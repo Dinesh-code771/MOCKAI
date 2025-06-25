@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "maxNodeModuleJsDepth": 20,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "baseUrl": "./src",
+    "paths": {
+      "@common/*": ["common/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@interceptors/*": ["interceptors/*"],
+      "@config/*": ["config/*"],
+      "@logger/*": ["logger/*"],
+      "@db/*": ["db/*"],
+      "@redis/*": ["redis/*"],
+      "@bg/*": ["background/*"],
+      "@cron/*": ["background/cron/*"],
+      "@email-queue/*": ["background/queue/email/*"],
+      "@health/*": ["api/health/*"],
+      "@email/*": ["api/email/*"],
+      "@media-upload/*": ["api/media-upload/*"],
+      "@dead-letter-queue/*": ["background/queue/dead-letter/*"]
+    }
+  }
+}

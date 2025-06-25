@@ -1,0 +1,78 @@
+{
+  "name": "mockai",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "libs/*"
+    ],
+    "nohoist": [
+      "**/eslint",
+      "**/eslint/**"
+    ]
+  },
+  "scripts": {
+    "frontend:dev": "npm run dev --workspace=nextjs",
+    "frontend:build": "npm run build --workspace=nextjs",
+    "frontend:start": "npm run start --workspace=nextjs",
+    "frontend:lint": "npm run lint --workspace=nextjs",
+    "backend:dev": "npm run start:dev --workspace=backend",
+    "backend:build": "npm run build --workspace=backend",
+    "backend:start": "npm run start --workspace=backend",
+    "backend:lint": "npm run lint --workspace=backend",
+    "backend:test": "npm run test --workspace=backend",
+    "backend:test:watch": "npm run test:watch --workspace=backend",
+    "backend:test:coverage": "npm run test:coverage --workspace=backend",
+    "backend:test:e2e": "npm run test:e2e --workspace=backend",
+    "backend:format": "npm run format --workspace=backend",
+    "backend:prisma:studio": "npm run prisma:studio --workspace=backend",
+    "backend:prisma:status": "npm run prisma:status --workspace=backend",
+    "backend:prisma:new-migration": "npm run prisma:new-migration --workspace=backend",
+    "backend:prisma:setup": "npm run prisma:setup --workspace=backend",
+    "backend:prisma:migrate-dbpull": "npm run prisma:migrate-dbpull --workspace=backend",
+    "backend:prisma:reset": "npm run prisma:reset --workspace=backend",
+    "backend:generate:client": "npm run generate:client --workspace=backend",
+    "backend:generate:sdk": "npm run generate:sdk --workspace=backend",
+    "backend:generate:openapi-spec": "npm run generate:openapi-spec --workspace=backend",
+    "backend:db:dev:up": "npm run db:dev:up --workspace=backend",
+    "backend:db:dev:rm": "npm run db:dev:rm --workspace=backend",
+    "backend:local:up": "npm run local:up --workspace=backend",
+    "backend:local:dev:up": "npm run local:dev:up --workspace=backend",
+    "backend:allow:permission": "npm run allow:permission --workspace=backend",
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "build": "npm run backend:build && npm run frontend:build",
+    "start": "concurrently \"npm run backend:start\" \"npm run frontend:start\"",
+    "lint": "npm run backend:lint && npm run frontend:lint",
+    "test": "npm run backend:test"
+  },
+  "dependencies": {
+    "@mdx-js/react": "^3.0.0",
+    "@radix-ui/react-toast": "^1.2.5",
+    "axios": "^1.6.0",
+    "clsx": "^2.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.8.0",
+    "@playwright/test": "^1.36.0",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "@types/node": "~18.16.9",
+    "concurrently": "^8.2.2",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^2.6.2",
+    "ts-node": "10.9.1",
+    "typescript": "~5.5.2",
+    "typescript-eslint": "^8.0.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "engines": {
+    "node": ">=18.0"
+  }
+}

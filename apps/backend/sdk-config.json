@@ -1,0 +1,11 @@
+{
+  "npmName": "@mockai/sdk",
+  "npmVersion": "1.0.0",
+  "npmMain": "index.ts",
+  "modelPackage": "models",
+  "apiPackage": "controllers",
+  "withSeparateModelsAndApi": true,
+  "dependencies": {
+    "socket.io-client": "^4.8.1"
+  }
+}

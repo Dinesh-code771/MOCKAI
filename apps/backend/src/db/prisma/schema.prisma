@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model media_metadata {
+  id         String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  file_url   String?    @db.VarChar(510)
+  file_name  String?    @db.VarChar(255)
+  file_type  file_type?
+  alt_text   String?    @db.VarChar(255)
+  created_at DateTime?  @default(now()) @db.Timestamptz(6)
+  users      users[]
+}
+
+model users {
+  id                                   String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  country_code                         String?         @db.VarChar(4)
+  phone_number                         String?         @db.VarChar(20)
+  email                                String?         @unique @db.VarChar(255)
+  password                             String?         @db.VarChar(255)
+  full_name                            String?         @db.VarChar(50)
+  gender                               gender?
+  date_of_birth                        DateTime?       @db.Timestamptz(6)
+  email_verified                       Boolean?        @default(false)
+  phone_number_verified                Boolean?        @default(false)
+  last_login                           DateTime?       @db.Timestamptz(6)
+  is_online                            Boolean?        @default(true)
+  avatar                               String?         @db.Uuid
+  is_deleted                           Boolean?        @default(false)
+  deleted_at                           DateTime?       @db.Timestamptz(6)
+  deleted_by                           String?         @db.Uuid
+  is_disabled                          Boolean?        @default(false)
+  disabled_at                          DateTime?       @db.Timestamptz(6)
+  disabled_by                          String?         @db.Uuid
+  created_at                           DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime?       @default(now()) @db.Timestamptz(6)
+  media_metadata                       media_metadata? @relation(fields: [avatar], references: [id])
+  users_users_deleted_byTousers        users?          @relation("users_deleted_byTousers", fields: [deleted_by], references: [id])
+  other_users_users_deleted_byTousers  users[]         @relation("users_deleted_byTousers")
+  users_users_disabled_byTousers       users?          @relation("users_disabled_byTousers", fields: [disabled_by], references: [id])
+  other_users_users_disabled_byTousers users[]         @relation("users_disabled_byTousers")
+
+  @@unique([phone_number, country_code], map: "unique_phone_country")
+}
+
+enum file_type {
+  pdf
+  docx
+  msword
+  png
+  jpg
+  jpeg
+  mp4
+  mov
+  mp3
+  wav
+}
+
+enum gender {
+  male
+  female
+  other
+}
