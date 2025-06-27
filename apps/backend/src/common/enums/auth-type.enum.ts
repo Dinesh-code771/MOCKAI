@@ -1,6 +1,10 @@
 export enum AuthType {
-  JWT,
-  REFRESH,
-  TEMP,
-  NONE,
+  JWT = 'jwt',
+  NONE = 'none',
+}
+
+export enum RoleType {
+  ADMIN = 'admin',
+  INSTRUCTOR = 'instructor',
+  STUDENT = 'student',
 }

@@ -33,7 +33,8 @@
       "@health/*": ["api/health/*"],
       "@email/*": ["api/email/*"],
       "@media-upload/*": ["api/media-upload/*"],
-      "@dead-letter-queue/*": ["background/queue/dead-letter/*"]
+      "@dead-letter-queue/*": ["background/queue/dead-letter/*"],
+      "@auth/*": ["api/auth/*"]
     }
   }
 }

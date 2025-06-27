@@ -18,11 +18,4 @@ export class ApiResponse<T> {
 
   @ApiProperty({ required: false, nullable: true })
   meta?: any;
-
-  @ApiProperty({
-    required: false,
-    nullable: true,
-    description: 'Trace ID for tracking',
-  })
-  traceId?: string;
 }

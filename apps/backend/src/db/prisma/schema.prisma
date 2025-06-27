@@ -7,62 +7,238 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model media_metadata {
-  id         String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  file_url   String?    @db.VarChar(510)
-  file_name  String?    @db.VarChar(255)
-  file_type  file_type?
-  alt_text   String?    @db.VarChar(255)
-  created_at DateTime?  @default(now()) @db.Timestamptz(6)
-  users      users[]
+model courses {
+  id           String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String         @unique @db.VarChar(255)
+  description  String?
+  is_active    Boolean?       @default(true)
+  created_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  interviews   interviews[]
+  user_courses user_courses[]
+}
+
+model interviews {
+  id               String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  course_id        String?             @db.Uuid
+  name             String              @db.VarChar(255)
+  type             interview_type_enum
+  difficulty       difficulty_enum
+  duration_minutes Int?                @default(60)
+  description      String?
+  max_score        Decimal?            @default(100) @db.Decimal(5, 2)
+  total_questions  Int?                @default(25)
+  is_active        Boolean?            @default(true)
+  created_at       DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?           @default(now()) @db.Timestamptz(6)
+  courses          courses?            @relation(fields: [course_id], references: [id], onUpdate: NoAction)
+  questions        questions[]
+  user_interviews  user_interviews[]
+
+  @@index([course_id], map: "idx_interviews_course")
+  @@index([difficulty], map: "idx_interviews_difficulty")
+  @@index([type], map: "idx_interviews_type")
+}
+
+model questions {
+  id             String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  interview_id   String             @db.Uuid
+  question_text  String
+  question_type  question_type_enum
+  options        Json?
+  correct_answer String?
+  difficulty     difficulty_enum?
+  order_sequence Int?
+  is_active      Boolean?           @default(true)
+  created_at     DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?          @default(now()) @db.Timestamptz(6)
+  interviews     interviews         @relation(fields: [interview_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user_answers   user_answers[]
+
+  @@index([interview_id], map: "idx_questions_interview")
+  @@index([order_sequence], map: "idx_questions_order")
+  @@index([question_type], map: "idx_questions_type")
+}
+
+model roles {
+  id          String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String       @unique @db.VarChar(100)
+  description String?
+  is_active   Boolean?     @default(true)
+  created_at  DateTime?    @default(now()) @db.Timestamptz(6)
+  user_roles  user_roles[]
+}
+
+model user_analytics {
+  id                     String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id                String    @unique @db.Uuid
+  test_taken_at          DateTime? @default(now()) @db.Timestamptz(6)
+  total_percentage_score Decimal?  @db.Decimal(5, 2)
+  given_interviews       Int?      @default(0)
+  upcoming_interviews    Int?      @default(0)
+  created_at             DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime? @default(now()) @db.Timestamptz(6)
+  users                  users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_user_analytics_user")
+}
+
+model user_answers {
+  id                String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_interview_id String          @db.Uuid
+  question_id       String          @db.Uuid
+  answer            String?
+  is_correct        Boolean?
+  points_earned     Decimal?        @default(0.00) @db.Decimal(5, 2)
+  questions         questions       @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user_interviews   user_interviews @relation(fields: [user_interview_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_interview_id, question_id])
+  @@index([question_id], map: "idx_user_answers_question")
+  @@index([user_interview_id], map: "idx_user_answers_user_interview")
+}
+
+model user_courses {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id   String   @db.Uuid
+  course_id String   @db.Uuid
+  is_active Boolean? @default(true)
+  courses   courses  @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users     users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, course_id])
+  @@index([is_active], map: "idx_user_courses_active")
+  @@index([course_id], map: "idx_user_courses_course")
+  @@index([user_id], map: "idx_user_courses_user")
+}
+
+model user_interviews {
+  id               String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id          String                 @db.Uuid
+  interview_id     String                 @db.Uuid
+  scheduled_at     DateTime               @db.Timestamptz(6)
+  started_at       DateTime?              @db.Timestamptz(6)
+  completed_at     DateTime?              @db.Timestamptz(6)
+  status           interview_status_enum? @default(scheduled)
+  total_score      Decimal?               @db.Decimal(5, 2)
+  percentage_score Decimal?               @db.Decimal(5, 2)
+  feedback         String?
+  strong_areas     String[]
+  weak_areas       String[]
+  created_at       DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?              @default(now()) @db.Timestamptz(6)
+  user_answers     user_answers[]
+  interviews       interviews             @relation(fields: [interview_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([interview_id], map: "idx_user_interviews_interview")
+  @@index([scheduled_at], map: "idx_user_interviews_scheduled")
+  @@index([status], map: "idx_user_interviews_status")
+  @@index([user_id], map: "idx_user_interviews_user")
+}
+
+model user_roles {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String    @db.Uuid
+  role_id    String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  roles      roles     @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, role_id])
+  @@index([role_id], map: "idx_user_roles_role")
+  @@index([user_id], map: "idx_user_roles_user")
+}
+
+model user_social_accounts {
+  id            String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String               @db.Uuid
+  provider_name social_provider_enum
+  provider_id   String               @db.VarChar(255)
+  created_at    DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?            @default(now()) @db.Timestamptz(6)
+  users         users                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider_name, provider_id])
+  @@unique([user_id, provider_name])
+  @@index([provider_name, provider_id], map: "idx_social_accounts_provider")
+  @@index([user_id], map: "idx_social_accounts_user")
 }
 
 model users {
-  id                                   String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  country_code                         String?         @db.VarChar(4)
-  phone_number                         String?         @db.VarChar(20)
-  email                                String?         @unique @db.VarChar(255)
-  password                             String?         @db.VarChar(255)
-  full_name                            String?         @db.VarChar(50)
-  gender                               gender?
-  date_of_birth                        DateTime?       @db.Timestamptz(6)
-  email_verified                       Boolean?        @default(false)
-  phone_number_verified                Boolean?        @default(false)
-  last_login                           DateTime?       @db.Timestamptz(6)
-  is_online                            Boolean?        @default(true)
-  avatar                               String?         @db.Uuid
-  is_deleted                           Boolean?        @default(false)
-  deleted_at                           DateTime?       @db.Timestamptz(6)
-  deleted_by                           String?         @db.Uuid
-  is_disabled                          Boolean?        @default(false)
-  disabled_at                          DateTime?       @db.Timestamptz(6)
-  disabled_by                          String?         @db.Uuid
-  created_at                           DateTime?       @default(now()) @db.Timestamptz(6)
-  updated_at                           DateTime?       @default(now()) @db.Timestamptz(6)
-  media_metadata                       media_metadata? @relation(fields: [avatar], references: [id])
-  users_users_deleted_byTousers        users?          @relation("users_deleted_byTousers", fields: [deleted_by], references: [id])
-  other_users_users_deleted_byTousers  users[]         @relation("users_deleted_byTousers")
-  users_users_disabled_byTousers       users?          @relation("users_disabled_byTousers", fields: [disabled_by], references: [id])
-  other_users_users_disabled_byTousers users[]         @relation("users_disabled_byTousers")
+  id                   String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  full_name            String?                @db.VarChar(255)
+  email                String                 @unique @db.VarChar(255)
+  avatar               String?
+  phone_number         String?                @db.VarChar(20)
+  country_code         String?                @db.VarChar(5)
+  gender               gender_enum?
+  password_hash        String?                @db.VarChar(255)
+  date_of_birth        DateTime?              @db.Date
+  is_email_verified    Boolean?               @default(false)
+  is_phone_verified    Boolean?               @default(false)
+  is_active            Boolean?               @default(true)
+  is_temp              Boolean?               @default(false)
+  is_deleted           Boolean?               @default(false)
+  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  user_analytics       user_analytics?
+  user_courses         user_courses[]
+  user_interviews      user_interviews[]
+  user_otps            user_otps?
+  user_roles           user_roles[]
+  user_social_accounts user_social_accounts[]
 
-  @@unique([phone_number, country_code], map: "unique_phone_country")
+  @@index([is_active, is_deleted], map: "idx_users_active")
+  @@index([created_at], map: "idx_users_created_at")
+  @@index([email], map: "idx_users_email")
+  @@index([phone_number, country_code], map: "idx_users_phone")
 }
 
-enum file_type {
-  pdf
-  docx
-  msword
-  png
-  jpg
-  jpeg
-  mp4
-  mov
-  mp3
-  wav
+model user_otps {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id         String?   @unique @db.Uuid
+  otp_value       String    @db.VarChar(255)
+  attempts        Int?      @default(0)
+  resend_attempts Int?      @default(0)
+  expires_at      DateTime? @db.Timestamptz(6)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  resend_at       DateTime? @db.Timestamptz(6)
+  locked_at       DateTime? @db.Timestamptz(6)
+  users           users?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
-enum gender {
+enum difficulty_enum {
+  beginner
+  intermediate
+  advanced
+}
+
+enum gender_enum {
   male
   female
   other
+  prefer_not_to_say
+}
+
+enum interview_status_enum {
+  scheduled
+  in_progress
+  completed
+  cancelled
+  no_show
+}
+
+enum interview_type_enum {
+  mcq
+  subjective
+}
+
+enum question_type_enum {
+  mcq
+  subjective
+}
+
+enum social_provider_enum {
+  google
 }

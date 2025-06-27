@@ -16,7 +16,7 @@ export class JwtInterceptor implements NestInterceptor {
   // Adding this interceptor to get User Info for authorized users even if endpoint is public
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
+    const authHeader = request.headers.authorization; 
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
@@ -28,11 +28,9 @@ export class JwtInterceptor implements NestInterceptor {
           request.user = {
             id: decoded.sub,
             full_name: decoded['name'],
-            user_id: decoded['user_id'],
-            roles: decoded['roles'],
-            device_id: decoded['device_id'],
-            otp_id: decoded['otp_id'],
+            roles: decoded['roles'], 
             is_disabled: decoded['is_disabled'],
+            type: decoded['type'],
           };
         }
       } catch (error) {

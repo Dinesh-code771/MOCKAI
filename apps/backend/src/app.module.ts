@@ -20,10 +20,11 @@ import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '@config/env.config';
 import { JwtInterceptor } from '@interceptors/jwt.interceptor';
 import { CookieAuthMiddleware } from '@middlewares/cookies.middleware';
-import { CustomJwtService } from '@common/services/jwt.service';
 import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from '@email/email.module';
 import { MediaUploadModule } from '@media-upload/media-upload.module';
+import { AuthModule } from '@auth/auth.module';
+import { CustomJwtService } from '@common/services/jwt.service';
 
 const configService = new ConfigService<EnvConfig>();
 
@@ -98,7 +99,8 @@ const cacheModule = CacheModule.registerAsync({
     // APIs
     HealthModule,
     EmailModule,
-    MediaUploadModule
+    MediaUploadModule,
+    AuthModule,
   ],
   providers: [
     CustomJwtService,

@@ -11,7 +11,7 @@ export class BcryptService implements HashingService {
    */
   async hash(data: string): Promise<string> {
     // Generate a salt for password hashing
-    const saltOrRounds = await bcrypt.genSalt();
+    const saltOrRounds = await bcrypt.genSalt(10);
     // Hash the password using the generated salt
     return await bcrypt.hash(data, saltOrRounds);
   }

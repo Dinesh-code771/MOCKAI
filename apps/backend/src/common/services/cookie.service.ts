@@ -9,10 +9,10 @@ export class CookieService {
   private readonly SET_COOKIE_OPTIONS: ICookieOptions;
   private readonly JWT_TOKEN_EXPIRY: number;
   private readonly REFRESH_TOKEN_EXPIRY: number;
-  private readonly TEMP_TOKEN_EXPIRY: number;
   private readonly env: string;
 
   constructor(private readonly configService: ConfigService<EnvConfig>) {
+    this.env = this.configService.get<string>('NODE_ENV');
     this.JWT_TOKEN_EXPIRY =
       this.configService.get<number>('JWT_TOKEN_EXPIRY') * 1000;
     this.REFRESH_TOKEN_EXPIRY =
@@ -23,7 +23,7 @@ export class CookieService {
       secure: this.env !== 'development',
       sameSite: this.env === 'development' ? 'strict' : 'none',
       path: '/',
-      domain: this.env === 'development' ? undefined : 'domain here', // eg: .test.com
+      domain: this.env === 'development' ? undefined : '.mockai.com',
     };
   }
 
@@ -34,30 +34,12 @@ export class CookieService {
     });
   }
 
-  setAuthCookie(
-    req: Request,
-    res: Response,
-    accessToken?: string,
-    refreshToken?: string,
-    tempToken?: string,
-  ) {
-
+  setAuthCookie(res: Response, accessToken?: string) {    
     if (accessToken) {
       res.cookie('sid', accessToken, {
         ...this.SET_COOKIE_OPTIONS,
         maxAge: this.JWT_TOKEN_EXPIRY,
       });
-    }
-
-    if (refreshToken) {
-      res.cookie(
-        'refresh_token',
-        refreshToken,
-        {
-          ...this.SET_COOKIE_OPTIONS,
-          maxAge: this.REFRESH_TOKEN_EXPIRY,
-        },
-      );
     }
   }
 
@@ -70,7 +52,7 @@ export class CookieService {
     });
   }
 
-  deleteAuthCookies(req: Request, res: Response) {
+  deleteAuthCookies(res: Response) {
     const cookieNames = ['sid', 'refresh_token'];
     this.deleteCookies(res, ...cookieNames);
   }

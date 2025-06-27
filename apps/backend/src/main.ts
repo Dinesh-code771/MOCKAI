@@ -93,14 +93,18 @@ async function bootstrap() {
   // Default Route - Show Friendly Info Page
   const expressApp = app.getHttpAdapter().getInstance() as any;
   expressApp.get(['/', '/v1'], (_, res: Response) => {
-    res.status(200).render('default', {
-      app: 'mockAI API Services',
-      environment,
-      isProd,
-      message: isProd
-        ? 'You are hitting a wrong URL. Please check the official API documentation.'
-        : 'Welcome to the backend service. Use the options below to explore further.',
-    });
+    try {
+      res.status(200).json({
+        app: 'mockAI API Services',
+        environment,
+        isProd,
+        message: isProd
+          ? 'You are hitting a wrong URL. Please check the official API documentation.'
+          : 'Welcome to the backend service. Use the options below to explore further.',
+      });
+    } catch (error) { 
+      res.status(500).send('Internal server error');
+    }
   });
   if (!isProd) {
     expressApp.get('/robots.txt', (_, res) =>

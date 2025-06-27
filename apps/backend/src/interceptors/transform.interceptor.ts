@@ -23,7 +23,6 @@ export class TransformInterceptor<T>
 
       // Exclude specific routes
       if (
-        request.url.includes(RouteNames.METRICS) ||
         request.url.includes(RouteNames.HEALTH)
       ) {
         return next.handle();

@@ -7,31 +7,23 @@ import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class CustomJwtService {
   private readonly jwtTokenSecret: string;
-  private readonly refreshTokenSecret: string;
-  private readonly tempTokenSecret: string;
-  private readonly jwtTokenExpiry: number;
-  private readonly refreshTokenExpiry: number;
-  private readonly tempTokenExpiry: number;
+  private readonly jwtTokenExpiry: number; 
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService<EnvConfig>,
   ) {
     this.jwtTokenSecret = this.configService.get<string>('JWT_TOKEN_SECRET');
-
-    this.refreshTokenSecret = this.configService.get<string>('REFRESH_TOKEN_SECRET');
     this.jwtTokenExpiry = this.configService.get<number>('JWT_TOKEN_EXPIRY');
-    this.refreshTokenExpiry = this.configService.get<number>('REFRESH_TOKEN_EXPIRY');
   }
 
-  async generateAuthToken(user: UserInfo, deviceId: string) {
+  async generateAuthToken(user: UserInfo, type: 'access' | 'temp' = 'access') {
     // Create the payload for the JWT token
     const payload = {
       sub: user.id,
       name: user.full_name,
-      user_id: user.user_id,
-      device_id: deviceId,
-      type: 'access',
-      is_disabled: user.is_disabled
+      roles: user.roles,
+      is_disabled: user.is_disabled,
+      type
     };
 
     // Get the JWT secret from the configuration
@@ -44,27 +36,6 @@ export class CustomJwtService {
     });
 
     // Return the generated authentication token
-    return token;
-  }
-
-  async generateRefreshToken(userId: string, deviceId: string) {
-    // Prepare the payload for the refresh token
-    const payload = {
-      sub: userId,
-      device_id: deviceId,
-      Type: 'refresh'
-    };
-
-    // Get the refresh token secret from the configuration
-    const secret = this.refreshTokenSecret;
-
-    // Sign the payload using the secret and generate the refresh token
-    const token = await this.jwtService.signAsync(payload, {
-      expiresIn: this.refreshTokenExpiry,
-      secret,
-    });
-
-    // Return the generated refresh token
     return token;
   }
 

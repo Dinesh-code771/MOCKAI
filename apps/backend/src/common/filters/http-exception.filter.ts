@@ -72,9 +72,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
       };
     }
 
-    // Attach error ID to response
-    (errorResponse as any).traceId = errorId;
-
     if (host.getType() === 'http') {
       if (!response.headersSent) {
         return response.status(errorResponse.statusCode).json(errorResponse);

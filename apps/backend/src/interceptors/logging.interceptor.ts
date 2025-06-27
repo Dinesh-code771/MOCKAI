@@ -43,8 +43,7 @@ export class HttpLoggingInterceptor implements NestInterceptor {
             `Remote Address: ${remoteAddr}, Method: ${method}, URL: ${url}, HTTP Version: ${httpVersion}\n` +
             `User-Agent: ${userAgent}, Referrer: ${referrer}\n` +
             `Request Body: ${JSON.stringify(this.deepSanitize(body))}\n` +
-            `Query Params: ${JSON.stringify(query)}\n` +
-            `Trace ID: ${request['traceId'] ?? 'NA'}, Response Status: ${statusCode}\n\n`,
+            `Query Params: ${JSON.stringify(query)}\n`
         );
       }),
     );
