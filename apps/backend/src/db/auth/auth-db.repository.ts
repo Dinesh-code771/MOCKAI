@@ -255,12 +255,12 @@ export class AuthDBRepository {
       await tx.user_social_accounts.upsert({
         where: {
           user_id_provider_name: {
-            user_id: user.id,
+            user_id: upsertedUser.id,
             provider_name: provider,
           },
         },
         create: {
-          user_id: user.id,
+          user_id: upsertedUser.id,
           provider_name: provider,
           provider_id: userData.provider_id,
         },
