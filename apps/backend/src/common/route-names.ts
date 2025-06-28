@@ -4,7 +4,7 @@ export enum RouteNames {
   AUTH = 'auth',
   API_DOCS = 'api',
   QUEUES_UI = 'queues',
-  EMAIL = 'email',  
+  EMAIL = 'email',
   MEDIA_UPLOAD = 'media-upload',
   HEALTH_UI = 'health-ui',
 
@@ -14,10 +14,12 @@ export enum RouteNames {
   AUTH_LOGOUT = 'logout',
   AUTH_VERIFY_OTP = 'verify-otp',
   AUTH_RESEND_OTP = 'resend-otp',
+  AUTH_FORGOT_PASSWORD = 'forgot-password',
+  AUTH_VERIFY_FORGOT_PASSWORD_OTP = 'verify-forgot-password-otp',
+  AUTH_RESET_PASSWORD = 'reset-password',
   AUTH_GOOGLE = 'google',
   AUTH_GOOGLE_REDIRECT = 'google/redirect',
   AUTH_LOGGED_IN_USER = 'logged-in-user',
-  
 
   // --- EMAIL ROUTES ---
   EMAIL_SEND = 'send',

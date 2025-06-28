@@ -1,8 +1,29 @@
 import { RouteNames } from '@common/route-names';
-import { BadRequestException, Body, Controller, Get, HttpStatus, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiHeader,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiResponse } from '@nestjs/swagger';
-import { LoginApiResponse, LoginDto, LoginResponseDto } from '@auth/dto/login.dto';
+import {
+  LoginApiResponse,
+  LoginDto,
+  LoginResponseDto,
+} from '@auth/dto/login.dto';
 import { AuthService } from '@auth/auth.service';
 import { ResponseUtil } from '@common/helpers/response.utils';
 import { CookieService } from '@common/services/cookie.service';
@@ -18,6 +39,14 @@ import { OAuthEnum } from '@common/enums/oauth-providers.enum';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '@config/env.config';
 import { UserResponseApiResponse } from './dto/user.dto';
+import {
+  ForgotPasswordDto,
+  ForgotPasswordApiResponse,
+  VerifyForgotPasswordOtpDto,
+  VerifyForgotPasswordOtpApiResponse,
+  ResetPasswordDto,
+  ResetPasswordApiResponse,
+} from './dto/forgot-password.dto';
 
 @Controller(RouteNames.AUTH)
 @ApiTags('Auth')
@@ -54,7 +83,10 @@ export class AuthController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Internal server error.',
   })
-  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<LoginApiResponse> {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LoginApiResponse> {
     const response = await this.authService.login(loginDto);
     if (response.token) {
       this.cookieService.setAuthCookie(res, response.token);
@@ -68,7 +100,7 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'OTP resent successfully',
-    type: apiResponse<null>
+    type: apiResponse<null>,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -78,16 +110,21 @@ export class AuthController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Internal server error.',
   })
-  async resendOtp(@User('id') userId: string, @User('type') tokenType: 'access' | 'temp'): Promise<LoginApiResponse> {
+  async resendOtp(
+    @User('id') userId: string,
+    @User('type') tokenType: 'access' | 'temp',
+  ): Promise<LoginApiResponse> {
     if (tokenType === 'access') {
-      throw new BadRequestException(APP_STRINGS.common.cannot_access_this_resource);
+      throw new BadRequestException(
+        APP_STRINGS.common.cannot_access_this_resource,
+      );
     }
     await this.authService.resendOtp(userId);
     return ResponseUtil.success(null, 'OTP resent successfully', HttpStatus.OK);
   }
 
   @Post(RouteNames.AUTH_VERIFY_OTP)
-  @Auth(AuthType.JWT)
+  @Auth(AuthType.NONE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'API to verify OTP' })
   @ApiResponse({
@@ -103,12 +140,30 @@ export class AuthController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Internal server error.',
   })
-  async verifyOtp(@User('id') userId: string, @Body() input: OtpDto, @Res({ passthrough: true }) res: Response): Promise<LoginApiResponse> {
-    const response = await this.authService.verifyOtp(userId, input.otp.toString());
+  async verifyOtp(
+    @User('id') userId: string,
+    @Body() input: OtpDto,
+    @Res({ passthrough: true }) res: Response,
+    @User('type') tokenType: 'access' | 'temp',
+  ): Promise<LoginApiResponse> {
+    if (tokenType === 'access') {
+      throw new BadRequestException(
+        APP_STRINGS.common.cannot_access_this_resource,
+      );
+    }
+
+    const response = await this.authService.verifyOtp(
+      userId,
+      input.otp.toString(),
+    );
     if (response.token) {
       this.cookieService.setAuthCookie(res, response.token);
     }
-    return ResponseUtil.success(response, 'OTP verified successfully', HttpStatus.OK);
+    return ResponseUtil.success(
+      response,
+      'OTP verified successfully',
+      HttpStatus.OK,
+    );
   }
 
   @Post(RouteNames.AUTH_LOGOUT)
@@ -118,7 +173,7 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Logout successful',
-    type: apiResponse<null>
+    type: apiResponse<null>,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -128,7 +183,9 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized.',
   })
-  async logout(@Res({ passthrough: true }) res: Response): Promise<apiResponse<null>> {
+  async logout(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<apiResponse<null>> {
     this.cookieService.deleteAuthCookies(res);
     return ResponseUtil.success(null, 'Logout successful', HttpStatus.OK);
   }
@@ -179,5 +236,121 @@ export class AuthController {
   })
   async getLoggedInUser(@User('id') userId: string) {
     return this.authService.getLoggedInUser(userId);
+  }
+
+  @Post(RouteNames.AUTH_FORGOT_PASSWORD)
+  @Auth(AuthType.NONE)
+  @ApiOperation({ summary: 'API to send OTP for password reset' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'OTP sent successfully',
+    type: ForgotPasswordApiResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'User not found or invalid email.',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error.',
+  })
+  async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ForgotPasswordApiResponse> {
+    const response = await this.authService.forgotPassword(forgotPasswordDto);
+
+    // Set temp token in cookie
+    this.cookieService.setAuthCookie(res, response.temp_token);
+
+    return ResponseUtil.success(
+      response,
+      'OTP sent successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Post(RouteNames.AUTH_VERIFY_FORGOT_PASSWORD_OTP)
+  @Auth(AuthType.NONE)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'API to verify OTP for password reset' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'OTP verified successfully',
+    type: VerifyForgotPasswordOtpApiResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid OTP or expired token.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized - Invalid temp token.',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error.',
+  })
+  async verifyForgotPasswordOtp(
+    @User('id') userId: string,
+    @Body() verifyOtpDto: VerifyForgotPasswordOtpDto,
+    @Res({ passthrough: true }) res: Response,
+    @User('type') tokenType: 'access' | 'temp',
+  ): Promise<VerifyForgotPasswordOtpApiResponse> {
+    if (tokenType === 'access') {
+      throw new BadRequestException(
+        APP_STRINGS.common.cannot_access_this_resource,
+      );
+    }
+    const response = await this.authService.verifyForgotPasswordOtp(
+      userId,
+      verifyOtpDto,
+    );
+
+    // Set access token in cookie
+    this.cookieService.setAuthCookie(res, response.token);
+
+    return ResponseUtil.success(
+      response,
+      'OTP verified successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Post(RouteNames.AUTH_RESET_PASSWORD)
+  @Auth(AuthType.JWT)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'API to reset password' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Password reset successfully',
+    type: ResetPasswordApiResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid request.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized - Invalid access token.',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error.',
+  })
+  async resetPassword(
+    @User('id') userId: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<ResetPasswordApiResponse> {
+    const response = await this.authService.resetPassword(
+      userId,
+      resetPasswordDto,
+    );
+
+    return ResponseUtil.success(
+      response,
+      'Password reset successfully',
+      HttpStatus.OK,
+    );
   }
 }
