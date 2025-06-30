@@ -7,6 +7,8 @@ export enum RouteNames {
   EMAIL = 'email',
   MEDIA_UPLOAD = 'media-upload',
   HEALTH_UI = 'health-ui',
+  STATIC_DATA = 'static-data',
+  USERS = 'users',
 
   // Named routes
   // --- AUTH ROUTES ---
@@ -29,4 +31,10 @@ export enum RouteNames {
   MEDIA_UPLOAD_DELETE = 'delete',
   MEDIA_UPLOAD_LIST = 'list',
   MEDIA_UPLOAD_GET = 'get',
+
+  // --- STATIC DATA ROUTES ---
+  STATIC_DATA_COURSES = 'courses',
+
+  // --- USERS ROUTES ---
+  USERS_PROFILE = 'profile',
 }

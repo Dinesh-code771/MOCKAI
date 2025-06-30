@@ -24,6 +24,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from '@email/email.module';
 import { MediaUploadModule } from '@media-upload/media-upload.module';
 import { AuthModule } from '@auth/auth.module';
+import { StaticDataModule } from '@static-data/static-data.module';
+import { UsersModule } from '@users/users.module';
 import { CustomJwtService } from '@common/services/jwt.service';
 
 const configService = new ConfigService<EnvConfig>();
@@ -101,6 +103,8 @@ const cacheModule = CacheModule.registerAsync({
     EmailModule,
     MediaUploadModule,
     AuthModule,
+    StaticDataModule,
+    UsersModule,
   ],
   providers: [
     CustomJwtService,

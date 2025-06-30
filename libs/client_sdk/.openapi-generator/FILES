@@ -6,8 +6,13 @@ package.json
 src/apis/AuthApi.ts
 src/apis/HealthApi.ts
 src/apis/MediaApi.ts
+src/apis/StaticDataApi.ts
+src/apis/UsersApi.ts
 src/apis/index.ts
 src/index.ts
+src/models/CourseDto.ts
+src/models/CoursesApiResponse.ts
+src/models/CoursesResponseDto.ts
 src/models/DataDto.ts
 src/models/DeleteMediaApiResponseDto.ts
 src/models/ForgotPasswordApiResponse.ts
@@ -26,6 +31,10 @@ src/models/ResetPasswordApiResponse.ts
 src/models/ResetPasswordDto.ts
 src/models/ResetPasswordResponseDto.ts
 src/models/RoleDto.ts
+src/models/UpdateUserProfileDto.ts
+src/models/UserProfileApiResponse.ts
+src/models/UserProfileDto.ts
+src/models/UserProfileResponseDto.ts
 src/models/UserResponseApiResponse.ts
 src/models/UserResponseDto.ts
 src/models/VerifyForgotPasswordOtpApiResponse.ts

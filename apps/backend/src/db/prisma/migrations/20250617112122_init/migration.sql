@@ -150,7 +150,7 @@ CREATE TABLE user_answers (
     question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
     answer TEXT,
     is_correct BOOLEAN,
-    points_earned DECIMAL(5,2) DEFAULT 0.00, -- for subjective questions 
+    points_earned DECIMAL(5,2) DEFAULT 0.00, -- for subjective questions
     UNIQUE(user_interview_id, question_id)
 );
 
