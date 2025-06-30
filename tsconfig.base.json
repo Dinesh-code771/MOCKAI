@@ -3,7 +3,8 @@
     "baseUrl": ".",
     "paths": {
       "@libs/*": ["libs/*"],
-      "@apps/*": ["apps/*"]
+      "@apps/*": ["apps/*"],
+      "@mockai/sdk": ["libs/client_sdk/dist"]
     }
   }
 }

@@ -74,3 +74,4 @@ k3s/apps/**/*configmap*
 # env files
 .env
 .env.*
+!.env.example

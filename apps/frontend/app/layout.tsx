@@ -1,3 +1,4 @@
+
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -7,7 +8,8 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'EduPrep - Mock Interview & Exam Platform',
-  description: 'Advanced platform for mock interviews, examinations, and skill assessment',
+  description:
+    'Advanced platform for mock interviews, examinations, and skill assessment',
 };
 
 export default function RootLayout({

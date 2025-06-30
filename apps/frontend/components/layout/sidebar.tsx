@@ -4,19 +4,20 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  BookOpen, 
-  Calendar, 
-  Trophy, 
-  BarChart3, 
-  Settings, 
+import {
+  BookOpen,
+  Calendar,
+  Trophy,
+  BarChart3,
+  Settings,
   LogOut,
   Users,
   FileText,
   Building,
-  ShieldCheck
+  ShieldCheck,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { logoutAction } from '@/app/auth/actions';
 
 interface SidebarProps {
   role: 'student' | 'admin' | 'superadmin';
@@ -26,26 +27,54 @@ interface SidebarProps {
 const sidebarItems = {
   student: [
     { icon: BarChart3, label: 'Dashboard', href: '/dashboard/student' },
-    { icon: Calendar, label: 'Schedule Interview', href: '/dashboard/student/schedule' },
+    {
+      icon: Calendar,
+      label: 'Schedule Interview',
+      href: '/dashboard/student/schedule',
+    },
     { icon: BookOpen, label: 'Take Test', href: '/dashboard/student/test' },
     { icon: Trophy, label: 'Results', href: '/dashboard/student/results' },
-    { icon: Users, label: 'Leaderboard', href: '/dashboard/student/leaderboard' },
+    {
+      icon: Users,
+      label: 'Leaderboard',
+      href: '/dashboard/student/leaderboard',
+    },
     { icon: Settings, label: 'Settings', href: '/dashboard/student/settings' },
   ],
   admin: [
     { icon: BarChart3, label: 'Dashboard', href: '/dashboard/admin' },
     { icon: FileText, label: 'Questions', href: '/dashboard/admin/questions' },
     { icon: Users, label: 'Students', href: '/dashboard/admin/students' },
-    { icon: Trophy, label: 'Leaderboard', href: '/dashboard/admin/leaderboard' },
-    { icon: Calendar, label: 'Interviews', href: '/dashboard/admin/interviews' },
+    {
+      icon: Trophy,
+      label: 'Leaderboard',
+      href: '/dashboard/admin/leaderboard',
+    },
+    {
+      icon: Calendar,
+      label: 'Interviews',
+      href: '/dashboard/admin/interviews',
+    },
     { icon: Settings, label: 'Settings', href: '/dashboard/admin/settings' },
   ],
   superadmin: [
     { icon: BarChart3, label: 'Dashboard', href: '/dashboard/superadmin' },
-    { icon: Building, label: 'Workspaces', href: '/dashboard/superadmin/workspaces' },
+    {
+      icon: Building,
+      label: 'Workspaces',
+      href: '/dashboard/superadmin/workspaces',
+    },
     { icon: Users, label: 'Admins', href: '/dashboard/superadmin/admins' },
-    { icon: ShieldCheck, label: 'Security', href: '/dashboard/superadmin/security' },
-    { icon: Settings, label: 'Settings', href: '/dashboard/superadmin/settings' },
+    {
+      icon: ShieldCheck,
+      label: 'Security',
+      href: '/dashboard/superadmin/security',
+    },
+    {
+      icon: Settings,
+      label: 'Settings',
+      href: '/dashboard/superadmin/settings',
+    },
   ],
 };
 
@@ -54,7 +83,7 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
   const items = sidebarItems[role];
 
   const handleLogout = () => {
-    router.push('/auth/login');
+    logoutAction();
   };
 
   return (
@@ -87,7 +116,9 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-800 truncate">John Doe</p>
+            <p className="text-sm font-medium text-gray-800 truncate">
+              John Doe
+            </p>
             <p className="text-xs text-gray-500">john.doe@example.com</p>
           </div>
         </div>
@@ -98,16 +129,16 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = currentPath === item.href;
-          
+
           return (
             <Button
               key={item.href}
-              variant={isActive ? "default" : "ghost"}
+              variant={isActive ? 'default' : 'ghost'}
               className={cn(
-                "w-full justify-start transition-all duration-200",
-                isActive 
-                  ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg" 
-                  : "hover:bg-gray-100/50"
+                'w-full justify-start transition-all duration-200',
+                isActive
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                  : 'hover:bg-gray-100/50',
               )}
               onClick={() => router.push(item.href)}
             >

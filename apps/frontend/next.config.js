@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  experimental: {
+    ppr: 'incremental',
+
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
+  reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
