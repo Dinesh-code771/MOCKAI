@@ -10,6 +10,9 @@ src/apis/index.ts
 src/index.ts
 src/models/DataDto.ts
 src/models/DeleteMediaApiResponseDto.ts
+src/models/ForgotPasswordApiResponse.ts
+src/models/ForgotPasswordDto.ts
+src/models/ForgotPasswordResponseDto.ts
 src/models/GetMediaResponseDto.ts
 src/models/HealthControllerCheck200Response.ts
 src/models/HealthControllerCheck200ResponseInfoValue.ts
@@ -19,9 +22,15 @@ src/models/LoginDto.ts
 src/models/LoginResponseDto.ts
 src/models/ModelApiResponse.ts
 src/models/OtpDto.ts
+src/models/ResetPasswordApiResponse.ts
+src/models/ResetPasswordDto.ts
+src/models/ResetPasswordResponseDto.ts
 src/models/RoleDto.ts
 src/models/UserResponseApiResponse.ts
 src/models/UserResponseDto.ts
+src/models/VerifyForgotPasswordOtpApiResponse.ts
+src/models/VerifyForgotPasswordOtpDto.ts
+src/models/VerifyForgotPasswordOtpResponseDto.ts
 src/models/index.ts
 src/runtime.ts
 tsconfig.json

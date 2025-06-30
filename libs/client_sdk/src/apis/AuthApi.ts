@@ -15,13 +15,23 @@
 
 import * as runtime from '../runtime';
 import type {
+  ForgotPasswordApiResponse,
+  ForgotPasswordDto,
   LoginApiResponse,
   LoginDto,
   ModelApiResponse,
   OtpDto,
+  ResetPasswordApiResponse,
+  ResetPasswordDto,
   UserResponseApiResponse,
+  VerifyForgotPasswordOtpApiResponse,
+  VerifyForgotPasswordOtpDto,
 } from '../models/index';
 import {
+    ForgotPasswordApiResponseFromJSON,
+    ForgotPasswordApiResponseToJSON,
+    ForgotPasswordDtoFromJSON,
+    ForgotPasswordDtoToJSON,
     LoginApiResponseFromJSON,
     LoginApiResponseToJSON,
     LoginDtoFromJSON,
@@ -30,12 +40,24 @@ import {
     ModelApiResponseToJSON,
     OtpDtoFromJSON,
     OtpDtoToJSON,
+    ResetPasswordApiResponseFromJSON,
+    ResetPasswordApiResponseToJSON,
+    ResetPasswordDtoFromJSON,
+    ResetPasswordDtoToJSON,
     UserResponseApiResponseFromJSON,
     UserResponseApiResponseToJSON,
+    VerifyForgotPasswordOtpApiResponseFromJSON,
+    VerifyForgotPasswordOtpApiResponseToJSON,
+    VerifyForgotPasswordOtpDtoFromJSON,
+    VerifyForgotPasswordOtpDtoToJSON,
 } from '../models/index';
 
 export interface AuthControllerAuthenticateWithGoogleRequest {
     nextUrl?: string;
+}
+
+export interface AuthControllerForgotPasswordRequest {
+    forgotPasswordDto: ForgotPasswordDto;
 }
 
 export interface AuthControllerGoogleAuthRedirectRequest {
@@ -45,6 +67,14 @@ export interface AuthControllerGoogleAuthRedirectRequest {
 export interface AuthControllerLoginRequest {
     loginDto: LoginDto;
     xLandingAppId?: string;
+}
+
+export interface AuthControllerResetPasswordRequest {
+    resetPasswordDto: ResetPasswordDto;
+}
+
+export interface AuthControllerVerifyForgotPasswordOtpRequest {
+    verifyForgotPasswordOtpDto: VerifyForgotPasswordOtpDto;
 }
 
 export interface AuthControllerVerifyOtpRequest {
@@ -83,6 +113,42 @@ export class AuthApi extends runtime.BaseAPI {
      */
     async authControllerAuthenticateWithGoogle(requestParameters: AuthControllerAuthenticateWithGoogleRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.authControllerAuthenticateWithGoogleRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * API to send OTP for password reset
+     */
+    async authControllerForgotPasswordRaw(requestParameters: AuthControllerForgotPasswordRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ForgotPasswordApiResponse>> {
+        if (requestParameters['forgotPasswordDto'] == null) {
+            throw new runtime.RequiredError(
+                'forgotPasswordDto',
+                'Required parameter "forgotPasswordDto" was null or undefined when calling authControllerForgotPassword().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/v1/auth/forgot-password`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ForgotPasswordDtoToJSON(requestParameters['forgotPasswordDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ForgotPasswordApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * API to send OTP for password reset
+     */
+    async authControllerForgotPassword(requestParameters: AuthControllerForgotPasswordRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ForgotPasswordApiResponse> {
+        const response = await this.authControllerForgotPasswordRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**
@@ -253,6 +319,94 @@ export class AuthApi extends runtime.BaseAPI {
      */
     async authControllerResendOtp(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ModelApiResponse> {
         const response = await this.authControllerResendOtpRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * API to reset password
+     */
+    async authControllerResetPasswordRaw(requestParameters: AuthControllerResetPasswordRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ResetPasswordApiResponse>> {
+        if (requestParameters['resetPasswordDto'] == null) {
+            throw new runtime.RequiredError(
+                'resetPasswordDto',
+                'Required parameter "resetPasswordDto" was null or undefined when calling authControllerResetPassword().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/auth/reset-password`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ResetPasswordDtoToJSON(requestParameters['resetPasswordDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ResetPasswordApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * API to reset password
+     */
+    async authControllerResetPassword(requestParameters: AuthControllerResetPasswordRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ResetPasswordApiResponse> {
+        const response = await this.authControllerResetPasswordRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * API to verify OTP for password reset
+     */
+    async authControllerVerifyForgotPasswordOtpRaw(requestParameters: AuthControllerVerifyForgotPasswordOtpRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VerifyForgotPasswordOtpApiResponse>> {
+        if (requestParameters['verifyForgotPasswordOtpDto'] == null) {
+            throw new runtime.RequiredError(
+                'verifyForgotPasswordOtpDto',
+                'Required parameter "verifyForgotPasswordOtpDto" was null or undefined when calling authControllerVerifyForgotPasswordOtp().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/auth/verify-forgot-password-otp`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: VerifyForgotPasswordOtpDtoToJSON(requestParameters['verifyForgotPasswordOtpDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => VerifyForgotPasswordOtpApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * API to verify OTP for password reset
+     */
+    async authControllerVerifyForgotPasswordOtp(requestParameters: AuthControllerVerifyForgotPasswordOtpRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VerifyForgotPasswordOtpApiResponse> {
+        const response = await this.authControllerVerifyForgotPasswordOtpRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

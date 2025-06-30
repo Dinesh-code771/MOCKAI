@@ -10,6 +10,14 @@ import { CustomJwtService } from '@common/services/jwt.service';
 import { APP_STRINGS } from '@common/strings';
 import { OAuthEnum } from '@common/enums/oauth-providers.enum';
 import { OAuthDto } from './dto/oauth-input.dto';
+import {
+  ForgotPasswordDto,
+  ForgotPasswordResponseDto,
+  VerifyForgotPasswordOtpDto,
+  VerifyForgotPasswordOtpResponseDto,
+  ResetPasswordDto,
+  ResetPasswordResponseDto,
+} from './dto/forgot-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -33,12 +41,12 @@ export class AuthService {
 
     // create user if not exists
     if (!user) {
-      input.password = await this.hashingService.hash(input.password); 
- 
+      input.password = await this.hashingService.hash(input.password);
+
       let otp = generateOtp();
       if (this.isDevelopment) {
         otp = '123456';
-      } 
+      }
 
       const newUser = await this.authDBService.createUser(input, otp);
       const parsedUser = this.authTransform.transformToUserResponse(newUser);
@@ -100,8 +108,9 @@ export class AuthService {
 
       // ToDo: send email
 
-      const parsedUser =
-        this.authTransform.transformToUserResponse(updatedUser.user);
+      const parsedUser = this.authTransform.transformToUserResponse(
+        updatedUser.user,
+      );
       const token = await this.jwtService.generateAuthToken(parsedUser, 'temp');
 
       return {
@@ -133,7 +142,7 @@ export class AuthService {
     };
   }
 
-  async resendOtp(userId: string) {    
+  async resendOtp(userId: string) {
     const otpData = await this.authDBService.getOtp(userId);
 
     if (!otpData?.users) {
@@ -206,7 +215,12 @@ export class AuthService {
     // clear otp
     await this.authDBService.deleteOtpByUserId(userId);
 
-    const parsedUser = this.authTransform.transformToUserResponse(otpData.users);
+    // set is_temp to false
+    await this.authDBService.updateUserIsTemp(userId, false);
+
+    const parsedUser = this.authTransform.transformToUserResponse(
+      otpData.users,
+    );
     const token = await this.jwtService.generateAuthToken(parsedUser);
 
     return {
@@ -247,5 +261,109 @@ export class AuthService {
   async getLoggedInUser(userId: string) {
     const user = await this.authDBService.findUserById(userId);
     return this.authTransform.transformToUserResponse(user);
+  }
+
+  async forgotPassword(
+    input: ForgotPasswordDto,
+  ): Promise<ForgotPasswordResponseDto> {
+    input.email = input.email?.toLowerCase();
+    const user = await this.authDBService.findUserByEmail(input.email);
+
+    if (!user) {
+      throw new BadRequestException(APP_STRINGS.api_errors.auth.user_not_found);
+    }
+
+    if (user.is_temp) {
+      throw new BadRequestException('Please complete your registration first');
+    }
+
+    let otp = generateOtp();
+    if (this.isDevelopment) {
+      otp = '123456';
+    }
+
+    // Create OTP for password reset
+    await this.authDBService.createForgotPasswordOtp(user.id, otp);
+
+    // Generate temporary token for password reset
+    const parsedUser = this.authTransform.transformToUserResponse(user);
+    const tempToken = await this.jwtService.generateAuthToken(
+      parsedUser,
+      'temp',
+    );
+
+    // TODO: Send email with OTP
+
+    return {
+      message: 'OTP sent successfully to your email',
+      temp_token: tempToken,
+    };
+  }
+
+  async verifyForgotPasswordOtp(
+    userId: string,
+    input: VerifyForgotPasswordOtpDto,
+  ): Promise<VerifyForgotPasswordOtpResponseDto> {
+    const otpData = await this.authDBService.getOtp(userId);
+
+    if (!otpData) {
+      throw new BadRequestException(APP_STRINGS.api_errors.auth.user_not_found);
+    }
+
+    if (new Date(otpData.expires_at) < new Date()) {
+      throw new BadRequestException(
+        APP_STRINGS.api_errors.auth.verification_code_expired,
+      );
+    }
+
+    // Check if OTP is locked and if 15 minutes have passed
+    if (otpData.locked_at) {
+      const lockExpiry = new Date(otpData.locked_at.getTime() + 15 * 60 * 1000);
+      if (new Date() < lockExpiry) {
+        throw new BadRequestException(
+          APP_STRINGS.api_errors.auth.too_many_attempts,
+        );
+      }
+      // Reset attempts and locked_at if lock period has expired
+      await this.authDBService.incrementOtpAttempts(otpData.id, 0);
+      otpData.attempts = 0;
+    }
+
+    if (otpData.otp_value !== input.otp.toString()) {
+      await this.authDBService.incrementOtpAttempts(
+        otpData.id,
+        otpData.attempts + 1,
+      );
+      throw new BadRequestException(APP_STRINGS.api_errors.auth.invalid_code);
+    }
+
+    // Clear OTP after successful verification
+    await this.authDBService.deleteOtpByUserId(userId);
+
+    // Generate access token
+    const parsedUser = this.authTransform.transformToUserResponse(
+      otpData.users,
+    );
+    const token = await this.jwtService.generateAuthToken(parsedUser);
+
+    return {
+      message: 'OTP verified successfully',
+      token,
+    };
+  }
+
+  async resetPassword(
+    userId: string,
+    input: ResetPasswordDto,
+  ): Promise<ResetPasswordResponseDto> {
+    // Hash the new password
+    const hashedPassword = await this.hashingService.hash(input.new_password);
+
+    // Update user password
+    await this.authDBService.updatePassword(userId, hashedPassword);
+
+    return {
+      message: 'Password reset successfully',
+    };
   }
 }

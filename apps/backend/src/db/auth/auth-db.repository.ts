@@ -204,6 +204,17 @@ export class AuthDBRepository {
     });
   }
 
+  async updateUserIsTemp(userId: string, isTemp: boolean) {
+    return await this.prisma.users.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        is_temp: isTemp,
+      },
+    });
+  }
+
   async upsertOAuthUser(userData: OAuthDto, provider: OAuthEnum) {
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.users.findUnique({
@@ -255,12 +266,12 @@ export class AuthDBRepository {
       await tx.user_social_accounts.upsert({
         where: {
           user_id_provider_name: {
-            user_id: user.id,
+            user_id: upsertedUser.id,
             provider_name: provider,
           },
         },
         create: {
-          user_id: user.id,
+          user_id: upsertedUser.id,
           provider_name: provider,
           provider_id: userData.provider_id,
         },
@@ -268,6 +279,65 @@ export class AuthDBRepository {
       });
 
       return upsertedUser;
+    });
+  }
+
+  async findUserByEmail(email: string) {
+    return this.prisma.users.findUnique({
+      where: { email },
+      include: {
+        user_roles: {
+          include: {
+            roles: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async updatePassword(userId: string, hashedPassword: string) {
+    return this.prisma.users.update({
+      where: { id: userId },
+      data: { password_hash: hashedPassword },
+      include: {
+        user_roles: {
+          include: {
+            roles: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async createForgotPasswordOtp(userId: string, otp: string) {
+    return this.prisma.user_otps.upsert({
+      where: { user_id: userId },
+      update: {
+        otp_value: otp,
+        expires_at: new Date(Date.now() + 15 * 60 * 1000),
+        attempts: 0,
+        resend_at: new Date(),
+        resend_attempts: 0,
+        locked_at: null,
+      },
+      create: {
+        user_id: userId,
+        otp_value: otp,
+        expires_at: new Date(Date.now() + 15 * 60 * 1000),
+        attempts: 0,
+        resend_at: new Date(),
+        resend_attempts: 0,
+      },
     });
   }
 }

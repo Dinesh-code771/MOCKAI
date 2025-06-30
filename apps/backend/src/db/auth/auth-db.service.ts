@@ -50,7 +50,23 @@ export class AuthDBService {
     return this.authReposioty.deleteOtpByUserId(userId);
   }
 
+  async updateUserIsTemp(userId: string, isTemp: boolean) {
+    return this.authReposioty.updateUserIsTemp(userId, isTemp);
+  }
+
   async upsertOAuthUser(userData: OAuthDto, provider: OAuthEnum) {
     return this.authReposioty.upsertOAuthUser(userData, provider);
+  }
+
+  async findUserByEmail(email: string) {
+    return this.authReposioty.findUserByEmail(email);
+  }
+
+  async updatePassword(userId: string, hashedPassword: string) {
+    return this.authReposioty.updatePassword(userId, hashedPassword);
+  }
+
+  async createForgotPasswordOtp(userId: string, otp: string) {
+    return this.authReposioty.createForgotPasswordOtp(userId, otp);
   }
 }
