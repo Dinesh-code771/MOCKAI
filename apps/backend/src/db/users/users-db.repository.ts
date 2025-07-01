@@ -71,6 +71,8 @@ export class UsersDBRepository {
       full_name?: string;
       gender?: Gender;
       date_of_birth?: string;
+      phone_number?: string;
+      country_code?: string;
     },
     courseIds?: string[],
   ) {

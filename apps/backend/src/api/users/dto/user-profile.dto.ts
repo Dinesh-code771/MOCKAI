@@ -37,7 +37,7 @@ export class UserProfileDto {
   avatar?: string;
 
   @ApiPropertyOptional({
-    example: '+919876543210',
+    example: '9876543210',
     description: 'User phone number',
   })
   phone_number?: string;
@@ -124,6 +124,22 @@ export class UpdateUserProfileDto {
   @IsOptional()
   @IsDateString()
   date_of_birth?: string;
+
+  @ApiPropertyOptional({
+    example: '+91',
+    description: 'Country code',
+  })
+  @IsOptional()
+  @IsString()
+  country_code?: string;
+
+  @ApiPropertyOptional({
+    example: '9876543210',
+    description: 'User phone number',
+  })
+  @IsOptional()
+  @IsString()
+  phone_number?: string;
 
   @ApiPropertyOptional({
     type: [String],

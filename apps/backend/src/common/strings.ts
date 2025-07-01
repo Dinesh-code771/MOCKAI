@@ -136,6 +136,10 @@ export const APP_STRINGS = {
         },
       },
     },
+    users: {
+      country_code_required: 'Country code is required when phone number is provided',
+      invalid_phone_number: (ids: string[]) => `Invalid course IDs: ${ids.join(', ')}`,
+    },
     metrics: {
       failed_to_retrieve_metrics: 'Failed to retrieve metrics',
     },

@@ -33,6 +33,13 @@ export class UsersService {
     userId: string,
     updateData: UpdateUserProfileDto,
   ): Promise<UserProfileResponseDto> {
+
+    if (updateData.phone_number && !updateData.country_code) {
+      throw new BadRequestException(
+        APP_STRINGS.api_errors.users.country_code_required,
+      );
+    }
+
     // Validate courses if provided
     if (updateData.enrolled_courses && updateData.enrolled_courses.length > 0) {
       const courseValidation = await this.usersDBService.validateCoursesExist(
@@ -41,7 +48,7 @@ export class UsersService {
 
       if (courseValidation.invalidCourseIds.length > 0) {
         throw new BadRequestException(
-          `Invalid course IDs: ${courseValidation.invalidCourseIds.join(', ')}`,
+          APP_STRINGS.api_errors.users.invalid_phone_number(courseValidation.invalidCourseIds),
         );
       }
     }
@@ -51,6 +58,8 @@ export class UsersService {
       full_name?: string;
       gender?: Gender;
       date_of_birth?: string;
+      phone_number?: string;
+      country_code?: string;
     } = {};
 
     if (updateData.full_name !== undefined) {
@@ -63,6 +72,11 @@ export class UsersService {
 
     if (updateData.date_of_birth !== undefined) {
       dbUpdateData.date_of_birth = updateData.date_of_birth;
+    }
+
+    if (updateData.phone_number !== undefined) {
+      dbUpdateData.phone_number = updateData.phone_number;
+      dbUpdateData.country_code = updateData.country_code;
     }
 
     // Update user profile
