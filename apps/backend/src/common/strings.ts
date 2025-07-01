@@ -1,27 +1,17 @@
 import { strategies } from "passport";
 
 export const APP_STRINGS = {
-  auth: {},
-
   redis: {
     health: {
       redis_check_failed: 'Redis check failed',
     },
   },
-
-  db: {
-    auth: {
-
-    }
-  },
-
   common: {
     pipes: {
       validation_failed: 'Validation failed (numeric string is expected)',
     },
     cannot_access_this_resource: 'Cannot access this resource',
   },
-
   background: {
     cron: {
       processor: {
@@ -32,7 +22,6 @@ export const APP_STRINGS = {
       unknown_job_name: (jobName) => `Unknown job name ${jobName}`,
     },
   },
-
   api_responses: {
     email: {
       providers: {

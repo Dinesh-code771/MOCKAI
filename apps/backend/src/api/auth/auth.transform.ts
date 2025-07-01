@@ -10,7 +10,7 @@ export class AuthTransform {
       roles: user.user_roles.map((userRole) => userRole.roles),
       full_name: user.full_name,
       phone_number: user.phone_number,
-      is_disabled: user.is_active,
+      is_disabled: !user.is_active,
     };
   }
 }

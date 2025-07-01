@@ -14,35 +14,13 @@ model courses {
   is_active    Boolean?       @default(true)
   created_at   DateTime?      @default(now()) @db.Timestamptz(6)
   updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
-  interviews   interviews[]
+  assessments  assessments[]
   user_courses user_courses[]
-}
-
-model interviews {
-  id               String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  course_id        String?             @db.Uuid
-  name             String              @db.VarChar(255)
-  type             interview_type_enum
-  difficulty       difficulty_enum
-  duration_minutes Int?                @default(60)
-  description      String?
-  max_score        Decimal?            @default(100) @db.Decimal(5, 2)
-  total_questions  Int?                @default(25)
-  is_active        Boolean?            @default(true)
-  created_at       DateTime?           @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?           @default(now()) @db.Timestamptz(6)
-  courses          courses?            @relation(fields: [course_id], references: [id], onUpdate: NoAction)
-  questions        questions[]
-  user_interviews  user_interviews[]
-
-  @@index([course_id], map: "idx_interviews_course")
-  @@index([difficulty], map: "idx_interviews_difficulty")
-  @@index([type], map: "idx_interviews_type")
 }
 
 model questions {
   id             String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  interview_id   String             @db.Uuid
+  assessment_id  String             @db.Uuid
   question_text  String
   question_type  question_type_enum
   options        Json?
@@ -52,12 +30,12 @@ model questions {
   is_active      Boolean?           @default(true)
   created_at     DateTime?          @default(now()) @db.Timestamptz(6)
   updated_at     DateTime?          @default(now()) @db.Timestamptz(6)
-  interviews     interviews         @relation(fields: [interview_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  assessments    assessments        @relation(fields: [assessment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   user_answers   user_answers[]
 
-  @@index([interview_id], map: "idx_questions_interview")
   @@index([order_sequence], map: "idx_questions_order")
   @@index([question_type], map: "idx_questions_type")
+  @@index([assessment_id], map: "idx_questions_assessment")
 }
 
 model roles {
@@ -74,8 +52,8 @@ model user_analytics {
   user_id                String    @unique @db.Uuid
   test_taken_at          DateTime? @default(now()) @db.Timestamptz(6)
   total_percentage_score Decimal?  @db.Decimal(5, 2)
-  given_interviews       Int?      @default(0)
-  upcoming_interviews    Int?      @default(0)
+  given_assessments      Int?      @default(0)
+  upcoming_assessments   Int?      @default(0)
   created_at             DateTime? @default(now()) @db.Timestamptz(6)
   updated_at             DateTime? @default(now()) @db.Timestamptz(6)
   users                  users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -84,18 +62,18 @@ model user_analytics {
 }
 
 model user_answers {
-  id                String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_interview_id String          @db.Uuid
-  question_id       String          @db.Uuid
-  answer            String?
-  is_correct        Boolean?
-  points_earned     Decimal?        @default(0.00) @db.Decimal(5, 2)
-  questions         questions       @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  user_interviews   user_interviews @relation(fields: [user_interview_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_assessment_id String           @db.Uuid
+  question_id        String           @db.Uuid
+  answer             String?
+  is_correct         Boolean?
+  points_earned      Decimal?         @default(0.00) @db.Decimal(5, 2)
+  questions          questions        @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user_assessments   user_assessments @relation(fields: [user_assessment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([user_interview_id, question_id])
+  @@unique([user_assessment_id, question_id])
   @@index([question_id], map: "idx_user_answers_question")
-  @@index([user_interview_id], map: "idx_user_answers_user_interview")
+  @@index([user_assessment_id], map: "idx_user_answers_user_assessment")
 }
 
 model user_courses {
@@ -110,31 +88,6 @@ model user_courses {
   @@index([is_active], map: "idx_user_courses_active")
   @@index([course_id], map: "idx_user_courses_course")
   @@index([user_id], map: "idx_user_courses_user")
-}
-
-model user_interviews {
-  id               String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id          String                 @db.Uuid
-  interview_id     String                 @db.Uuid
-  scheduled_at     DateTime               @db.Timestamptz(6)
-  started_at       DateTime?              @db.Timestamptz(6)
-  completed_at     DateTime?              @db.Timestamptz(6)
-  status           interview_status_enum? @default(scheduled)
-  total_score      Decimal?               @db.Decimal(5, 2)
-  percentage_score Decimal?               @db.Decimal(5, 2)
-  feedback         String?
-  strong_areas     String[]
-  weak_areas       String[]
-  created_at       DateTime?              @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?              @default(now()) @db.Timestamptz(6)
-  user_answers     user_answers[]
-  interviews       interviews             @relation(fields: [interview_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users            users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([interview_id], map: "idx_user_interviews_interview")
-  @@index([scheduled_at], map: "idx_user_interviews_scheduled")
-  @@index([status], map: "idx_user_interviews_status")
-  @@index([user_id], map: "idx_user_interviews_user")
 }
 
 model user_roles {
@@ -183,8 +136,8 @@ model users {
   created_at           DateTime?              @default(now()) @db.Timestamptz(6)
   updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
   user_analytics       user_analytics?
+  user_assessments     user_assessments[]
   user_courses         user_courses[]
-  user_interviews      user_interviews[]
   user_otps            user_otps?
   user_roles           user_roles[]
   user_social_accounts user_social_accounts[]
@@ -206,6 +159,53 @@ model user_otps {
   resend_at       DateTime? @db.Timestamptz(6)
   locked_at       DateTime? @db.Timestamptz(6)
   users           users?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model assessments {
+  id               String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  course_id        String?             @db.Uuid
+  name             String              @db.VarChar(255)
+  type             interview_type_enum
+  difficulty       difficulty_enum
+  duration_minutes Int?                @default(60)
+  description      String?
+  max_score        Decimal?            @default(100) @db.Decimal(5, 2)
+  total_questions  Int?                @default(25)
+  is_active        Boolean?            @default(true)
+  created_at       DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?           @default(now()) @db.Timestamptz(6)
+  courses          courses?            @relation(fields: [course_id], references: [id], onUpdate: NoAction)
+  questions        questions[]
+  user_assessments user_assessments[]
+
+  @@index([course_id], map: "idx_assessments_course")
+  @@index([difficulty], map: "idx_assessments_difficulty")
+  @@index([type], map: "idx_assessments_type")
+}
+
+model user_assessments {
+  id               String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id          String                 @db.Uuid
+  assessment_id    String                 @db.Uuid
+  scheduled_at     DateTime               @db.Timestamptz(6)
+  started_at       DateTime?              @db.Timestamptz(6)
+  completed_at     DateTime?              @db.Timestamptz(6)
+  status           interview_status_enum? @default(scheduled)
+  total_score      Decimal?               @db.Decimal(5, 2)
+  percentage_score Decimal?               @db.Decimal(5, 2)
+  feedback         String?
+  strong_areas     String[]
+  weak_areas       String[]
+  created_at       DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?              @default(now()) @db.Timestamptz(6)
+  user_answers     user_answers[]
+  assessments      assessments            @relation(fields: [assessment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([assessment_id], map: "idx_user_assessments_assessment")
+  @@index([scheduled_at], map: "idx_user_assessments_scheduled")
+  @@index([status], map: "idx_user_assessments_status")
+  @@index([user_id], map: "idx_user_assessments_user")
 }
 
 enum difficulty_enum {
