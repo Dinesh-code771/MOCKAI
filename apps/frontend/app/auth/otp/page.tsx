@@ -9,8 +9,6 @@ export default async function OtpPage() {
   if (isLoggedIn) {
     redirect('/dashboard/student');
   }
-  if (!isLoggedIn) {
-    redirect('/auth/login');
-  }
+
   return <OtpClient />;
 }

@@ -46,14 +46,15 @@ export default function LoginPage() {
       email: formData.email,
       password: formData.password,
     });
-
+    console.log(result, 'result');
     if (result.success) {
       console.log(result.data, 'result.data');
       if (result.data?.is_temp) {
-        router.push('/auth/otp');
+        return router.push('/auth/otp');
       }
+
       // Redirect to dashboard on successful login
-      // router.push('/dashboard/student');
+      router.push('/auth/gender-course');
     }
   };
 

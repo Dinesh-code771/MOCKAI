@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function OtpClient() {
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -78,8 +78,8 @@ export default function OtpClient() {
     e.preventDefault();
     const otpString = otp.join('');
 
-    if (otpString.length !== 4) {
-      setError('Please enter the complete 4-digit OTP');
+    if (otpString.length !== 6) {
+      setError('Please enter the complete 6-digit OTP');
       return;
     }
 
@@ -88,17 +88,11 @@ export default function OtpClient() {
 
     try {
       // Simulate API call
-      const result = await verifyOtp({ otp: parseInt(otpString) });
-      console.log(result, 'result');
-
-      // Mock OTP validation - in real app, validate against backend
-      if (otpString === '1234') {
-        setSuccess('OTP verified successfully!');
-        setTimeout(() => {
-          router.push('/dashboard/student');
-        }, 1000);
+      const result = await verifyOtp({ otp: otpString });
+      if (result.success) {
+        router.push('/auth/gender-course');
       } else {
-        setError('Invalid OTP. Please try again.');
+        setError(result.error);
       }
     } catch (err) {
       setError('Failed to verify OTP. Please try again.');
@@ -200,7 +194,7 @@ export default function OtpClient() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={isLoading || otp.join('').length !== 4}
+                disabled={isLoading || otp.join('').length !== 6}
                 className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 disabled:opacity-50"
               >
                 {isLoading ? 'Verifying...' : 'Verify OTP'}

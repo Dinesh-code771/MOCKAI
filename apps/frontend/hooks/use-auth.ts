@@ -62,16 +62,6 @@ export const useAuth = () => {
 
   const checkAuthStatus = async () => {
     try {
-      const token = getAuthToken();
-      if (!token) {
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          isAuthenticated: false,
-        }));
-        return;
-      }
-
       const authenticatedApi = getAuthenticatedAuthApi();
       const response = await authenticatedApi.authControllerGetLoggedInUser();
       if (response && response.data) {
@@ -97,7 +87,6 @@ export const useAuth = () => {
         isLoading: false,
         error: 'Authentication check failed',
       });
-      removeAuthToken();
     }
   };
 
@@ -121,9 +110,9 @@ export const useAuth = () => {
       });
 
       if (response && response.data?.token) {
+        // Store token in cookies using the new utility
         setAuthToken(response.data.token);
-        document.cookie = `token=${response.data.token} ; path=/ ; max-age=3600 ; secure`;
-        console.log(response.data.token, 'response.data.token');
+
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
@@ -147,15 +136,29 @@ export const useAuth = () => {
   };
 
   const verifyOtp = async (otpData: OtpDto) => {
+    const validatedData: any = otpSchema.safeParse(otpData);
+    if (!validatedData.success) {
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: JSON.parse(validatedData.error.message)[2]?.message,
+      }));
+      return { success: false, error: validatedData.error.message };
+    }
+
     setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const response = await authApi.authControllerVerifyOtp({
+      const authenticatedApi = getAuthenticatedAuthApi();
+      const response = await authenticatedApi.authControllerVerifyOtp({
         otpDto: otpData,
       });
 
       if (response && response.data?.token) {
+        // Store token in cookies using the new utility
+
         setAuthToken(response.data.token);
+
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
@@ -187,7 +190,7 @@ export const useAuth = () => {
     } catch (error) {
       console.error('Logout API call failed:', error);
     } finally {
-      removeAuthToken();
+      // Clear auth state
       setAuthState({
         user: null,
         isAuthenticated: false,
