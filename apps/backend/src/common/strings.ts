@@ -1,4 +1,5 @@
-import { strategies } from "passport";
+import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
+import { strategies } from 'passport';
 
 export const APP_STRINGS = {
   redis: {
@@ -89,7 +90,7 @@ export const APP_STRINGS = {
           roles: {
             roles_are_not_an_array: 'Roles are not an array',
           },
-        }
+        },
       },
       too_many_attempts: 'Too many attempts',
       too_many_attempts_after_1_minute: 'Too many attempts after 1 minute',
@@ -126,8 +127,35 @@ export const APP_STRINGS = {
       },
     },
     users: {
-      country_code_required: 'Country code is required when phone number is provided',
-      invalid_phone_number: (ids: string[]) => `Invalid course IDs: ${ids.join(', ')}`,
+      country_code_required:
+        'Country code is required when phone number is provided',
+      invalid_phone_number: (ids: string[]) =>
+        `Invalid course IDs: ${ids.join(', ')}`,
+    },
+    assessments: {
+      user_assessment_not_found: 'User assessment not found',
+      assessment_not_found: 'Assessment not found',
+      missing_required_parameter:
+        'Either userAssessmentId or assessmentId must be provided',
+      assessment_already_completed:
+        'Cannot start assessment. Assessment is already completed.',
+      assessment_cancelled: 'Cannot start assessment. Assessment is cancelled.',
+      assessment_time_expired:
+        'Cannot start assessment. Assessment time has expired.',
+      user_already_has_assessment:
+        'User already has an assessment for this test. Use userAssessmentId to continue.',
+      cannot_start_assessment: (status: AssessmentStatus) => {
+        switch (status) {
+          case AssessmentStatus.COMPLETED:
+            return 'Cannot start assessment. Assessment is already completed.';
+          case AssessmentStatus.CANCELLED:
+            return 'Cannot start assessment. Assessment is cancelled.';
+          default:
+            return `Cannot start assessment. Assessment is in ${status} state.`;
+        }
+      },
+      question_already_answered: 'Question already answered',
+      question_not_found: 'Question not found',
     },
     metrics: {
       failed_to_retrieve_metrics: 'Failed to retrieve metrics',

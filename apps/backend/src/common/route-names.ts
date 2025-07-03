@@ -9,6 +9,7 @@ export enum RouteNames {
   HEALTH_UI = 'health-ui',
   STATIC_DATA = 'static-data',
   USERS = 'users',
+  ASSESSMENTS = 'assessments',
 
   // Named routes
   // --- AUTH ROUTES ---
@@ -37,4 +38,12 @@ export enum RouteNames {
 
   // --- USERS ROUTES ---
   USERS_PROFILE = 'profile',
+
+  // --- ASSESSMENTS ROUTES ---
+  ASSESSMENTS_LIST = 'list',
+  ASSESSMENTS_START = 'start',
+  ASSESSMENTS_STORE_USER_ANSWERS = 'user-assessment/:userAssessmentId/question/:questionId',
+  ASSESSMENTS_COMPLETE = 'user-assessment/:userAssessmentId/complete',
+  ASSESSMENTS_GET_COMPLETE_DATA = 'user-assessment/:userAssessmentId/complete-data',
+  ASSESSMENTS_USER_LIST = 'user-assessments',
 }

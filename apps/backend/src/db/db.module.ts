@@ -7,6 +7,8 @@ import { StaticDataDBService } from '@db/static-data/static-data-db.service';
 import { StaticDataDBRepository } from '@db/static-data/static-data-db.repository';
 import { UsersDBService } from '@db/users/users-db.service';
 import { UsersDBRepository } from '@db/users/users-db.repository';
+import { AssessmentsDBService } from '@db/assessments/assessments-db.service';
+import { AssessmentsDBRepository } from '@db/assessments/assessments-db.repository';
 
 @Global()
 @Module({
@@ -19,12 +21,15 @@ import { UsersDBRepository } from '@db/users/users-db.repository';
     StaticDataDBRepository,
     UsersDBService,
     UsersDBRepository,
+    AssessmentsDBService,
+    AssessmentsDBRepository,
   ],
   exports: [
     DBService,
     AuthDBService,
     StaticDataDBService,
     UsersDBService,
+    AssessmentsDBService,
   ],
 })
 export class DBModule {}

@@ -26,6 +26,7 @@ import { MediaUploadModule } from '@media-upload/media-upload.module';
 import { AuthModule } from '@auth/auth.module';
 import { StaticDataModule } from '@static-data/static-data.module';
 import { UsersModule } from '@users/users.module';
+import { AssessmentsModule } from '@assessments/assessments.module';
 import { CustomJwtService } from '@common/services/jwt.service';
 
 const configService = new ConfigService<EnvConfig>();
@@ -105,6 +106,7 @@ const cacheModule = CacheModule.registerAsync({
     AuthModule,
     StaticDataModule,
     UsersModule,
+    AssessmentsModule,
   ],
   providers: [
     CustomJwtService,

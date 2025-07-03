@@ -1,5 +1,11 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from './AssessmentDetailsDto';
+export * from './AssessmentListApiResponse';
+export * from './AssessmentListResponseDto';
+export * from './AssessmentResponseDto';
+export * from './CompleteAssessmentApiResponse';
+export * from './CompleteAssessmentResponseDto';
 export * from './CourseDto';
 export * from './CoursesApiResponse';
 export * from './CoursesResponseDto';
@@ -17,11 +23,22 @@ export * from './LoginDto';
 export * from './LoginResponseDto';
 export * from './ModelApiResponse';
 export * from './OtpDto';
+export * from './PaginationDetailsDto';
+export * from './QuestionDto';
+export * from './QuestionWithAnswersDto';
 export * from './ResetPasswordApiResponse';
 export * from './ResetPasswordDto';
 export * from './ResetPasswordResponseDto';
 export * from './RoleDto';
+export * from './StartAssessmentApiResponse';
+export * from './StartAssessmentBodyDto';
+export * from './StoreAnswerDto';
 export * from './UpdateUserProfileDto';
+export * from './UserAnswerDto';
+export * from './UserAssessmentItemDto';
+export * from './UserAssessmentListApiResponse';
+export * from './UserAssessmentListResponseDto';
+export * from './UserAssessmentResponseDto';
 export * from './UserProfileApiResponse';
 export * from './UserProfileDto';
 export * from './UserProfileResponseDto';

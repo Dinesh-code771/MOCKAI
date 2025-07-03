@@ -38,6 +38,18 @@ export interface UpdateUserProfileDto {
      */
     date_of_birth?: string;
     /**
+     * Country code
+     * @type {string}
+     * @memberof UpdateUserProfileDto
+     */
+    country_code?: string;
+    /**
+     * User phone number
+     * @type {string}
+     * @memberof UpdateUserProfileDto
+     */
+    phone_number?: string;
+    /**
      * Array of course IDs to enroll in
      * @type {Array<string>}
      * @memberof UpdateUserProfileDto
@@ -78,6 +90,8 @@ export function UpdateUserProfileDtoFromJSONTyped(json: any, ignoreDiscriminator
         'full_name': json['full_name'] == null ? undefined : json['full_name'],
         'gender': json['gender'] == null ? undefined : json['gender'],
         'date_of_birth': json['date_of_birth'] == null ? undefined : json['date_of_birth'],
+        'country_code': json['country_code'] == null ? undefined : json['country_code'],
+        'phone_number': json['phone_number'] == null ? undefined : json['phone_number'],
         'enrolled_courses': json['enrolled_courses'] == null ? undefined : json['enrolled_courses'],
     };
 }
@@ -91,6 +105,8 @@ export function UpdateUserProfileDtoToJSON(value?: UpdateUserProfileDto | null):
         'full_name': value['full_name'],
         'gender': value['gender'],
         'date_of_birth': value['date_of_birth'],
+        'country_code': value['country_code'],
+        'phone_number': value['phone_number'],
         'enrolled_courses': value['enrolled_courses'],
     };
 }

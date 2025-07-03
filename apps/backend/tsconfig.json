@@ -36,7 +36,8 @@
       "@dead-letter-queue/*": ["background/queue/dead-letter/*"],
       "@auth/*": ["api/auth/*"],
       "@static-data/*": ["api/static-data/*"],
-      "@users/*": ["api/users/*"]
+      "@users/*": ["api/users/*"],
+      "@assessments/*": ["api/assessments/*"]
     }
   }
 }
