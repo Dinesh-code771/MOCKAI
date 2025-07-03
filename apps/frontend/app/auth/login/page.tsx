@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 export default async function LoginPage() {
   const { isLoggedIn } = await verifySession();
-
+  console.log(isLoggedIn, 'isLoggedIn');
   if (isLoggedIn) {
     redirect('/dashboard/student');
   }

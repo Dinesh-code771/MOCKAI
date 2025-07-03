@@ -82,8 +82,17 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
   const router = useRouter();
   const items = sidebarItems[role];
 
-  const handleLogout = () => {
-    logoutAction();
+  const handleLogout = async () => {
+    try {
+      const result = await logoutAction();
+      if (result.success) {
+        router.push('/auth/login');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback redirect
+      router.push('/auth/login');
+    }
   };
 
   return (

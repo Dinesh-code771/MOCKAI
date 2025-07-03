@@ -3,8 +3,9 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { removeAuthToken, staticDataApi, usersApi } from '@/lib/api-client';
 
-const cokkieStore = cookies();
+const cookieStore = cookies();
 // Validation schemas
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -32,102 +33,151 @@ export type GoogleLoginFormState = {
   message?: string;
 };
 
-// Login action
 export async function loginAction(
   prevState: LoginFormState,
   formData: FormData,
 ): Promise<LoginFormState> {
-  try {
-    // Validate form data
-    const validatedFields = loginSchema.safeParse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    });
+  const validatedFields = loginSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
+  });
 
-    if (!validatedFields.success) {
-      return {
-        errors: validatedFields.error.flatten().fieldErrors,
-        message: 'Invalid form data',
-      };
-    }
-
-    const { email, password } = validatedFields.data;
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Mock authentication logic
-    // In a real app, you would validate against your backend
-    if (email === 'student@example.com' && password === 'password123') {
-      // Success - redirect to OTP page
-      redirect('/auth/otp');
-    } else {
-      return {
-        errors: {
-          _form: ['Invalid email or password'],
-        },
-        message: 'Authentication failed',
-      };
-    }
-  } catch (error) {
-    console.error('Login error:', error);
+  if (!validatedFields.success) {
     return {
-      errors: {
-        _form: ['An unexpected error occurred. Please try again.'],
-      },
-      message: 'Login failed',
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Login.',
+    };
+  }
+
+  const { email, password } = validatedFields.data;
+
+  try {
+    // This would typically call your API
+    // For now, we'll just redirect
+    redirect('/auth/otp');
+  } catch (error) {
+    return {
+      message: 'Database Error: Failed to Login.',
     };
   }
 }
 
-// Google login action
 export async function googleLoginAction(
   prevState: GoogleLoginFormState,
   formData: FormData,
 ): Promise<GoogleLoginFormState> {
-  try {
-    // Validate form data
-    const validatedFields = googleLoginSchema.safeParse({
-      provider: formData.get('provider'),
-    });
+  const validatedFields = googleLoginSchema.safeParse({
+    provider: formData.get('provider'),
+  });
 
-    if (!validatedFields.success) {
-      return {
-        errors: {
-          _form: ['Invalid form data'],
-        },
-        message: 'Invalid form data',
-      };
-    }
-
-    // Simulate Google OAuth flow
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Mock successful Google login
-    // In a real app, you would handle OAuth flow
-    redirect('/auth/otp');
-  } catch (error) {
-    console.error('Google login error:', error);
+  if (!validatedFields.success) {
     return {
       errors: {
-        _form: ['Google login failed. Please try again.'],
+        _form: ['Invalid provider'],
       },
-      message: 'Google login failed',
+      message: 'Invalid provider.',
+    };
+  }
+
+  try {
+    // Redirect to Google OAuth
+    redirect('/api/auth/google');
+  } catch (error) {
+    return {
+      message: 'Failed to initiate Google login.',
     };
   }
 }
 
 export async function verifySession() {
-  const session = cokkieStore.get('token');
-  console.log(session, 'session');
+  const session = cookieStore.get('token');
   const isLoggedIn = session?.value ? true : false;
   return { session, isLoggedIn };
 }
 
-export async function logoutAction() {
-  const cookieStore = await cookies();
+export async function getToken() {
+  const token = cookieStore.get('token')?.value;
+  return token;
+}
 
+export async function getUserProfile() {
+  try {
+    const response = await usersApi.usersControllerGetUserProfile();
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function logoutAction() {
+  console.log('logoutAction');
+  // Delete cookies first
+  cookieStore.delete('auth_token');
   cookieStore.delete('token');
   cookieStore.delete('user');
-  redirect('/auth/login');
+  // Return success response instead of redirecting
+  return { success: true, message: 'Logged out successfully' };
+}
+
+// Update user profile action
+export async function updateUserProfileAction(formData: FormData) {
+  try {
+    const name = formData.get('full_name') as string;
+    const email = formData.get('email') as string;
+    const phone = formData.get('phone') as string;
+    const course = formData.get('course') as string;
+    const gender = formData.get('gender') as string;
+
+    // Validate required fields
+    if (!name || !email) {
+      return {
+        success: false,
+        message: 'Name and email are required',
+      };
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return {
+        success: false,
+        message: 'Please enter a valid email address',
+      };
+    }
+
+    // Simulate API call to update profile
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // In a real app, you would call the API here
+    // const result = await usersApi.usersControllerUpdateProfile({
+    //   name,
+    //   email,
+    //   phone,
+    //   course,
+    //   gender,
+    // });
+
+    return {
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        name,
+        email,
+        phone,
+        course,
+        gender,
+      },
+    };
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    return {
+      success: false,
+      message: 'Failed to update profile. Please try again.',
+    };
+  }
+}
+
+export async function getCourses() {
+  const response = await staticDataApi.staticDataControllerGetActiveCourses();
+  return response.data;
 }
