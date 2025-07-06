@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import {
   Card,
@@ -11,315 +11,386 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import {
-  Trophy,
-  TrendingUp,
+  CheckCircle,
+  XCircle,
   Clock,
+  BookOpen,
+  Users,
+  ArrowLeft,
+  Trophy,
   Target,
-  Star,
-  Calendar,
-  Download,
-  Share2,
+  AlertCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { assessmentApi } from '@/lib/api-client';
+import { toast } from 'sonner';
 
-interface InterviewResult {
+interface QuestionWithAnswers {
   id: string;
-  questions: Array<{
-    id: number;
-    text: string;
-    category: string;
+  question_text: string;
+  question_type: 'mcq' | 'subjective';
+  options: string[] | null;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  order_sequence: number;
+  user_answers?: {
+    id: string;
     answer: string;
-    isAnswered: boolean;
-  }>;
-  completedAt: string;
-  totalQuestions: number;
-  answeredQuestions: number;
-  createdAt: string;
+    is_correct: boolean;
+    points_earned: number;
+  };
+  correct_answer?: string;
+}
+
+interface CompleteAssessmentData {
+  id: string;
+  user_id: string;
+  assessment_id: string;
+  scheduled_at: string;
+  started_at?: string;
+  status: string;
+  total_score: number;
+  percentage_score: number;
+  assessment: {
+    id: string;
+    name: string;
+    description: string;
+    duration_minutes: number;
+    total_questions: number;
+    difficulty: string;
+  };
+  questions: QuestionWithAnswers[];
 }
 
 export default function ResultsPage() {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const [results, setResults] = useState<InterviewResult[]>([]);
+  const testId = searchParams.get('testId');
+  const score = searchParams.get('score');
+
+  const [assessmentData, setAssessmentData] =
+    useState<CompleteAssessmentData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data - replace with actual API call
-    const mockResults: InterviewResult[] = [
-      {
-        id: '1',
-        questions: [
-          {
-            id: 1,
-            text: 'Tell me about yourself and your background.',
-            category: 'Introduction',
-            answer:
-              'I am a passionate software developer with 3 years of experience in web development.',
-            isAnswered: true,
-          },
-          {
-            id: 2,
-            text: 'What are your greatest strengths?',
-            category: 'Self-Assessment',
-            answer:
-              'My greatest strengths include problem-solving, attention to detail, and strong communication skills.',
-            isAnswered: true,
-          },
-        ],
-        completedAt: '2024-01-15T10:30:00Z',
-        totalQuestions: 25,
-        answeredQuestions: 20,
-        createdAt: '2024-01-15T10:00:00Z',
-      },
-    ];
+    const fetchCompleteAssessmentData = async () => {
+      if (!testId) {
+        toast.error('Test ID not found');
+        router.push('/dashboard/student/test');
+        return;
+      }
 
-    setTimeout(() => {
-      setResults(mockResults);
-      setLoading(false);
-    }, 1000);
-  }, []);
+      try {
+        setLoading(true);
+        const response =
+          await assessmentApi.assessmentsControllerGetUserAssessmentCompleteData(
+            {
+              userAssessmentId: testId,
+            },
+          );
 
-  const calculateScore = (result: InterviewResult) => {
-    return Math.round((result.answeredQuestions / result.totalQuestions) * 100);
+        if (response?.data) {
+          setAssessmentData(response.data);
+        } else {
+          toast.error('No assessment data found');
+          router.push('/dashboard/student/test');
+        }
+      } catch (error) {
+        console.error('Error fetching assessment data:', error);
+        toast.error('Failed to load assessment results');
+        router.push('/dashboard/student/test');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompleteAssessmentData();
+  }, [testId, router]);
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'beginner':
+        return 'bg-green-100 text-green-800';
+      case 'intermediate':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'advanced':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const getCategoryStats = (result: InterviewResult) => {
-    const categories = result.questions.reduce((acc, q) => {
-      if (!acc[q.category]) {
-        acc[q.category] = 0;
-      }
-      acc[q.category]++;
-      return acc;
-    }, {} as Record<string, number>);
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
-    return Object.entries(categories).map(([category, count]) => ({
-      category,
-      count,
-      percentage: Math.round((count / result.answeredQuestions) * 100),
-    }));
+  const getScoreBadgeColor = (score: number) => {
+    if (score >= 80) return 'bg-green-100 text-green-800';
+    if (score >= 60) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
   };
 
   if (loading) {
     return (
       <DashboardLayout role="student" currentPath="/dashboard/student/results">
-        <div className="flex items-center justify-center h-64">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading results...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading results...</p>
           </div>
         </div>
       </DashboardLayout>
     );
   }
 
+  if (!assessmentData) {
+    return (
+      <DashboardLayout role="student" currentPath="/dashboard/student/results">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              No Results Found
+            </h2>
+            <p className="text-gray-600 mb-4">
+              The assessment results could not be loaded.
+            </p>
+            <Button onClick={() => router.push('/dashboard/student/test')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Tests
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const correctAnswers = assessmentData.questions.filter(
+    (q) => q.user_answers?.is_correct,
+  ).length;
+  const totalQuestions = assessmentData.questions.length;
+
   return (
     <DashboardLayout role="student" currentPath="/dashboard/student/results">
       <div className="space-y-6">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between"
-        >
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">
-              Interview Results
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Review your performance and track your progress
-            </p>
-          </div>
-          <Button onClick={() => router.push('/dashboard/student/interview')}>
-            <Calendar className="h-4 w-4 mr-2" />
-            Start New Interview
-          </Button>
-        </motion.div>
-
-        {results.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12"
-          >
-            <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-600 mb-2">
-              No Results Yet
-            </h2>
-            <p className="text-gray-500 mb-6">
-              Complete your first interview to see your results here.
-            </p>
-            <Button onClick={() => router.push('/dashboard/student/interview')}>
-              Start Your First Interview
+            <Button
+              variant="outline"
+              onClick={() => router.push('/dashboard/student/test')}
+              className="mb-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Tests
             </Button>
-          </motion.div>
-        ) : (
-          <div className="space-y-6">
-            {results.map((result, index) => (
-              <motion.div
-                key={result.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center">
-                          <Trophy className="h-5 w-5 mr-2 text-yellow-500" />
-                          Interview #{result.id}
-                        </CardTitle>
-                        <CardDescription>
-                          Completed on{' '}
-                          {new Date(result.completedAt).toLocaleDateString()}
-                        </CardDescription>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {calculateScore(result)}%
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {result.answeredQuestions}/{result.totalQuestions}{' '}
-                          questions
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-6">
-                    {/* Overall Progress */}
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-gray-800">
-                        Overall Performance
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <div className="flex items-center">
-                            <Target className="h-5 w-5 text-blue-600 mr-2" />
-                            <span className="font-medium text-blue-800">
-                              Completion Rate
-                            </span>
-                          </div>
-                          <div className="text-2xl font-bold text-blue-600 mt-2">
-                            {Math.round(
-                              (result.answeredQuestions /
-                                result.totalQuestions) *
-                                100,
-                            )}
-                            %
-                          </div>
-                        </div>
-
-                        <div className="bg-green-50 p-4 rounded-lg">
-                          <div className="flex items-center">
-                            <Clock className="h-5 w-5 text-green-600 mr-2" />
-                            <span className="font-medium text-green-800">
-                              Duration
-                            </span>
-                          </div>
-                          <div className="text-2xl font-bold text-green-600 mt-2">
-                            ~45 min
-                          </div>
-                        </div>
-
-                        <div className="bg-purple-50 p-4 rounded-lg">
-                          <div className="flex items-center">
-                            <Star className="h-5 w-5 text-purple-600 mr-2" />
-                            <span className="font-medium text-purple-800">
-                              Score
-                            </span>
-                          </div>
-                          <div className="text-2xl font-bold text-purple-600 mt-2">
-                            {calculateScore(result)}%
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Category Breakdown */}
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-gray-800">
-                        Category Breakdown
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {getCategoryStats(result).map((stat) => (
-                          <div
-                            key={stat.category}
-                            className="bg-gray-50 p-4 rounded-lg"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-gray-800">
-                                {stat.category}
-                              </span>
-                              <Badge variant="secondary">
-                                {stat.count} questions
-                              </Badge>
-                            </div>
-                            <Progress value={stat.percentage} className="h-2" />
-                            <div className="text-sm text-gray-500 mt-1">
-                              {stat.percentage}% of your answers
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Sample Questions */}
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-gray-800">
-                        Sample Questions & Answers
-                      </h3>
-                      <div className="space-y-4">
-                        {result.questions.slice(0, 3).map((question) => (
-                          <div
-                            key={question.id}
-                            className="bg-gray-50 p-4 rounded-lg"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-medium text-gray-800">
-                                {question.text}
-                              </h4>
-                              <Badge variant="outline" className="text-xs">
-                                {question.category}
-                              </Badge>
-                            </div>
-                            <p className="text-gray-600 text-sm">
-                              {question.answer}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          Download Report
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Share Results
-                        </Button>
-                      </div>
-                      <Button
-                        onClick={() =>
-                          router.push('/dashboard/student/interview')
-                        }
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        Practice Again
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+            <h1 className="text-2xl font-bold text-gray-800">Test Results</h1>
+            <p className="text-gray-600">{assessmentData.assessment.name}</p>
           </div>
-        )}
+        </div>
+
+        {/* Score Summary */}
+        <Card className="bg-white/80 backdrop-blur-lg border-white/20">
+          <CardHeader className="text-center">
+            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trophy className="w-10 h-10 text-white" />
+            </div>
+            <CardTitle className="text-3xl font-bold">
+              <span className={getScoreColor(assessmentData.percentage_score)}>
+                {assessmentData.percentage_score}%
+              </span>
+            </CardTitle>
+            <CardDescription className="text-lg">
+              {assessmentData.total_score} out of {totalQuestions * 4} points
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {correctAnswers}
+                </div>
+                <div className="text-sm text-gray-600">Correct Answers</div>
+              </div>
+              <div className="p-4 bg-red-50 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">
+                  {totalQuestions - correctAnswers}
+                </div>
+                <div className="text-sm text-gray-600">Incorrect Answers</div>
+              </div>
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {totalQuestions}
+                </div>
+                <div className="text-sm text-gray-600">Total Questions</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Assessment Details */}
+        <Card className="bg-white/80 backdrop-blur-lg border-white/20">
+          <CardHeader>
+            <CardTitle>Assessment Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-3">
+                <BookOpen className="h-5 w-5 text-gray-500" />
+                <span className="text-gray-700">
+                  {assessmentData.assessment.total_questions} Questions
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Clock className="h-5 w-5 text-gray-500" />
+                <span className="text-gray-700">
+                  {assessmentData.assessment.duration_minutes} Minutes
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Target className="h-5 w-5 text-gray-500" />
+                <span className="text-gray-700">
+                  <Badge
+                    className={getDifficultyColor(
+                      assessmentData.assessment.difficulty,
+                    )}
+                  >
+                    {assessmentData.assessment.difficulty}
+                  </Badge>
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Trophy className="h-5 w-5 text-gray-500" />
+                <span className="text-gray-700">
+                  <Badge
+                    className={getScoreBadgeColor(
+                      assessmentData.percentage_score,
+                    )}
+                  >
+                    {assessmentData.percentage_score}% Score
+                  </Badge>
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Question Review */}
+        <Card className="bg-white/80 backdrop-blur-lg border-white/20">
+          <CardHeader>
+            <CardTitle>Question Review</CardTitle>
+            <CardDescription>
+              Review your answers and see the correct solutions
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {assessmentData.questions.map((question, index) => (
+              <div
+                key={question.id}
+                className="border border-gray-200 rounded-lg p-4"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-sm font-medium text-gray-500">
+                      Question {index + 1}
+                    </span>
+                    <Badge className={getDifficultyColor(question.difficulty)}>
+                      {question.difficulty}
+                    </Badge>
+                    {question.user_answers?.is_correct ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {question.user_answers?.points_earned || 0} points
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-medium text-gray-800 mb-4">
+                  {question.question_text}
+                </h3>
+
+                {question.options && (
+                  <div className="space-y-2 mb-4">
+                    {question.options.map((option, optionIndex) => (
+                      <div
+                        key={optionIndex}
+                        className={`p-3 border-2 rounded-lg ${
+                          question.user_answers?.answer === option
+                            ? question.user_answers.is_correct
+                              ? 'border-green-500 bg-green-50'
+                              : 'border-red-500 bg-red-50'
+                            : question.correct_answer === option
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                              question.user_answers?.answer === option
+                                ? question.user_answers.is_correct
+                                  ? 'border-green-500 bg-green-500'
+                                  : 'border-red-500 bg-red-500'
+                                : question.correct_answer === option
+                                ? 'border-green-500 bg-green-500'
+                                : 'border-gray-300'
+                            }`}
+                          >
+                            {(question.user_answers?.answer === option ||
+                              question.correct_answer === option) && (
+                              <div className="w-3 h-3 bg-white rounded-full" />
+                            )}
+                          </div>
+                          <span className="text-gray-700">{option}</span>
+                          {question.user_answers?.answer === option &&
+                            !question.user_answers.is_correct && (
+                              <span className="text-red-600 text-sm font-medium">
+                                Your Answer
+                              </span>
+                            )}
+                          {question.correct_answer === option && (
+                            <span className="text-green-600 text-sm font-medium">
+                              Correct Answer
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-gray-600">
+                      Your Answer:{' '}
+                      <span className="font-medium">
+                        {question.user_answers?.answer || 'No answer'}
+                      </span>
+                    </span>
+                    {question.correct_answer && (
+                      <span className="text-gray-600">
+                        Correct:{' '}
+                        <span className="font-medium text-green-600">
+                          {question.correct_answer}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-gray-500">
+                    Points: {question.user_answers?.points_earned || 0}/4
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
