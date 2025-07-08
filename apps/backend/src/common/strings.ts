@@ -83,6 +83,9 @@ export const APP_STRINGS = {
     },
     auth: {
       verification_code_expired: 'Verification code expired',
+      you_are_not_authorized_to_access_this_app:
+        'You are not authorized to access this app',
+      your_account_is_disabled: 'Your account is disabled, contact admin.',
       user_not_found: 'User not found',
       invalid_code: 'Invalid code',
       strategies: {

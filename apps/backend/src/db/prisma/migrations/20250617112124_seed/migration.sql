@@ -1,9 +1,21 @@
+INSERT INTO users (id, email, password_hash, is_temp, full_name) VALUES
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae1', 'admin@gmail.com', '$2a$10$jJEZ6VrojnQ.AqItAa5qbuHviz8lP5XyJea6vaheXSWOb1Lr1Ahda', false, 'Admin'),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae2', 'instructor@gmail.com', '$2a$10$jJEZ6VrojnQ.AqItAa5qbuHviz8lP5XyJea6vaheXSWOb1Lr1Ahda', false, 'Instructor'),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae3', 'student@gmail.com', '$2a$10$jJEZ6VrojnQ.AqItAa5qbuHviz8lP5XyJea6vaheXSWOb1Lr1Ahda', false, 'Student')
+ON CONFLICT(id) DO NOTHING;
+
 -- seed roles
 INSERT INTO roles (name, description) VALUES 
 ('admin', 'System administrator with full access'),
 ('instructor', 'Course instructor and interview creator'),
 ('student', 'Regular student user')
 ON CONFLICT(name) DO NOTHING;
+
+INSERT INTO user_roles (id, user_id, role_id) VALUES
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae4', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae1', (SELECT id FROM roles WHERE name = 'admin')),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae5', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae2', (SELECT id FROM roles WHERE name = 'instructor')),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae6', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM roles WHERE name = 'student'))
+ON CONFLICT(id) DO NOTHING;
 
 -- seed courses
 INSERT INTO courses (name, description) VALUES
@@ -12,6 +24,13 @@ INSERT INTO courses (name, description) VALUES
 ('Frontend Development', 'Frontend development course'),
 ('Database Management', 'Database management course')
 ON CONFLICT(name) DO NOTHING;
+
+INSERT INTO user_courses (id, user_id, course_id) VALUES
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae7', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM courses WHERE name = 'Java Full Stack')),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae8', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM courses WHERE name = 'Python Full Stack')),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae9', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM courses WHERE name = 'Database Management')),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aaea', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM courses WHERE name = 'Frontend Development'))
+ON CONFLICT(id) DO NOTHING;
 
 
 -- seed assessments

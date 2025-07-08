@@ -9,8 +9,18 @@ import {
   UserProfileResponseDto,
   UpdateUserProfileDto,
 } from '@users/dto/user-profile.dto';
+import {
+  AddUsersDto,
+  UserListQueryDto,
+  UserListResponseDto,
+  UserStatus,
+} from '@users/dto/user-management.dto';
 import { APP_STRINGS } from '@common/strings';
 import { Gender } from '@users/enum/gender.enum';
+import {
+  calculateSkipAndTake,
+  getPaginatedData,
+} from '@common/helpers/pagination.utils';
 
 @Injectable()
 export class UsersService {
@@ -33,7 +43,6 @@ export class UsersService {
     userId: string,
     updateData: UpdateUserProfileDto,
   ): Promise<UserProfileResponseDto> {
-
     if (updateData.phone_number && !updateData.country_code) {
       throw new BadRequestException(
         APP_STRINGS.api_errors.users.country_code_required,
@@ -48,7 +57,9 @@ export class UsersService {
 
       if (courseValidation.invalidCourseIds.length > 0) {
         throw new BadRequestException(
-          APP_STRINGS.api_errors.users.invalid_phone_number(courseValidation.invalidCourseIds),
+          APP_STRINGS.api_errors.users.invalid_phone_number(
+            courseValidation.invalidCourseIds,
+          ),
         );
       }
     }
@@ -91,5 +102,55 @@ export class UsersService {
     }
 
     return this.usersTransform.transformToUserProfileResponse(updatedUser);
+  }
+
+  async addUsers(addUsersDto: AddUsersDto) {
+    const { emails } = addUsersDto;
+
+    if (!emails || emails.length === 0) {
+      throw new BadRequestException('At least one email is required');
+    }
+
+    // Check for existing users
+    const existingUsers = await this.usersDBService.getUsersByEmail(emails);
+    const existingEmails = existingUsers.map((user) => user.email);
+    const newEmails = emails.filter((email) => !existingEmails.includes(email));
+
+    let usersAdded = 0;
+
+    // Add new users if any
+    if (newEmails.length > 0) {
+      await this.usersDBService.addUsers(newEmails);
+    }
+
+    return;
+  }
+
+  async getUsersList(query: UserListQueryDto): Promise<UserListResponseDto> {
+    const { skip, take } = calculateSkipAndTake(query.page, query.limit);
+
+    const { users, totalCount } = await this.usersDBService.getUsersList(
+      query.search || '',
+      skip,
+      take,
+      query?.status ? query.status === UserStatus.ENABLED : undefined,
+    );
+
+    const pagination = {
+      pageNo: query.page || 1,
+      pageSize: take,
+      totalCount,
+      ...getPaginatedData(totalCount, query.page, query.limit),
+    };
+
+    return this.usersTransform.transformToUserListResponse(users, pagination);
+  }
+
+  async disableUser(userId: string, isActive: boolean) {
+    return await this.usersDBService.disableUser(userId, isActive);
+  }
+
+  async deleteUser(userId: string) {
+    return await this.usersDBService.deleteUser(userId);
   }
 }

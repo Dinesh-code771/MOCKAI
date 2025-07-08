@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from './AddUsersDto';
 export * from './AssessmentDetailsDto';
 export * from './AssessmentListApiResponse';
 export * from './AssessmentListResponseDto';
@@ -11,6 +12,7 @@ export * from './CoursesApiResponse';
 export * from './CoursesResponseDto';
 export * from './DataDto';
 export * from './DeleteMediaApiResponseDto';
+export * from './DisableUserDto';
 export * from './ForgotPasswordApiResponse';
 export * from './ForgotPasswordDto';
 export * from './ForgotPasswordResponseDto';
@@ -39,6 +41,10 @@ export * from './UserAssessmentItemDto';
 export * from './UserAssessmentListApiResponse';
 export * from './UserAssessmentListResponseDto';
 export * from './UserAssessmentResponseDto';
+export * from './UserIdDto';
+export * from './UserListApiResponse';
+export * from './UserListItemDto';
+export * from './UserListResponseDto';
 export * from './UserProfileApiResponse';
 export * from './UserProfileDto';
 export * from './UserProfileResponseDto';

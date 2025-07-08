@@ -31,4 +31,29 @@ export class UsersDBService {
       courseIds,
     );
   }
+
+  async getUsersByEmail(emails: string[]) {
+    return this.usersRepository.getUsersByEmail(emails);
+  }
+
+  async addUsers(emails: string[]) {
+    return this.usersRepository.addUsers(emails);
+  }
+
+  async getUsersList(
+    search: string,
+    skip: number,
+    take: number,
+    isActive?: boolean,
+  ) {
+    return this.usersRepository.getUsersList(search, skip, take, isActive);
+  }
+
+  async disableUser(userId: string, isActive: boolean) {
+    return this.usersRepository.disableUser(userId, isActive);
+  }
+
+  async deleteUser(userId: string) {
+    return this.usersRepository.deleteUser(userId);
+  }
 }

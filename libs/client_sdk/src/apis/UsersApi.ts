@@ -15,15 +15,49 @@
 
 import * as runtime from '../runtime';
 import type {
+  AddUsersDto,
+  DisableUserDto,
+  ModelApiResponse,
   UpdateUserProfileDto,
+  UserIdDto,
+  UserListApiResponse,
   UserProfileApiResponse,
 } from '../models/index';
 import {
+    AddUsersDtoFromJSON,
+    AddUsersDtoToJSON,
+    DisableUserDtoFromJSON,
+    DisableUserDtoToJSON,
+    ModelApiResponseFromJSON,
+    ModelApiResponseToJSON,
     UpdateUserProfileDtoFromJSON,
     UpdateUserProfileDtoToJSON,
+    UserIdDtoFromJSON,
+    UserIdDtoToJSON,
+    UserListApiResponseFromJSON,
+    UserListApiResponseToJSON,
     UserProfileApiResponseFromJSON,
     UserProfileApiResponseToJSON,
 } from '../models/index';
+
+export interface UsersControllerAddUsersRequest {
+    addUsersDto: AddUsersDto;
+}
+
+export interface UsersControllerDeleteUserRequest {
+    userIdDto: UserIdDto;
+}
+
+export interface UsersControllerDisableUserRequest {
+    disableUserDto: DisableUserDto;
+}
+
+export interface UsersControllerGetUsersListRequest {
+    search?: string;
+    status?: UsersControllerGetUsersListStatusEnum;
+    page?: number;
+    limit?: number;
+}
 
 export interface UsersControllerUpdateUserProfileRequest {
     updateUserProfileDto: UpdateUserProfileDto;
@@ -33,6 +67,140 @@ export interface UsersControllerUpdateUserProfileRequest {
  * 
  */
 export class UsersApi extends runtime.BaseAPI {
+
+    /**
+     * Add users by providing email addresses. Only emails that are not already in the database will be added.
+     * API to add multiple users by email addresses (Admin only)
+     */
+    async usersControllerAddUsersRaw(requestParameters: UsersControllerAddUsersRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ModelApiResponse>> {
+        if (requestParameters['addUsersDto'] == null) {
+            throw new runtime.RequiredError(
+                'addUsersDto',
+                'Required parameter "addUsersDto" was null or undefined when calling usersControllerAddUsers().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/users/add`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AddUsersDtoToJSON(requestParameters['addUsersDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ModelApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Add users by providing email addresses. Only emails that are not already in the database will be added.
+     * API to add multiple users by email addresses (Admin only)
+     */
+    async usersControllerAddUsers(requestParameters: UsersControllerAddUsersRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ModelApiResponse> {
+        const response = await this.usersControllerAddUsersRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * API to delete a user (Admin only)
+     */
+    async usersControllerDeleteUserRaw(requestParameters: UsersControllerDeleteUserRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ModelApiResponse>> {
+        if (requestParameters['userIdDto'] == null) {
+            throw new runtime.RequiredError(
+                'userIdDto',
+                'Required parameter "userIdDto" was null or undefined when calling usersControllerDeleteUser().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/users/delete`,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+            body: UserIdDtoToJSON(requestParameters['userIdDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ModelApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * API to delete a user (Admin only)
+     */
+    async usersControllerDeleteUser(requestParameters: UsersControllerDeleteUserRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ModelApiResponse> {
+        const response = await this.usersControllerDeleteUserRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * API to disable a user (Admin only)
+     */
+    async usersControllerDisableUserRaw(requestParameters: UsersControllerDisableUserRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ModelApiResponse>> {
+        if (requestParameters['disableUserDto'] == null) {
+            throw new runtime.RequiredError(
+                'disableUserDto',
+                'Required parameter "disableUserDto" was null or undefined when calling usersControllerDisableUser().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/users/disable`,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: DisableUserDtoToJSON(requestParameters['disableUserDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ModelApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * API to disable a user (Admin only)
+     */
+    async usersControllerDisableUser(requestParameters: UsersControllerDisableUserRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ModelApiResponse> {
+        const response = await this.usersControllerDisableUserRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * API to get user profile with enrolled courses
@@ -65,6 +233,58 @@ export class UsersApi extends runtime.BaseAPI {
      */
     async usersControllerGetUserProfile(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserProfileApiResponse> {
         const response = await this.usersControllerGetUserProfileRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get paginated list of users with optional filtering by search term and active status. For admin use to manage users.
+     * API to get users list with filtering and pagination (Admin only)
+     */
+    async usersControllerGetUsersListRaw(requestParameters: UsersControllerGetUsersListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserListApiResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['search'] != null) {
+            queryParameters['search'] = requestParameters['search'];
+        }
+
+        if (requestParameters['status'] != null) {
+            queryParameters['status'] = requestParameters['status'];
+        }
+
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/users/list`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserListApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get paginated list of users with optional filtering by search term and active status. For admin use to manage users.
+     * API to get users list with filtering and pagination (Admin only)
+     */
+    async usersControllerGetUsersList(requestParameters: UsersControllerGetUsersListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserListApiResponse> {
+        const response = await this.usersControllerGetUsersListRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -113,3 +333,12 @@ export class UsersApi extends runtime.BaseAPI {
     }
 
 }
+
+/**
+ * @export
+ */
+export const UsersControllerGetUsersListStatusEnum = {
+    Disabled: 'disabled',
+    Enabled: 'enabled'
+} as const;
+export type UsersControllerGetUsersListStatusEnum = typeof UsersControllerGetUsersListStatusEnum[keyof typeof UsersControllerGetUsersListStatusEnum];

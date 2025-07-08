@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DBService } from '@db/db.service';
 import { Gender } from '@users/enum/gender.enum';
 import { Prisma } from '@prisma/client';
+import { RoleType } from '@common/enums/auth-type.enum';
+import { APP_STRINGS } from '@common/strings';
 
 @Injectable()
 export class UsersDBRepository {
@@ -197,5 +199,181 @@ export class UsersDBRepository {
         },
       });
     });
+  }
+
+  async getUsersByEmail(emails: string[]) {
+    return this.prisma.users.findMany({
+      where: {
+        email: {
+          in: emails,
+        },
+        user_roles: {
+          some: {
+            roles: {
+              name: RoleType.STUDENT,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async addUsers(emails: string[]) {
+    const insertData = emails.map((email) => ({
+      email,
+      is_temp: false,
+      is_active: true,
+    }));
+
+    const role = await this.prisma.roles.findUnique({
+      where: {
+        name: RoleType.STUDENT,
+      },
+    });
+
+    const users = await this.prisma.users.createManyAndReturn({
+      data: insertData,
+      skipDuplicates: true,
+      select: {
+        id: true,
+      },
+    });
+
+    await this.prisma.user_roles.createMany({
+      data: users.map((user) => ({
+        user_id: user.id,
+        role_id: role.id,
+      })),
+    });
+
+    return users;
+  }
+
+  async getUsersList(
+    search: string,
+    skip: number,
+    take: number,
+    isActive?: boolean,
+  ) {
+    const where: Prisma.usersWhereInput = {
+      is_deleted: false,
+    };
+
+    where.user_roles = {
+      some: {
+        roles: {
+          name: RoleType.STUDENT,
+        },
+      },
+    };
+
+    if (search) {
+      where.OR = [
+        {
+          full_name: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          email: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      ];
+    }
+
+    if (isActive !== undefined && isActive !== null) {
+      where.is_active = {
+        equals: isActive,
+      };
+    } 
+
+    const [users, totalCount] = await Promise.all([
+      this.prisma.users.findMany({
+        where,
+        select: {
+          id: true,
+          full_name: true,
+          email: true,
+          phone_number: true,
+          country_code: true,
+          is_active: true,
+          is_email_verified: true,
+          is_phone_verified: true,
+          created_at: true,
+          user_roles: {
+            select: {
+              roles: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              user_courses: {
+                where: {
+                  is_active: true,
+                },
+              },
+            },
+          },
+        },
+        skip,
+        take,
+        orderBy: {
+          created_at: 'desc',
+        },
+      }),
+      this.prisma.users.count({
+        where,
+      }),
+    ]);
+
+    return { users, totalCount };
+  }
+
+  async disableUser(userId: string, isActive: boolean) {
+    try {
+      return this.prisma.users.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          is_active: isActive,
+        },
+      });
+    } catch (error) {
+      // if user not found, throw error
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new NotFoundException(
+            APP_STRINGS.api_errors.auth.user_not_found,
+          );
+        }
+      }
+      throw error;
+    }
+  }
+
+  async deleteUser(userId: string) {
+    try {
+      return this.prisma.users.delete({
+        where: { id: userId },
+      });
+    } catch (error) {
+      // if user not found, throw error
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new NotFoundException(
+            APP_STRINGS.api_errors.auth.user_not_found,
+          );
+        }
+      }
+      throw error;
+    }
   }
 }

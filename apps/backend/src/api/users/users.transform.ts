@@ -4,6 +4,11 @@ import {
   UserProfileDto,
   UserProfileResponseDto,
 } from '@users/dto/user-profile.dto';
+import {
+  UserListItemDto,
+  UserListResponseDto,
+} from '@users/dto/user-management.dto';
+import { PaginationDetailsDto } from '@common/dto/pagination.dto';
 
 @Injectable()
 export class UsersTransform {
@@ -39,6 +44,32 @@ export class UsersTransform {
   transformToUserProfileResponse(user: any): UserProfileResponseDto {
     return {
       profile: this.transformToUserProfile(user),
+    };
+  }
+
+  transformToUserListItem(user: any): UserListItemDto {
+    return {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      phone_number: user.phone_number,
+      country_code: user.country_code,
+      is_active: user.is_active,
+      is_email_verified: user.is_email_verified || false,
+      is_phone_verified: user.is_phone_verified || false,
+      created_at: user.created_at,
+      roles: user.user_roles?.map((userRole: any) => userRole.roles.name) || [],
+      enrolled_courses_count: user._count?.user_courses || 0,
+    };
+  }
+
+  transformToUserListResponse(
+    users: any[],
+    pagination: PaginationDetailsDto,
+  ): UserListResponseDto {
+    return {
+      users: users.map((user) => this.transformToUserListItem(user)),
+      pagination,
     };
   }
 }

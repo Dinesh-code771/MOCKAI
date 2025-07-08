@@ -38,6 +38,10 @@ export enum RouteNames {
 
   // --- USERS ROUTES ---
   USERS_PROFILE = 'profile',
+  USERS_ADD = 'add',
+  USERS_LIST = 'list',
+  USERS_DISABLE = 'disable',
+  USERS_DELETE = 'delete',
 
   // --- ASSESSMENTS ROUTES ---
   ASSESSMENTS_LIST = 'list',

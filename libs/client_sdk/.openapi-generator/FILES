@@ -11,6 +11,7 @@ src/apis/StaticDataApi.ts
 src/apis/UsersApi.ts
 src/apis/index.ts
 src/index.ts
+src/models/AddUsersDto.ts
 src/models/AssessmentDetailsDto.ts
 src/models/AssessmentListApiResponse.ts
 src/models/AssessmentListResponseDto.ts
@@ -22,6 +23,7 @@ src/models/CoursesApiResponse.ts
 src/models/CoursesResponseDto.ts
 src/models/DataDto.ts
 src/models/DeleteMediaApiResponseDto.ts
+src/models/DisableUserDto.ts
 src/models/ForgotPasswordApiResponse.ts
 src/models/ForgotPasswordDto.ts
 src/models/ForgotPasswordResponseDto.ts
@@ -50,6 +52,10 @@ src/models/UserAssessmentItemDto.ts
 src/models/UserAssessmentListApiResponse.ts
 src/models/UserAssessmentListResponseDto.ts
 src/models/UserAssessmentResponseDto.ts
+src/models/UserIdDto.ts
+src/models/UserListApiResponse.ts
+src/models/UserListItemDto.ts
+src/models/UserListResponseDto.ts
 src/models/UserProfileApiResponse.ts
 src/models/UserProfileDto.ts
 src/models/UserProfileResponseDto.ts
