@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {
-  AssessmentResponseDto,
-  AssessmentListResponseDto,
-} from '@assessments/dto/assessment-list.dto';
-import {
-  UserAssessmentListResponseDto,
-  UserAssessmentItemDto,
-} from '@assessments/dto/user-assessment-list.dto';
+import { AssessmentResponseDto, AssessmentListResponseDto } from '@assessments/dto/assessment-list.dto';
+import { UserAssessmentListResponseDto, UserAssessmentItemDto } from '@assessments/dto/user-assessment-list.dto';
 import {
   CompleteAssessmentResponseDto,
   UserAnswerDto,
@@ -37,25 +31,18 @@ export class AssessmentsTransform {
     };
   }
 
-  transformToAssessmentListResponse(
-    assessments: any[],
-    pagination: PaginationDetailsDto,
-  ): AssessmentListResponseDto {
+  transformToAssessmentListResponse(assessments: any[], pagination: PaginationDetailsDto): AssessmentListResponseDto {
     return {
-      assessments: assessments.map((assessment) =>
-        this.transformToAssessmentResponse(assessment),
-      ),
+      assessments: assessments.map((assessment) => this.transformToAssessmentResponse(assessment)),
       pagination,
     };
   }
 
   transformToUserAssessmentListResponse(
     assessments: any[],
-    pagination: PaginationDetailsDto,
+    pagination: PaginationDetailsDto
   ): UserAssessmentListResponseDto {
-    const userAssessments = assessments.map((assessment) =>
-      this.transformToUserAssessmentItem(assessment),
-    );
+    const userAssessments = assessments.map((assessment) => this.transformToUserAssessmentItem(assessment));
 
     return {
       assessments: userAssessments,
@@ -63,12 +50,9 @@ export class AssessmentsTransform {
     };
   }
 
-  private transformToUserAssessmentItem(
-    assessment: any,
-  ): UserAssessmentItemDto {
+  private transformToUserAssessmentItem(assessment: any): UserAssessmentItemDto {
     const userAssessment = assessment.user_assessments[0];
-    const shouldShowScores =
-      userAssessment.status === AssessmentStatus.COMPLETED;
+    const shouldShowScores = userAssessment.status === AssessmentStatus.COMPLETED;
 
     return {
       id: assessment.id,
@@ -86,9 +70,7 @@ export class AssessmentsTransform {
         started_at: userAssessment.started_at,
         completed_at: userAssessment.completed_at,
         total_score: shouldShowScores ? userAssessment.total_score : null,
-        percentage_score: shouldShowScores
-          ? userAssessment.percentage_score
-          : null,
+        percentage_score: shouldShowScores ? userAssessment.percentage_score : null,
         feedback: userAssessment.feedback,
         scheduled_at: userAssessment.scheduled_at,
         weak_areas: userAssessment.weak_areas,
@@ -121,9 +103,7 @@ export class AssessmentsTransform {
         difficulty: userAssessment.assessments.difficulty,
         duration_minutes: userAssessment.assessments.duration_minutes,
         description: userAssessment.assessments.description,
-        max_score: userAssessment.assessments.max_score
-          ? Number(userAssessment.assessments.max_score)
-          : 100,
+        max_score: userAssessment.assessments.max_score ? Number(userAssessment.assessments.max_score) : 100,
         total_questions: userAssessment.assessments.total_questions,
         course: userAssessment.assessments.courses
           ? {
@@ -161,9 +141,7 @@ export class AssessmentsTransform {
     };
   }
 
-  transformToCompleteAssessmentResponse(
-    data: any,
-  ): CompleteAssessmentResponseDto {
+  transformToCompleteAssessmentResponse(data: any): CompleteAssessmentResponseDto {
     const { userAssessment, questions } = data;
 
     return {
@@ -182,9 +160,7 @@ export class AssessmentsTransform {
         difficulty: userAssessment.assessments.difficulty,
         duration_minutes: userAssessment.assessments.duration_minutes,
         description: userAssessment.assessments.description,
-        max_score: userAssessment.assessments.max_score
-          ? Number(userAssessment.assessments.max_score)
-          : 100,
+        max_score: userAssessment.assessments.max_score ? Number(userAssessment.assessments.max_score) : 100,
         total_questions: userAssessment.assessments.total_questions,
         course: userAssessment.assessments.courses
           ? {
@@ -215,49 +191,50 @@ export class AssessmentsTransform {
 
   transformToUserAssessmentResponse(
     assessments: any[],
-    pagination: PaginationDetailsDto,
+    pagination: PaginationDetailsDto
   ): UserAssessmentListResponseDto {
     return {
-      assessments: assessments.map((assessment) => {
-        return {
-          id: assessment.id,
-          name: assessment.name,
-          type: assessment.type,
-          difficulty: assessment.difficulty,
-          duration_minutes: assessment.duration_minutes,
-          description: assessment.description,
-          max_score: Number(assessment.max_score),
-          total_questions: assessment.total_questions,
-          created_at: assessment.created_at,
-          user_assessment: {
-            id: assessment.user_assessments[0].id,
-            status: assessment.user_assessments[0].status,
-            started_at: assessment.user_assessments[0].started_at,
-            completed_at: assessment.user_assessments[0].completed_at,
-            total_score:
-              assessment.user_assessments[0].status === 'scheduled' ||
-              assessment.user_assessments[0].status === 'in_progress'
-                ? null
-                : assessment.user_assessments[0].total_score,
-            percentage_score:
-              assessment.user_assessments[0].status === 'scheduled' ||
-              assessment.user_assessments[0].status === 'in_progress'
-                ? null
-                : assessment.user_assessments[0].percentage_score,
-            feedback: assessment.user_assessments[0].feedback,
-            scheduled_at: assessment.user_assessments[0].scheduled_at,
-            weak_areas: assessment.user_assessments[0].weak_areas,
-            strong_areas: assessment.user_assessments[0].strong_areas,
-            created_at: assessment.user_assessments[0].created_at,
-          },
-          course: assessment.courses
-            ? {
-                id: assessment.courses.id,
-                name: assessment.courses.name,
-              }
-            : null,
-        };
-      }),
+      assessments:
+        assessments?.map((assessment) => {
+          return {
+            id: assessment.id,
+            name: assessment.name,
+            type: assessment.type,
+            difficulty: assessment.difficulty,
+            duration_minutes: assessment.duration_minutes,
+            description: assessment.description,
+            max_score: Number(assessment.max_score),
+            total_questions: assessment.total_questions,
+            created_at: assessment.created_at,
+            user_assessment: {
+              id: assessment.user_assessments[0].id,
+              status: assessment.user_assessments[0].status,
+              started_at: assessment.user_assessments[0].started_at,
+              completed_at: assessment.user_assessments[0].completed_at,
+              total_score:
+                assessment.user_assessments[0].status === 'scheduled' ||
+                assessment.user_assessments[0].status === 'in_progress'
+                  ? null
+                  : assessment.user_assessments[0].total_score,
+              percentage_score:
+                assessment.user_assessments[0].status === 'scheduled' ||
+                assessment.user_assessments[0].status === 'in_progress'
+                  ? null
+                  : assessment.user_assessments[0].percentage_score,
+              feedback: assessment.user_assessments[0].feedback,
+              scheduled_at: assessment.user_assessments[0].scheduled_at,
+              weak_areas: assessment.user_assessments[0].weak_areas,
+              strong_areas: assessment.user_assessments[0].strong_areas,
+              created_at: assessment.user_assessments[0].created_at,
+            },
+            course: assessment.courses
+              ? {
+                  id: assessment.courses.id,
+                  name: assessment.courses.name,
+                }
+              : null,
+          };
+        }) || [],
       pagination,
     };
   }

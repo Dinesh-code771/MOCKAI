@@ -85,6 +85,7 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
   const handleLogout = async () => {
     try {
       const result = await logoutAction();
+      console.log(result, 'result');
       if (result.success) {
         router.push('/auth/login');
       }
@@ -119,7 +120,6 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
       <div className="p-6 border-b border-gray-200/50">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src="/placeholder-avatar.jpg" />
             <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
               JD
             </AvatarFallback>

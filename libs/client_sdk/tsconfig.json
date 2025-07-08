@@ -1,22 +1,15 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "target": "es5",
+    "target": "es2017",
     "module": "commonjs",
     "noImplicitAny": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": [
-      "es6",
-      "dom"
-    ],
+    "lib": ["es2017", "dom"],
     "skipLibCheck": true,
     "moduleResolution": "node",
     "esModuleInterop": true
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["dist", "node_modules", "**/*.spec.ts"]
 }

@@ -4,7 +4,6 @@ import {
   getAuthenticatedAuthApi,
   setAuthToken,
   removeAuthToken,
-  getAuthToken,
 } from '@/lib/api-client';
 import {
   LoginDto,

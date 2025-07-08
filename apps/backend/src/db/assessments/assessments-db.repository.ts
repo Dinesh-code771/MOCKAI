@@ -94,6 +94,7 @@ export class AssessmentsDBRepository {
     whereCondition.user_assessments = {
       some: {
         user_id: userId,
+        ...(query.status && { status: query.status }),
       },
     };
 

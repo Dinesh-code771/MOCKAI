@@ -1,4 +1,4 @@
-import { authApi, getAuthenticatedAuthApi, getAuthToken } from './api-client';
+import { getAuthenticatedAuthApi } from './api-client';
 
 // Health check utilities
 export const checkApiHealth = async () => {

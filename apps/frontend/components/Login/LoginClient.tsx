@@ -48,7 +48,7 @@ export default function LoginPage() {
     });
     console.log(result, 'result');
     if (result.success) {
-      console.log(result.data, 'result.data');
+      console.log(result.data, 'result.data', result.data?.is_temp);
       if (result.data?.is_temp) {
         return router.push('/auth/otp');
       }

@@ -6,7 +6,8 @@ import {
   UsersApi,
   Middleware,
   StaticDataApi,
-} from '@mockai/sdk';
+  AssessmentsApi,
+  } from '@mockai/sdk';
 import cookieUtils from './cookie-utils';
 import { getToken } from '@/app/auth/actions';
 
@@ -14,7 +15,7 @@ import { getToken } from '@/app/auth/actions';
 const authMiddleware: Middleware = {
   pre: async (context) => {
     const token = await getToken();
-    console.log('token', token);
+    console.log('token23', token);
 
     if (token) {
       context.init = {
@@ -65,11 +66,9 @@ export const healthApi = new HealthApi(config);
 export const mediaApi = new MediaApi(config);
 export const usersApi = new UsersApi(config);
 export const staticDataApi = new StaticDataApi(config);
+export const assessmentApi = new AssessmentsApi(config);
 
-// Helper function to get auth token from cookies
-export const getAuthToken = (): string | null => {
-  return getToken();
-};
+
 
 // Helper function to set auth token in cookies
 export const setAuthToken = (token: string): void => {
@@ -102,4 +101,8 @@ export const getAuthenticatedMediaApi = (): MediaApi => {
 
 export const getAuthenticatedUsersApi = (): UsersApi => {
   return new UsersApi(createAuthenticatedConfig());
+};
+
+export const getAuthenticatedAssessmentsApi = (): AssessmentsApi => {
+  return new AssessmentsApi(createAuthenticatedConfig());
 };

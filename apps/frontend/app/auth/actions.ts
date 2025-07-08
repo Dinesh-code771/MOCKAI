@@ -4,8 +4,6 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { removeAuthToken, staticDataApi, usersApi } from '@/lib/api-client';
-
-const cookieStore = cookies();
 // Validation schemas
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -90,12 +88,14 @@ export async function googleLoginAction(
 }
 
 export async function verifySession() {
+  const cookieStore = cookies();
   const session = cookieStore.get('token');
   const isLoggedIn = session?.value ? true : false;
   return { session, isLoggedIn };
 }
 
 export async function getToken() {
+  const cookieStore = cookies();
   const token = cookieStore.get('token')?.value;
   return token;
 }
@@ -112,6 +112,7 @@ export async function getUserProfile() {
 export async function logoutAction() {
   console.log('logoutAction');
   // Delete cookies first
+  const cookieStore = cookies();
   cookieStore.delete('auth_token');
   cookieStore.delete('token');
   cookieStore.delete('user');
