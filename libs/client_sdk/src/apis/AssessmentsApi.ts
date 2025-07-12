@@ -17,9 +17,12 @@ import * as runtime from '../runtime';
 import type {
   AssessmentListApiResponse,
   CompleteAssessmentApiResponse,
+  ModelApiResponse,
   StartAssessmentApiResponse,
   StartAssessmentBodyDto,
   StoreAnswerDto,
+  UpsertAssessmentApiResponse,
+  UpsertAssessmentDto,
   UserAssessmentListApiResponse,
 } from '../models/index';
 import {
@@ -27,12 +30,18 @@ import {
     AssessmentListApiResponseToJSON,
     CompleteAssessmentApiResponseFromJSON,
     CompleteAssessmentApiResponseToJSON,
+    ModelApiResponseFromJSON,
+    ModelApiResponseToJSON,
     StartAssessmentApiResponseFromJSON,
     StartAssessmentApiResponseToJSON,
     StartAssessmentBodyDtoFromJSON,
     StartAssessmentBodyDtoToJSON,
     StoreAnswerDtoFromJSON,
     StoreAnswerDtoToJSON,
+    UpsertAssessmentApiResponseFromJSON,
+    UpsertAssessmentApiResponseToJSON,
+    UpsertAssessmentDtoFromJSON,
+    UpsertAssessmentDtoToJSON,
     UserAssessmentListApiResponseFromJSON,
     UserAssessmentListApiResponseToJSON,
 } from '../models/index';
@@ -41,12 +50,17 @@ export interface AssessmentsControllerCompleteAssessmentRequest {
     userAssessmentId: string;
 }
 
+export interface AssessmentsControllerGetAssessmentDetailsRequest {
+    assessmentId: string;
+}
+
 export interface AssessmentsControllerGetAssessmentsListRequest {
     type?: AssessmentsControllerGetAssessmentsListTypeEnum;
     courseId?: string;
     difficulty?: AssessmentsControllerGetAssessmentsListDifficultyEnum;
     page?: number;
     limit?: number;
+    draftAssessment?: AssessmentsControllerGetAssessmentsListDraftAssessmentEnum;
 }
 
 export interface AssessmentsControllerGetUserAssessmentCompleteDataRequest {
@@ -57,9 +71,13 @@ export interface AssessmentsControllerGetUserAssessmentsRequest {
     type?: AssessmentsControllerGetUserAssessmentsTypeEnum;
     courseId?: string;
     difficulty?: AssessmentsControllerGetUserAssessmentsDifficultyEnum;
+    status?: AssessmentsControllerGetUserAssessmentsStatusEnum;
     page?: number;
     limit?: number;
-    status?: AssessmentsControllerGetUserAssessmentsStatusEnum;
+}
+
+export interface AssessmentsControllerPublishAssessmentRequest {
+    assessmentId: string;
 }
 
 export interface AssessmentsControllerStartAssessmentRequest {
@@ -70,6 +88,10 @@ export interface AssessmentsControllerStoreUserAnswersRequest {
     userAssessmentId: string;
     questionId: string;
     storeAnswerDto: StoreAnswerDto;
+}
+
+export interface AssessmentsControllerUpsertAssessmentRequest {
+    upsertAssessmentDto: UpsertAssessmentDto;
 }
 
 /**
@@ -121,6 +143,49 @@ export class AssessmentsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get assessment details
+     * Get assessment details
+     */
+    async assessmentsControllerGetAssessmentDetailsRaw(requestParameters: AssessmentsControllerGetAssessmentDetailsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UpsertAssessmentApiResponse>> {
+        if (requestParameters['assessmentId'] == null) {
+            throw new runtime.RequiredError(
+                'assessmentId',
+                'Required parameter "assessmentId" was null or undefined when calling assessmentsControllerGetAssessmentDetails().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/assessments/{assessmentId}`.replace(`{${"assessmentId"}}`, encodeURIComponent(String(requestParameters['assessmentId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UpsertAssessmentApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get assessment details
+     * Get assessment details
+     */
+    async assessmentsControllerGetAssessmentDetails(requestParameters: AssessmentsControllerGetAssessmentDetailsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UpsertAssessmentApiResponse> {
+        const response = await this.assessmentsControllerGetAssessmentDetailsRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Retrieve assessments with optional filters for type, course_id, and difficulty. Supports pagination.
      * Get list of assessments with filtering and pagination
      */
@@ -145,6 +210,10 @@ export class AssessmentsApi extends runtime.BaseAPI {
 
         if (requestParameters['limit'] != null) {
             queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['draftAssessment'] != null) {
+            queryParameters['draft_assessment'] = requestParameters['draftAssessment'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -212,8 +281,8 @@ export class AssessmentsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Retrieve user assessments with optional filters for type, course_id, difficulty, and status. Supports pagination. Scores are shown as null for scheduled and in_progress assessments.
-     * Get user assessments with filtering and pagination
+     * Get paginated list of user assessments with optional filtering by type, course, difficulty, and status.
+     * API to get user assessments list with filtering and pagination
      */
     async assessmentsControllerGetUserAssessmentsRaw(requestParameters: AssessmentsControllerGetUserAssessmentsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserAssessmentListApiResponse>> {
         const queryParameters: any = {};
@@ -230,16 +299,16 @@ export class AssessmentsApi extends runtime.BaseAPI {
             queryParameters['difficulty'] = requestParameters['difficulty'];
         }
 
+        if (requestParameters['status'] != null) {
+            queryParameters['status'] = requestParameters['status'];
+        }
+
         if (requestParameters['page'] != null) {
             queryParameters['page'] = requestParameters['page'];
         }
 
         if (requestParameters['limit'] != null) {
             queryParameters['limit'] = requestParameters['limit'];
-        }
-
-        if (requestParameters['status'] != null) {
-            queryParameters['status'] = requestParameters['status'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -263,11 +332,54 @@ export class AssessmentsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Retrieve user assessments with optional filters for type, course_id, difficulty, and status. Supports pagination. Scores are shown as null for scheduled and in_progress assessments.
-     * Get user assessments with filtering and pagination
+     * Get paginated list of user assessments with optional filtering by type, course, difficulty, and status.
+     * API to get user assessments list with filtering and pagination
      */
     async assessmentsControllerGetUserAssessments(requestParameters: AssessmentsControllerGetUserAssessmentsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserAssessmentListApiResponse> {
         const response = await this.assessmentsControllerGetUserAssessmentsRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Publish an assessment
+     * Publish an assessment
+     */
+    async assessmentsControllerPublishAssessmentRaw(requestParameters: AssessmentsControllerPublishAssessmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ModelApiResponse>> {
+        if (requestParameters['assessmentId'] == null) {
+            throw new runtime.RequiredError(
+                'assessmentId',
+                'Required parameter "assessmentId" was null or undefined when calling assessmentsControllerPublishAssessment().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/assessments/{assessmentId}/publish`.replace(`{${"assessmentId"}}`, encodeURIComponent(String(requestParameters['assessmentId']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ModelApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Publish an assessment
+     * Publish an assessment
+     */
+    async assessmentsControllerPublishAssessment(requestParameters: AssessmentsControllerPublishAssessmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ModelApiResponse> {
+        const response = await this.assessmentsControllerPublishAssessmentRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -376,6 +488,52 @@ export class AssessmentsApi extends runtime.BaseAPI {
         await this.assessmentsControllerStoreUserAnswersRaw(requestParameters, initOverrides);
     }
 
+    /**
+     * Create a new assessment or update an existing unpublished assessment with questions. Only unpublished assessments can be updated.
+     * API to create or update assessment with questions (Admin only)
+     */
+    async assessmentsControllerUpsertAssessmentRaw(requestParameters: AssessmentsControllerUpsertAssessmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UpsertAssessmentApiResponse>> {
+        if (requestParameters['upsertAssessmentDto'] == null) {
+            throw new runtime.RequiredError(
+                'upsertAssessmentDto',
+                'Required parameter "upsertAssessmentDto" was null or undefined when calling assessmentsControllerUpsertAssessment().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/assessments/upsert`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: UpsertAssessmentDtoToJSON(requestParameters['upsertAssessmentDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UpsertAssessmentApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create a new assessment or update an existing unpublished assessment with questions. Only unpublished assessments can be updated.
+     * API to create or update assessment with questions (Admin only)
+     */
+    async assessmentsControllerUpsertAssessment(requestParameters: AssessmentsControllerUpsertAssessmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UpsertAssessmentApiResponse> {
+        const response = await this.assessmentsControllerUpsertAssessmentRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
 }
 
 /**
@@ -395,6 +553,14 @@ export const AssessmentsControllerGetAssessmentsListDifficultyEnum = {
     Advanced: 'advanced'
 } as const;
 export type AssessmentsControllerGetAssessmentsListDifficultyEnum = typeof AssessmentsControllerGetAssessmentsListDifficultyEnum[keyof typeof AssessmentsControllerGetAssessmentsListDifficultyEnum];
+/**
+ * @export
+ */
+export const AssessmentsControllerGetAssessmentsListDraftAssessmentEnum = {
+    True: 'true',
+    False: 'false'
+} as const;
+export type AssessmentsControllerGetAssessmentsListDraftAssessmentEnum = typeof AssessmentsControllerGetAssessmentsListDraftAssessmentEnum[keyof typeof AssessmentsControllerGetAssessmentsListDraftAssessmentEnum];
 /**
  * @export
  */

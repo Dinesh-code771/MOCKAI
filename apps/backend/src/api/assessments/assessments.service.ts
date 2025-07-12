@@ -6,8 +6,9 @@ import {
 import { AssessmentsDBService } from '@db/assessments/assessments-db.service';
 import { AssessmentsTransform } from '@assessments/assessments.transform';
 import {
-  AssessmentListQueryDto,
+  AssessmentListQuery,
   AssessmentListResponseDto,
+  DraftAssessmentFilter,
   UserAssessmentListQueryDto,
 } from '@assessments/dto/assessment-list.dto';
 import {
@@ -28,10 +29,6 @@ import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
 import { QuestionType } from '@assessments/enum/question-type.enum';
 import { UserInfo } from '@common/types/auth.types';
 import { RoleType } from '@common/enums/auth-type.enum';
-import {
-  UserAssessmentListApiResponse,
-  UserAssessmentQueryDto,
-} from '@assessments/dto/user-assessment-list.dto';
 
 @Injectable()
 export class AssessmentsService {
@@ -41,7 +38,7 @@ export class AssessmentsService {
   ) {}
 
   async getAssessmentsList(
-    query: AssessmentListQueryDto,
+    query: AssessmentListQuery,
     user: UserInfo,
   ): Promise<AssessmentListResponseDto> {
     const { skip, take } = calculateSkipAndTake(query.page, query.limit);
@@ -59,6 +56,7 @@ export class AssessmentsService {
         userId,
         skip,
         take,
+        draft_assessment: query.draft_assessment === DraftAssessmentFilter.TRUE,
       });
 
     const pagination = {
@@ -349,25 +347,25 @@ export class AssessmentsService {
 
         if (question.options.length < 2) {
           throw new BadRequestException(
-            `MCQ question "${question.question_text}" must have at least 2 options`,
+            APP_STRINGS.api_errors.assessments.mcq_question_must_have_at_least_2_options(question.question_text),
           );
         }
 
         if (question.options.length > 6) {
           throw new BadRequestException(
-            `MCQ question "${question.question_text}" can have at most 6 options`,
+            APP_STRINGS.api_errors.assessments.mcq_question_can_have_at_most_6_options(question.question_text),
           );
         }
 
         if (!question.correct_answer) {
           throw new BadRequestException(
-            `MCQ question "${question.question_text}" must have a correct answer`,
+            APP_STRINGS.api_errors.assessments.correct_answer_must_be_one_of_the_provided_options(question.question_text),
           );
         }
 
         if (!question.options.includes(question.correct_answer)) {
           throw new BadRequestException(
-            `Correct answer for question "${question.question_text}" must be one of the provided options`,
+            APP_STRINGS.api_errors.assessments.correct_answer_must_be_one_of_the_provided_options(question.question_text),
           );
         }
       }
@@ -376,7 +374,7 @@ export class AssessmentsService {
       if (question.question_type === QuestionType.SUBJECTIVE) {
         if (question.options && question.options.length > 0) {
           throw new BadRequestException(
-            `Subjective question "${question.question_text}" should not have options`,
+            APP_STRINGS.api_errors.assessments.subjective_question_should_not_have_options(question.question_text),
           );
         }
       }
@@ -387,7 +385,9 @@ export class AssessmentsService {
     const uniqueOrderSequences = new Set(orderSequences);
 
     if (orderSequences.length !== uniqueOrderSequences.size) {
-      throw new BadRequestException('Question order sequences must be unique');
+      throw new BadRequestException(
+        APP_STRINGS.api_errors.assessments.question_order_sequences_must_be_unique,
+      );
     }
 
     // Validate order sequences are sequential starting from 1
@@ -395,9 +395,52 @@ export class AssessmentsService {
     for (let i = 0; i < sortedSequences.length; i++) {
       if (sortedSequences[i] !== i + 1) {
         throw new BadRequestException(
-          'Question order sequences must be sequential starting from 1',
+          APP_STRINGS.api_errors.assessments.question_order_sequences_must_be_sequential,
         );
       }
     }
+  }
+
+  async publishAssessment(assessmentId: string) {
+    const assessment = await this.assessmentsDBService.getAssessmentWithQuestionsCount(
+      assessmentId,
+    );
+
+    if (!assessment) {
+      throw new NotFoundException(
+        APP_STRINGS.api_errors.assessments.assessment_not_found,
+      );
+    }
+
+    if (assessment.is_published) {
+      throw new BadRequestException(
+        APP_STRINGS.api_errors.assessments.assessment_already_published,
+      );
+    }
+
+    if (assessment.total_questions !== assessment.questions.length) {
+      throw new BadRequestException(
+        APP_STRINGS.api_errors.assessments.assessment_total_questions_mismatch,
+      );
+    }
+    
+    await this.assessmentsDBService.publishAssessment(assessmentId);
+  }
+
+  async getAssessmentDetails(assessmentId: string) {
+    const assessment = await this.assessmentsDBService.getAssessmentDetails(
+      assessmentId,
+    );
+
+    if (!assessment) {
+      throw new NotFoundException(
+        APP_STRINGS.api_errors.assessments.assessment_not_found,
+      );
+    }
+    
+    return this.assessmentsTransform.transformToUpsertAssessmentResponse(
+      assessment,
+      assessment.questions,
+    );
   }
 }

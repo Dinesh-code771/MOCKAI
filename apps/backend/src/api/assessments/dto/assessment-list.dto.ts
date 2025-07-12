@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsOptional, IsUUID, IsInt, Min } from 'class-validator';
+import { IsEnum, IsOptional, IsUUID, IsInt, Min, IsBoolean } from 'class-validator';
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
 import { PaginationDetailsDto } from '@common/dto/pagination.dto';
@@ -62,6 +62,23 @@ export class AssessmentListQueryDto {
   @Min(1)
   @Transform(({ value }) => parseInt(value))
   limit?: number;
+}
+
+export enum DraftAssessmentFilter {
+  TRUE = 'true',
+  FALSE = 'false',
+}
+
+export class AssessmentListQuery extends AssessmentListQueryDto {
+  @ApiPropertyOptional({
+    description: 'Draft assessment filter',
+    required: false,
+    enum: DraftAssessmentFilter,
+    example: DraftAssessmentFilter.TRUE,
+  })
+  @IsOptional()
+  @IsEnum(DraftAssessmentFilter)
+  draft_assessment?: DraftAssessmentFilter;
 }
 
 export class UserAssessmentListQueryDto extends AssessmentListQueryDto {
@@ -127,6 +144,12 @@ export class AssessmentResponseDto {
     example: 25,
   })
   total_questions: number;
+
+  @ApiProperty({
+    description: 'Is published',
+    example: true,
+  })
+  is_published: boolean;
 
   @ApiProperty({
     description: 'Course information',

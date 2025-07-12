@@ -18,10 +18,11 @@ export class AssessmentsDBRepository {
     userId?: string;
     skip: number;
     take: number;
+    draft_assessment?: boolean;
   }) {
     const whereCondition: Prisma.assessmentsWhereInput = {
       is_active: true,
-      is_published: true,
+      is_published: filters.draft_assessment ? false : true,
     };
 
     if (filters.type) {
@@ -582,6 +583,47 @@ export class AssessmentsDBRepository {
         assessment,
         questions,
       };
+    });
+  }
+
+  async getAssessmentDetails(assessmentId: string) {
+    return this.prisma.assessments.findUnique({
+      where: { id: assessmentId },
+      include: {
+        courses: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        questions: true,
+      },
+    });
+  }
+
+  async getAssessmentWithQuestionsCount(assessmentId: string) {
+    return this.prisma.assessments.findUnique({
+      where: { id: assessmentId },
+      select: { 
+        id: true,
+        total_questions: true,
+        is_published: true,
+        questions: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+  }
+
+  async publishAssessment(assessmentId: string) {
+    return this.prisma.assessments.update({
+      where: { id: assessmentId },
+      data: { 
+        is_published: true,
+        published_at: new Date(),
+      },
     });
   }
 }

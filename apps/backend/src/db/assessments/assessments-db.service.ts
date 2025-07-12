@@ -17,6 +17,7 @@ export class AssessmentsDBService {
     userId?: string;
     skip: number;
     take: number;
+    draft_assessment?: boolean;
   }) {
     return this.assessmentsRepository.getAssessmentsList(filters);
   }
@@ -144,4 +145,20 @@ export class AssessmentsDBService {
   }) {
     return this.assessmentsRepository.upsertAssessmentWithQuestions(data);
   }
+
+  async getAssessmentDetails(assessmentId: string) {
+    return this.assessmentsRepository.getAssessmentDetails(assessmentId);
+  }
+
+  async getAssessmentWithQuestionsCount(assessmentId: string) {
+    return this.assessmentsRepository.getAssessmentWithQuestionsCount(
+      assessmentId,
+    );
+  }
+
+  async publishAssessment(assessmentId: string) {
+    return this.assessmentsRepository.publishAssessment(assessmentId);
+  }
+  
+  
 }

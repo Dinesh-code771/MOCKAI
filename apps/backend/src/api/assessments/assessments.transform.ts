@@ -28,6 +28,7 @@ export class AssessmentsTransform {
       description: assessment.description,
       max_score: Number(assessment.max_score),
       total_questions: assessment.total_questions,
+      is_published: assessment.is_published,
       course: assessment.courses
         ? {
             id: assessment.courses.id,
@@ -275,7 +276,7 @@ export class AssessmentsTransform {
       difficulty: assessment.difficulty,
       duration_minutes: assessment.duration_minutes,
       description: assessment.description,
-      max_score: assessment.max_score,
+      max_score: Number(assessment.max_score),
       total_questions: assessment.total_questions,
       is_published: assessment.is_published,
       course: assessment.courses

@@ -13,6 +13,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
 } from '@nestjs/swagger';
 import { RouteNames } from '@common/route-names';
 import { ResponseUtil } from '@common/helpers/response.utils';
@@ -21,9 +22,8 @@ import { Auth } from '@auth/decorator/auth.decorator';
 import { AuthType, RoleType } from '@common/enums/auth-type.enum';
 import { User } from '@common/decorators/user.decorator';
 import {
-  AssessmentListQueryDto,
   AssessmentListApiResponse,
-  UserAssessmentListQueryDto,
+  AssessmentListQuery,
 } from '@assessments/dto/assessment-list.dto';
 import {
   UserAssessmentListApiResponse,
@@ -33,7 +33,6 @@ import {
   StartAssessmentBodyDto,
   StartAssessmentApiResponse,
   CompleteAssessmentApiResponse,
-  UserAnswerResponseDto,
 } from '@assessments/dto/start-assessment.dto';
 import { UserInfo } from '@common/types/auth.types';
 import { StoreAnswerDto } from '@assessments/dto/store-answer.dto';
@@ -42,6 +41,7 @@ import {
   UpsertAssessmentDto,
   UpsertAssessmentApiResponse,
 } from '@assessments/dto/upsert-assessment.dto';
+import { ApiResponse as apiResponse } from '@common/dto/api-response';
 
 @Controller(RouteNames.ASSESSMENTS)
 @ApiTags('Assessments')
@@ -54,6 +54,7 @@ export class AssessmentsController {
     description:
       'Retrieve assessments with optional filters for type, course_id, and difficulty. Supports pagination.',
   })
+  @Auth(AuthType.JWT)
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Assessments retrieved successfully',
@@ -68,7 +69,7 @@ export class AssessmentsController {
     description: 'Internal server error.',
   })
   async getAssessmentsList(
-    @Query() query: AssessmentListQueryDto,
+    @Query() query: AssessmentListQuery,
     @User() user: UserInfo,
   ): Promise<AssessmentListApiResponse> {
     const response = await this.assessmentsService.getAssessmentsList(
@@ -284,7 +285,7 @@ export class AssessmentsController {
 
   @Post(RouteNames.ASSESSMENTS_UPSERT)
   @Auth(AuthType.JWT)
-  @Roles(RoleType.ADMIN)
+  @Roles(RoleType.ADMIN, RoleType.INSTRUCTOR)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'API to create or update assessment with questions (Admin only)',
@@ -325,6 +326,76 @@ export class AssessmentsController {
     return ResponseUtil.success(
       response,
       'Assessment upserted successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Post(RouteNames.ASSESSMENTS_PUBLISH)
+  @Auth(AuthType.JWT)
+  @Roles(RoleType.ADMIN, RoleType.INSTRUCTOR)
+  @ApiBearerAuth()
+  @ApiParam({
+    name: 'assessmentId',
+    description: 'Assessment ID',
+    type: String,
+  })
+  @ApiOperation({
+    summary: 'Publish an assessment',
+    description: 'Publish an assessment',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Assessment published successfully',
+    type: apiResponse<null>,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Assessment is already published',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error',
+  })
+  async publishAssessment(
+    @Param('assessmentId') assessmentId: string,
+  ): Promise<apiResponse<null>> {
+    await this.assessmentsService.publishAssessment(assessmentId);
+    return ResponseUtil.success(
+      null,
+      'Assessment published successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Get(RouteNames.ASSESSMENTS_DETAILS)
+  @Auth(AuthType.JWT)
+  @Roles(RoleType.ADMIN, RoleType.INSTRUCTOR)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get assessment details',
+    description: 'Get assessment details',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Assessment details retrieved successfully',
+    type: UpsertAssessmentApiResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Assessment not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error',
+  })
+  async getAssessmentDetails(
+    @Param('assessmentId') assessmentId: string,
+  ): Promise<UpsertAssessmentApiResponse> {
+    const response =
+      await this.assessmentsService.getAssessmentDetails(assessmentId);
+    return ResponseUtil.success(
+      response,
+      'Assessment details retrieved successfully',
       HttpStatus.OK,
     );
   }

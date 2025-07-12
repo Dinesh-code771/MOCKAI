@@ -13,124 +13,143 @@
  */
 
 import { mapValues } from '../runtime';
+import type { UpsertQuestionResponseDto } from './UpsertQuestionResponseDto';
+import {
+    UpsertQuestionResponseDtoFromJSON,
+    UpsertQuestionResponseDtoFromJSONTyped,
+    UpsertQuestionResponseDtoToJSON,
+} from './UpsertQuestionResponseDto';
+
 /**
  * 
  * @export
- * @interface AssessmentResponseDto
+ * @interface UpsertAssessmentResponseDto
  */
-export interface AssessmentResponseDto {
+export interface UpsertAssessmentResponseDto {
     /**
      * Assessment ID
      * @type {string}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
     id: string;
     /**
      * Assessment name
      * @type {string}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
     name: string;
     /**
      * Assessment type
      * @type {string}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
-    type: AssessmentResponseDtoTypeEnum;
+    type: UpsertAssessmentResponseDtoTypeEnum;
     /**
-     * Difficulty level
+     * Assessment difficulty level
      * @type {string}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
-    difficulty: AssessmentResponseDtoDifficultyEnum;
+    difficulty: UpsertAssessmentResponseDtoDifficultyEnum;
     /**
      * Duration in minutes
      * @type {number}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
     duration_minutes: number;
     /**
      * Assessment description
      * @type {string}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
-    description: string | null;
+    description?: string | null;
     /**
      * Maximum score
      * @type {number}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
     max_score: number;
     /**
      * Total number of questions
      * @type {number}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
     total_questions: number;
     /**
-     * Is published
+     * Is assessment published
      * @type {boolean}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
     is_published: boolean;
     /**
      * Course information
      * @type {object}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
-    course: object | null;
+    course?: object | null;
     /**
      * Creation timestamp
      * @type {Date}
-     * @memberof AssessmentResponseDto
+     * @memberof UpsertAssessmentResponseDto
      */
     created_at: Date;
+    /**
+     * Last update timestamp
+     * @type {Date}
+     * @memberof UpsertAssessmentResponseDto
+     */
+    updated_at: Date;
+    /**
+     * Array of questions
+     * @type {Array<UpsertQuestionResponseDto>}
+     * @memberof UpsertAssessmentResponseDto
+     */
+    questions: Array<UpsertQuestionResponseDto>;
 }
 
 
 /**
  * @export
  */
-export const AssessmentResponseDtoTypeEnum = {
+export const UpsertAssessmentResponseDtoTypeEnum = {
     Mcq: 'mcq',
     Subjective: 'subjective'
 } as const;
-export type AssessmentResponseDtoTypeEnum = typeof AssessmentResponseDtoTypeEnum[keyof typeof AssessmentResponseDtoTypeEnum];
+export type UpsertAssessmentResponseDtoTypeEnum = typeof UpsertAssessmentResponseDtoTypeEnum[keyof typeof UpsertAssessmentResponseDtoTypeEnum];
 
 /**
  * @export
  */
-export const AssessmentResponseDtoDifficultyEnum = {
+export const UpsertAssessmentResponseDtoDifficultyEnum = {
     Beginner: 'beginner',
     Intermediate: 'intermediate',
     Advanced: 'advanced'
 } as const;
-export type AssessmentResponseDtoDifficultyEnum = typeof AssessmentResponseDtoDifficultyEnum[keyof typeof AssessmentResponseDtoDifficultyEnum];
+export type UpsertAssessmentResponseDtoDifficultyEnum = typeof UpsertAssessmentResponseDtoDifficultyEnum[keyof typeof UpsertAssessmentResponseDtoDifficultyEnum];
 
 
 /**
- * Check if a given object implements the AssessmentResponseDto interface.
+ * Check if a given object implements the UpsertAssessmentResponseDto interface.
  */
-export function instanceOfAssessmentResponseDto(value: object): value is AssessmentResponseDto {
+export function instanceOfUpsertAssessmentResponseDto(value: object): value is UpsertAssessmentResponseDto {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('type' in value) || value['type'] === undefined) return false;
     if (!('difficulty' in value) || value['difficulty'] === undefined) return false;
     if (!('duration_minutes' in value) || value['duration_minutes'] === undefined) return false;
-    if (!('description' in value) || value['description'] === undefined) return false;
     if (!('max_score' in value) || value['max_score'] === undefined) return false;
     if (!('total_questions' in value) || value['total_questions'] === undefined) return false;
     if (!('is_published' in value) || value['is_published'] === undefined) return false;
-    if (!('course' in value) || value['course'] === undefined) return false;
     if (!('created_at' in value) || value['created_at'] === undefined) return false;
+    if (!('updated_at' in value) || value['updated_at'] === undefined) return false;
+    if (!('questions' in value) || value['questions'] === undefined) return false;
     return true;
 }
 
-export function AssessmentResponseDtoFromJSON(json: any): AssessmentResponseDto {
-    return AssessmentResponseDtoFromJSONTyped(json, false);
+export function UpsertAssessmentResponseDtoFromJSON(json: any): UpsertAssessmentResponseDto {
+    return UpsertAssessmentResponseDtoFromJSONTyped(json, false);
 }
 
-export function AssessmentResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: boolean): AssessmentResponseDto {
+export function UpsertAssessmentResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: boolean): UpsertAssessmentResponseDto {
     if (json == null) {
         return json;
     }
@@ -141,16 +160,18 @@ export function AssessmentResponseDtoFromJSONTyped(json: any, ignoreDiscriminato
         'type': json['type'],
         'difficulty': json['difficulty'],
         'duration_minutes': json['duration_minutes'],
-        'description': json['description'],
+        'description': json['description'] == null ? undefined : json['description'],
         'max_score': json['max_score'],
         'total_questions': json['total_questions'],
         'is_published': json['is_published'],
-        'course': json['course'],
+        'course': json['course'] == null ? undefined : json['course'],
         'created_at': (new Date(json['created_at'])),
+        'updated_at': (new Date(json['updated_at'])),
+        'questions': ((json['questions'] as Array<any>).map(UpsertQuestionResponseDtoFromJSON)),
     };
 }
 
-export function AssessmentResponseDtoToJSON(value?: AssessmentResponseDto | null): any {
+export function UpsertAssessmentResponseDtoToJSON(value?: UpsertAssessmentResponseDto | null): any {
     if (value == null) {
         return value;
     }
@@ -167,6 +188,8 @@ export function AssessmentResponseDtoToJSON(value?: AssessmentResponseDto | null
         'is_published': value['is_published'],
         'course': value['course'],
         'created_at': ((value['created_at']).toISOString()),
+        'updated_at': ((value['updated_at']).toISOString()),
+        'questions': ((value['questions'] as Array<any>).map(UpsertQuestionResponseDtoToJSON)),
     };
 }
 

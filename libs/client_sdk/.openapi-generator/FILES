@@ -47,6 +47,11 @@ src/models/StartAssessmentApiResponse.ts
 src/models/StartAssessmentBodyDto.ts
 src/models/StoreAnswerDto.ts
 src/models/UpdateUserProfileDto.ts
+src/models/UpsertAssessmentApiResponse.ts
+src/models/UpsertAssessmentDto.ts
+src/models/UpsertAssessmentResponseDto.ts
+src/models/UpsertQuestionDto.ts
+src/models/UpsertQuestionResponseDto.ts
 src/models/UserAnswerDto.ts
 src/models/UserAssessmentItemDto.ts
 src/models/UserAssessmentListApiResponse.ts
