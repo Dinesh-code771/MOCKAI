@@ -136,6 +136,9 @@ export const APP_STRINGS = {
         `Invalid course IDs: ${ids.join(', ')}`,
     },
     assessments: {
+      course_not_found: 'Course not found',
+      cannot_update_published_assessment: 'Cannot update published assessment',
+      cannot_update_inactive_assessment: 'Cannot update inactive assessment',
       user_assessment_not_found: 'User assessment not found',
       assessment_not_found: 'Assessment not found',
       missing_required_parameter:

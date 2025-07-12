@@ -18,8 +18,14 @@ import {
   UserAnswerDto,
   UserAssessmentResponseDto,
 } from '@assessments/dto/start-assessment.dto';
+import {
+  UpsertAssessmentDto,
+  UpsertAssessmentResponseDto,
+  UpsertQuestionDto,
+} from '@assessments/dto/upsert-assessment.dto';
 import { APP_STRINGS } from '@common/strings';
 import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
+import { QuestionType } from '@assessments/enum/question-type.enum';
 import { UserInfo } from '@common/types/auth.types';
 import { RoleType } from '@common/enums/auth-type.enum';
 import {
@@ -281,5 +287,117 @@ export class AssessmentsService {
       assessments,
       pagination,
     );
+  }
+
+  async upsertAssessment(
+    upsertAssessmentDto: UpsertAssessmentDto,
+  ): Promise<UpsertAssessmentResponseDto> {
+    // Validate questions
+    this.validateQuestions(upsertAssessmentDto.questions);
+
+    // Validate question count limits
+    if (
+      upsertAssessmentDto.questions.length > upsertAssessmentDto.max_questions
+    ) {
+      throw new BadRequestException(
+        'Assessment cannot have more than 100 questions',
+      );
+    }
+
+    // Transform DTO to database format
+    const assessmentData = {
+      id: upsertAssessmentDto.id,
+      course_id: upsertAssessmentDto.course_id,
+      name: upsertAssessmentDto.name,
+      type: upsertAssessmentDto.type,
+      difficulty: upsertAssessmentDto.difficulty,
+      duration_minutes: upsertAssessmentDto.duration_minutes,
+      description: upsertAssessmentDto.description,
+      max_score: upsertAssessmentDto.max_score,
+      max_questions: upsertAssessmentDto.max_questions,
+      questions: upsertAssessmentDto.questions.map((question) => ({
+        id: question.id,
+        question_text: question.question_text,
+        question_type: question.question_type,
+        options: question.options,
+        correct_answer: question.correct_answer,
+        difficulty: question.difficulty,
+        order_sequence: question.order_sequence,
+      })),
+    };
+
+    const { assessment, questions } =
+      await this.assessmentsDBService.upsertAssessmentWithQuestions(
+        assessmentData,
+      );
+
+    return this.assessmentsTransform.transformToUpsertAssessmentResponse(
+      assessment,
+      questions,
+    );
+  }
+
+  private validateQuestions(questions: UpsertQuestionDto[]) {
+    for (const question of questions) {
+      // Validate MCQ questions
+      if (question.question_type === QuestionType.MCQ) {
+        if (!question.options || !Array.isArray(question.options)) {
+          throw new BadRequestException(
+            `MCQ question "${question.question_text}" must have options`,
+          );
+        }
+
+        if (question.options.length < 2) {
+          throw new BadRequestException(
+            `MCQ question "${question.question_text}" must have at least 2 options`,
+          );
+        }
+
+        if (question.options.length > 6) {
+          throw new BadRequestException(
+            `MCQ question "${question.question_text}" can have at most 6 options`,
+          );
+        }
+
+        if (!question.correct_answer) {
+          throw new BadRequestException(
+            `MCQ question "${question.question_text}" must have a correct answer`,
+          );
+        }
+
+        if (!question.options.includes(question.correct_answer)) {
+          throw new BadRequestException(
+            `Correct answer for question "${question.question_text}" must be one of the provided options`,
+          );
+        }
+      }
+
+      // Validate subjective questions
+      if (question.question_type === QuestionType.SUBJECTIVE) {
+        if (question.options && question.options.length > 0) {
+          throw new BadRequestException(
+            `Subjective question "${question.question_text}" should not have options`,
+          );
+        }
+      }
+    }
+
+    // Validate unique order sequences
+    const orderSequences = questions.map((q) => q.order_sequence);
+    const uniqueOrderSequences = new Set(orderSequences);
+
+    if (orderSequences.length !== uniqueOrderSequences.size) {
+      throw new BadRequestException('Question order sequences must be unique');
+    }
+
+    // Validate order sequences are sequential starting from 1
+    const sortedSequences = [...orderSequences].sort((a, b) => a - b);
+    for (let i = 0; i < sortedSequences.length; i++) {
+      if (sortedSequences[i] !== i + 1) {
+        throw new BadRequestException(
+          'Question order sequences must be sequential starting from 1',
+        );
+      }
+    }
   }
 }

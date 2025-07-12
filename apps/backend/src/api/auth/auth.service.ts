@@ -230,6 +230,16 @@ export class AuthService {
 
     const { email, full_name, avatar, provider_id } = req.user;
 
+    const existingUser = await this.authDBService.findUserByEmail(email.toLowerCase());
+
+    if (!existingUser) {
+      return {
+        is_temp: null,
+        user: null,
+        token: null,
+      };
+    }
+
     const userData: OAuthDto = {
       email: email.toLowerCase(),
       full_name,
@@ -237,7 +247,7 @@ export class AuthService {
       provider_id,
     };
 
-    const user = await this.authDBService.upsertOAuthUser(userData, provider);
+    const user = await this.authDBService.upsertOAuthUser(userData, provider, existingUser.is_temp);
 
     const parsedUser = this.authTransform.transformToUserResponse(user);
     const token = await this.jwtService.generateAuthToken(parsedUser);

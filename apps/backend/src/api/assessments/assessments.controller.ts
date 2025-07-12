@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   Param,
+  Put,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,15 +27,21 @@ import {
 } from '@assessments/dto/assessment-list.dto';
 import {
   UserAssessmentListApiResponse,
+  UserAssessmentQueryDto,
 } from '@assessments/dto/user-assessment-list.dto';
 import {
   StartAssessmentBodyDto,
   StartAssessmentApiResponse,
   CompleteAssessmentApiResponse,
+  UserAnswerResponseDto,
 } from '@assessments/dto/start-assessment.dto';
 import { UserInfo } from '@common/types/auth.types';
 import { StoreAnswerDto } from '@assessments/dto/store-answer.dto';
 import { Roles } from '@auth/decorator/roles.decorator';
+import {
+  UpsertAssessmentDto,
+  UpsertAssessmentApiResponse,
+} from '@assessments/dto/upsert-assessment.dto';
 
 @Controller(RouteNames.ASSESSMENTS)
 @ApiTags('Assessments')
@@ -235,34 +242,89 @@ export class AssessmentsController {
   @Roles(RoleType.STUDENT)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get user assessments with filtering and pagination',
+    summary: 'API to get user assessments list with filtering and pagination',
     description:
-      'Retrieve user assessments with optional filters for type, course_id, difficulty, and status. Supports pagination. Scores are shown as null for scheduled and in_progress assessments.',
+      'Get paginated list of user assessments with optional filtering by type, course, difficulty, and status.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'User assessments retrieved successfully',
+    description: 'User assessments list retrieved successfully',
     type: UserAssessmentListApiResponse,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid query parameters provided.',
+    description: 'Invalid query parameters.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized - Invalid access token.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - Student access required.',
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Internal server error.',
   })
   async getUserAssessments(
-    @Query() query: UserAssessmentListQueryDto,
     @User('id') userId: string,
-  ) {
+    @Query() query: UserAssessmentQueryDto,
+  ): Promise<UserAssessmentListApiResponse> {
     const response = await this.assessmentsService.getUserAssessments(
       userId,
       query,
     );
     return ResponseUtil.success(
       response,
-      'User assessments retrieved successfully',
+      'User assessments list retrieved successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Post(RouteNames.ASSESSMENTS_UPSERT)
+  @Auth(AuthType.JWT)
+  @Roles(RoleType.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'API to create or update assessment with questions (Admin only)',
+    description:
+      'Create a new assessment or update an existing unpublished assessment with questions. Only unpublished assessments can be updated.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Assessment upserted successfully',
+    type: UpsertAssessmentApiResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Invalid assessment data, published assessment update attempt, or validation errors.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Assessment or course not found.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized - Invalid access token.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - Admin access required.',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error.',
+  })
+  async upsertAssessment(
+    @Body() upsertAssessmentDto: UpsertAssessmentDto,
+  ): Promise<UpsertAssessmentApiResponse> {
+    const response =
+      await this.assessmentsService.upsertAssessment(upsertAssessmentDto);
+    return ResponseUtil.success(
+      response,
+      'Assessment upserted successfully',
       HttpStatus.OK,
     );
   }

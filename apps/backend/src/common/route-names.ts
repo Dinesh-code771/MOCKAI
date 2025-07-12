@@ -50,4 +50,5 @@ export enum RouteNames {
   ASSESSMENTS_COMPLETE = 'user-assessment/:userAssessmentId/complete',
   ASSESSMENTS_GET_COMPLETE_DATA = 'user-assessment/:userAssessmentId/complete-data',
   ASSESSMENTS_USER_LIST = 'user-assessments',
+  ASSESSMENTS_UPSERT = 'upsert',
 }

@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { AssessmentResponseDto, AssessmentListResponseDto } from '@assessments/dto/assessment-list.dto';
-import { UserAssessmentListResponseDto, UserAssessmentItemDto } from '@assessments/dto/user-assessment-list.dto';
 import {
-  CompleteAssessmentResponseDto,
-  UserAnswerDto,
+  AssessmentResponseDto,
+  AssessmentListResponseDto,
+} from '@assessments/dto/assessment-list.dto';
+import {
+  UserAssessmentItemDto,
+  UserAssessmentListResponseDto,
+} from '@assessments/dto/user-assessment-list.dto';
+import {
   UserAssessmentResponseDto,
+  UserAnswerDto,
+  CompleteAssessmentResponseDto,
 } from '@assessments/dto/start-assessment.dto';
+import { UpsertAssessmentResponseDto } from '@assessments/dto/upsert-assessment.dto';
 import { PaginationDetailsDto } from '@common/dto/pagination.dto';
 import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
 
@@ -31,18 +38,25 @@ export class AssessmentsTransform {
     };
   }
 
-  transformToAssessmentListResponse(assessments: any[], pagination: PaginationDetailsDto): AssessmentListResponseDto {
+  transformToAssessmentListResponse(
+    assessments: any[],
+    pagination: PaginationDetailsDto,
+  ): AssessmentListResponseDto {
     return {
-      assessments: assessments.map((assessment) => this.transformToAssessmentResponse(assessment)),
+      assessments: assessments.map((assessment) =>
+        this.transformToAssessmentResponse(assessment),
+      ),
       pagination,
     };
   }
 
   transformToUserAssessmentListResponse(
     assessments: any[],
-    pagination: PaginationDetailsDto
+    pagination: PaginationDetailsDto,
   ): UserAssessmentListResponseDto {
-    const userAssessments = assessments.map((assessment) => this.transformToUserAssessmentItem(assessment));
+    const userAssessments = assessments.map((assessment) =>
+      this.transformToUserAssessmentItem(assessment),
+    );
 
     return {
       assessments: userAssessments,
@@ -50,9 +64,12 @@ export class AssessmentsTransform {
     };
   }
 
-  private transformToUserAssessmentItem(assessment: any): UserAssessmentItemDto {
+  private transformToUserAssessmentItem(
+    assessment: any,
+  ): UserAssessmentItemDto {
     const userAssessment = assessment.user_assessments[0];
-    const shouldShowScores = userAssessment.status === AssessmentStatus.COMPLETED;
+    const shouldShowScores =
+      userAssessment.status === AssessmentStatus.COMPLETED;
 
     return {
       id: assessment.id,
@@ -70,7 +87,9 @@ export class AssessmentsTransform {
         started_at: userAssessment.started_at,
         completed_at: userAssessment.completed_at,
         total_score: shouldShowScores ? userAssessment.total_score : null,
-        percentage_score: shouldShowScores ? userAssessment.percentage_score : null,
+        percentage_score: shouldShowScores
+          ? userAssessment.percentage_score
+          : null,
         feedback: userAssessment.feedback,
         scheduled_at: userAssessment.scheduled_at,
         weak_areas: userAssessment.weak_areas,
@@ -103,7 +122,9 @@ export class AssessmentsTransform {
         difficulty: userAssessment.assessments.difficulty,
         duration_minutes: userAssessment.assessments.duration_minutes,
         description: userAssessment.assessments.description,
-        max_score: userAssessment.assessments.max_score ? Number(userAssessment.assessments.max_score) : 100,
+        max_score: userAssessment.assessments.max_score
+          ? Number(userAssessment.assessments.max_score)
+          : 100,
         total_questions: userAssessment.assessments.total_questions,
         course: userAssessment.assessments.courses
           ? {
@@ -141,7 +162,9 @@ export class AssessmentsTransform {
     };
   }
 
-  transformToCompleteAssessmentResponse(data: any): CompleteAssessmentResponseDto {
+  transformToCompleteAssessmentResponse(
+    data: any,
+  ): CompleteAssessmentResponseDto {
     const { userAssessment, questions } = data;
 
     return {
@@ -160,7 +183,9 @@ export class AssessmentsTransform {
         difficulty: userAssessment.assessments.difficulty,
         duration_minutes: userAssessment.assessments.duration_minutes,
         description: userAssessment.assessments.description,
-        max_score: userAssessment.assessments.max_score ? Number(userAssessment.assessments.max_score) : 100,
+        max_score: userAssessment.assessments.max_score
+          ? Number(userAssessment.assessments.max_score)
+          : 100,
         total_questions: userAssessment.assessments.total_questions,
         course: userAssessment.assessments.courses
           ? {
@@ -191,7 +216,7 @@ export class AssessmentsTransform {
 
   transformToUserAssessmentResponse(
     assessments: any[],
-    pagination: PaginationDetailsDto
+    pagination: PaginationDetailsDto,
   ): UserAssessmentListResponseDto {
     return {
       assessments:
@@ -236,6 +261,40 @@ export class AssessmentsTransform {
           };
         }) || [],
       pagination,
+    };
+  }
+
+  transformToUpsertAssessmentResponse(
+    assessment: any,
+    questions: any[],
+  ): UpsertAssessmentResponseDto {
+    return {
+      id: assessment.id,
+      name: assessment.name,
+      type: assessment.type,
+      difficulty: assessment.difficulty,
+      duration_minutes: assessment.duration_minutes,
+      description: assessment.description,
+      max_score: assessment.max_score,
+      total_questions: assessment.total_questions,
+      is_published: assessment.is_published,
+      course: assessment.courses
+        ? {
+            id: assessment.courses.id,
+            name: assessment.courses.name,
+          }
+        : null,
+      created_at: assessment.created_at,
+      updated_at: assessment.updated_at,
+      questions: questions.map((question) => ({
+        id: question.id,
+        question_text: question.question_text,
+        question_type: question.question_type as any,
+        options: question.options,
+        correct_answer: question.correct_answer,
+        difficulty: question.difficulty,
+        order_sequence: question.order_sequence,
+      })),
     };
   }
 }

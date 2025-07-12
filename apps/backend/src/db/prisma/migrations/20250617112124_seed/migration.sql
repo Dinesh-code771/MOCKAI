@@ -34,11 +34,11 @@ ON CONFLICT(id) DO NOTHING;
 
 
 -- seed assessments
-INSERT INTO assessments (id, course_id, name, type, difficulty, duration_minutes, description, max_score, total_questions, is_active, created_at, updated_at) VALUES
-  ('d30eeef6-b281-4e69-b7a8-bfafc8a4aae7', (SELECT id FROM courses WHERE name = 'Java Full Stack'), 'Fullstack Java MCQ Assessment', 'mcq', 'intermediate', 60, 'Auto-generated MCQ assessment for Fullstack Java', 100, 25, true, '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658'),
-  ('170a87be-29fe-47e4-82e7-cd3cdd6b3bf4', (SELECT id FROM courses WHERE name = 'Python Full Stack'), 'Fullstack Python MCQ Assessment', 'mcq', 'intermediate', 60, 'Auto-generated MCQ assessment for Fullstack Python', 100, 25, true, '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658'),
-  ('1485f4e0-2351-4ee9-b0d3-1931642af82a', (SELECT id FROM courses WHERE name = 'Database Management'), 'Database MCQ Assessment', 'mcq', 'intermediate', 60, 'Auto-generated MCQ assessment for Database', 100, 25, true, '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658'),
-  ('7e30fff8-14ba-4d91-bee3-d20ac02bf0d7', (SELECT id FROM courses WHERE name = 'Frontend Development'), 'Frontend MCQ Assessment', 'mcq', 'intermediate', 60, 'Auto-generated MCQ assessment for Frontend', 100, 25, true, '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658')
+INSERT INTO assessments (id, course_id, name, type, difficulty, duration_minutes, description, max_score, total_questions, is_active, is_published, published_at, created_at, updated_at) VALUES
+  ('d30eeef6-b281-4e69-b7a8-bfafc8a4aae7', (SELECT id FROM courses WHERE name = 'Java Full Stack'), 'Fullstack Java MCQ Assessment', 'mcq', 'intermediate', 60, 'Auto-generated MCQ assessment for Fullstack Java', 100, 25, true, true, '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658'),
+  ('170a87be-29fe-47e4-82e7-cd3cdd6b3bf4', (SELECT id FROM courses WHERE name = 'Python Full Stack'), 'Fullstack Python MCQ Assessment', 'mcq', 'intermediate', 60, 'Auto-generated MCQ assessment for Fullstack Python', 100, 25, true, true,  '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658'),
+  ('1485f4e0-2351-4ee9-b0d3-1931642af82a', (SELECT id FROM courses WHERE name = 'Database Management'), 'Database MCQ Assessment', 'mcq', 'intermediate', 60, 'Auto-generated MCQ assessment for Database', 100, 25, true, true, '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658'),
+  ('7e30fff8-14ba-4d91-bee3-d20ac02bf0d7', (SELECT id FROM courses WHERE name = 'Frontend Development'), 'Frontend MCQ Assessment', 'mcq', 'intermediate', 60, 'Auto-generated MCQ assessment for Frontend', 100, 25, true, true, '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658', '2025-07-02T16:59:44.034658')
 ON CONFLICT(id) DO NOTHING;
 
 -- Insert Java Full Stack questions

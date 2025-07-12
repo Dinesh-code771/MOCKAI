@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DBService } from '@db/db.service';
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
 import { Prisma } from '@prisma/client';
 import { APP_STRINGS } from '@common/strings';
 import { UserAssessmentListQueryDto } from '@assessments/dto/assessment-list.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AssessmentsDBRepository {
@@ -20,6 +21,7 @@ export class AssessmentsDBRepository {
   }) {
     const whereCondition: Prisma.assessmentsWhereInput = {
       is_active: true,
+      is_published: true,
     };
 
     if (filters.type) {
@@ -429,6 +431,157 @@ export class AssessmentsDBRepository {
           },
         },
       },
+    });
+  }
+
+  async upsertAssessmentWithQuestions(data: {
+    id?: string;
+    course_id?: string;
+    name: string;
+    type: string;
+    difficulty: string;
+    duration_minutes?: number;
+    description?: string;
+    max_score: number;
+    max_questions: number;
+    questions: Array<{
+      id?: string;
+      question_text: string;
+      question_type: string;
+      options?: string[];
+      correct_answer?: string;
+      difficulty: string;
+      order_sequence: number;
+    }>;
+  }) {
+    // If updating, check if assessment is published
+    if (data.id) {
+      const existingAssessment = await this.prisma.assessments.findUnique({
+        where: { id: data.id },
+        select: { is_published: true, is_active: true },
+      });
+
+      if (!existingAssessment) {
+        throw new NotFoundException(
+          APP_STRINGS.api_errors.assessments.assessment_not_found,
+        );
+      }
+
+      if (existingAssessment.is_published) {
+        throw new BadRequestException(
+          APP_STRINGS.api_errors.assessments.cannot_update_published_assessment,
+        )
+      }
+
+      if (!existingAssessment.is_active) {
+        throw new BadRequestException(
+          APP_STRINGS.api_errors.assessments.cannot_update_inactive_assessment,
+        )
+      }
+    }
+
+    // Validate course exists if provided
+    if (data.course_id) {
+      const course = await this.prisma.courses.findUnique({
+        where: { id: data.course_id, is_active: true },
+      });
+
+      if (!course) {
+        throw new NotFoundException(
+          APP_STRINGS.api_errors.assessments.course_not_found,
+        );
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // Upsert assessment
+      const assessment = await tx.assessments.upsert({
+        where: { id: data.id || uuidv4() },
+        create: {
+          course_id: data.course_id,
+          name: data.name,
+          type: data.type as any,
+          difficulty: data.difficulty as any,
+          duration_minutes: data.duration_minutes || 60,
+          description: data.description,
+          max_score: data.max_score,
+          total_questions: data.max_questions,
+          is_active: true,
+          is_published: false,
+        },
+        update: {
+          course_id: data.course_id,
+          name: data.name,
+          type: data.type as any,
+          difficulty: data.difficulty as any,
+          duration_minutes: data.duration_minutes || 60,
+          description: data.description,
+          max_score: data.max_score || 100,
+          total_questions: data.questions.length,
+          updated_at: new Date(),
+        },
+        include: {
+          courses: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      // If updating, delete existing questions that are not in the new set
+      if (data.id) {
+        const questionIds = data.questions
+          .filter((q) => q.id)
+          .map((q) => q.id!);
+
+        await tx.questions.deleteMany({
+          where: {
+            assessment_id: assessment.id,
+            id: {
+              notIn: questionIds,
+            },
+          },
+        });
+      }
+
+      // Upsert questions
+      for (const questionData of data.questions) {
+        await tx.questions.upsert({
+          where: { id: questionData.id || uuidv4() },
+          create: {
+            assessment_id: assessment.id,
+            question_text: questionData.question_text,
+            question_type: questionData.question_type as any,
+            options: questionData.options || null,
+            correct_answer: questionData.correct_answer,
+            difficulty: questionData.difficulty as any,
+            order_sequence: questionData.order_sequence,
+            is_active: true,
+          },
+          update: {
+            question_text: questionData.question_text,
+            question_type: questionData.question_type as any,
+            options: questionData.options || null,
+            correct_answer: questionData.correct_answer,
+            difficulty: questionData.difficulty as any,
+            order_sequence: questionData.order_sequence,
+            updated_at: new Date(),
+          },
+        });
+      }
+
+      const questions = await tx.questions.findMany({
+        where: {
+          assessment_id: assessment.id,
+        },
+      });
+
+      return {
+        assessment,
+        questions,
+      };
     });
   }
 }

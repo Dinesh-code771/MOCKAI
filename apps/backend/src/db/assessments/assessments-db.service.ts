@@ -121,4 +121,27 @@ export class AssessmentsDBService {
       userAssessmentId,
     );
   }
+
+  async upsertAssessmentWithQuestions(data: {
+    id?: string;
+    course_id?: string;
+    name: string;
+    type: string;
+    difficulty: string;
+    duration_minutes?: number;
+    description?: string;
+    max_score: number;
+    max_questions: number;
+    questions: Array<{
+      id?: string;
+      question_text: string;
+      question_type: string;
+      options?: string[];
+      correct_answer?: string;
+      difficulty: string;
+      order_sequence: number;
+    }>;
+  }) {
+    return this.assessmentsRepository.upsertAssessmentWithQuestions(data);
+  }
 }
