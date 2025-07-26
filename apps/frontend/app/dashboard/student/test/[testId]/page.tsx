@@ -28,7 +28,7 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { startTest } from '../_actions';
-import { assessmentApi } from '@/lib/api-client';
+import { getAuthenticatedAssessmentsApi } from '@/lib/api-client';
 
 interface UserAnswer {
   id: string;
@@ -189,7 +189,16 @@ export default function TakeTestPage() {
           ? question.options[selectedAnswer]
           : 'no answer';
 
-      await assessmentApi.assessmentsControllerStoreUserAnswers({
+      console.log(testData.userAssessmentId, 'testData.userAssessmentId');
+      console.log(question.id, 'question.id');
+      console.log(answerText, 'answerText');
+
+      const authenticatedApi = getAuthenticatedAssessmentsApi();
+
+      // Add debugging for authentication
+      console.log('Sending answer with authenticated API...');
+
+      await authenticatedApi.assessmentsControllerStoreUserAnswers({
         userAssessmentId: testData.userAssessmentId,
         questionId: question.id.toString(),
         storeAnswerDto: {
@@ -197,13 +206,22 @@ export default function TakeTestPage() {
         },
       });
 
+      console.log('Answer sent successfully!');
+
       // Mark as answered
       setAnsweredQuestions(
         (prev) => new Set(Array.from(prev).concat([question.id])),
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending answer:', error);
-      toast.error('Failed to save answer');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+
+      if (error.response?.status === 403) {
+        toast.error('Access denied. Please check your user role.');
+      } else {
+        toast.error('Failed to save answer');
+      }
     }
   };
 
@@ -227,8 +245,9 @@ export default function TakeTestPage() {
       await sendAnswerToServer(currentQuestion);
 
       // Complete the assessment
+      const authenticatedApi = getAuthenticatedAssessmentsApi();
       const completeResponse =
-        await assessmentApi.assessmentsControllerCompleteAssessment({
+        await authenticatedApi.assessmentsControllerCompleteAssessment({
           userAssessmentId: testData.userAssessmentId,
         });
 
@@ -260,7 +279,8 @@ export default function TakeTestPage() {
   };
 
   const getQuestionStatus = (index: number) => {
-    if (isQuestionAnswered(index)) return 'answered';
+    const question = testData?.questions[index];
+    if (question && isQuestionAnswered(question.id)) return 'answered';
     if (flaggedQuestions.has(index)) return 'flagged';
     return 'unanswered';
   };
@@ -441,7 +461,9 @@ export default function TakeTestPage() {
   }
 
   const currentQ = testData.questions[currentQuestion];
-  const isCurrentQuestionAnswered = isQuestionAnswered(currentQuestion);
+  const isCurrentQuestionAnswered = currentQ
+    ? isQuestionAnswered(currentQ.id)
+    : false;
 
   return (
     <DashboardLayout role="student" currentPath="/dashboard/student/test">

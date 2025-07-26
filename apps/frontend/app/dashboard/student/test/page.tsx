@@ -68,7 +68,7 @@ export default async function TakeTest() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[...tests?.assessments, ...inProgressTests?.assessments]?.map(
+              {[...(tests?.assessments || []), ...(inProgressTests?.assessments || [])]?.map(
                 (test, index) => (
                   <TestCard key={test.id} test={test} index={index} />
                 ),

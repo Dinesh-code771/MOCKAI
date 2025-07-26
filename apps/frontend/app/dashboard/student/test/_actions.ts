@@ -21,8 +21,18 @@ export const getTests = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching tests:', error);
-    // Return empty array as fallback
-    return [];
+    // Return proper structure as fallback
+    return {
+      assessments: [],
+      pagination: {
+        pageNo: 1,
+        pageSize: 10,
+        totalCount: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
   }
 };
 
@@ -56,6 +66,17 @@ export const getInProgressTests = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching in-progress tests:', error);
-    return [];
+    // Return proper structure as fallback
+    return {
+      assessments: [],
+      pagination: {
+        pageNo: 1,
+        pageSize: 10,
+        totalCount: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
   }
 };
