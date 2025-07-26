@@ -19,7 +19,8 @@ import {
   BookOpen,
   Target,
   Star,
-  Plus
+  Plus,
+  Trophy
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -125,9 +126,27 @@ export default function AdminDashboard() {
               <h1 className="text-2xl font-bold">Admin Dashboard</h1>
               <p className="text-purple-100">Manage students, questions, and assessments</p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-purple-100">Total Students</p>
-              <p className="text-3xl font-bold">267</p>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Button 
+                  onClick={() => window.location.href = '/dashboard/admin/assessments'}
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Assessments
+                </Button>
+                <Button 
+                  onClick={() => window.location.href = '/dashboard/admin/assessments/create'}
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Assessment
+                </Button>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-purple-100">Total Students</p>
+                <p className="text-3xl font-bold">267</p>
+              </div>
             </div>
           </div>
         </motion.div>

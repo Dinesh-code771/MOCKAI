@@ -53,8 +53,18 @@ export default function LoginPage() {
         return router.push('/auth/otp');
       }
 
+      if (result.data?.user.roles[0]?.name === 'admin') {
+        return router.push('/dashboard/admin');
+      }
+
+      if (result.data?.user.roles[0]?.name === 'instructor') {
+        return router.push('/dashboard/instructor');
+      }
+
+      if (result.data?.user.roles[0]?.name === 'student') {
+        return router.push('/dashboard/student');
+      }
       // Redirect to dashboard on successful login
-      router.push('/auth/gender-course');
     }
   };
 

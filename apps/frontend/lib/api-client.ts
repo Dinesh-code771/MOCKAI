@@ -106,3 +106,4 @@ export const getAuthenticatedUsersApi = (): UsersApi => {
 export const getAuthenticatedAssessmentsApi = (): AssessmentsApi => {
   return new AssessmentsApi(createAuthenticatedConfig());
 };
+
