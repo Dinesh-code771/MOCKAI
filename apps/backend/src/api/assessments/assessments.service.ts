@@ -105,6 +105,14 @@ export class AssessmentsService {
         scheduleAt,
       );
 
+      if (assessment.type === AssessmentType.SUBJECTIVE && !scheduleAt) {
+        throw new BadRequestException(
+          APP_STRINGS.api_errors.assessments.subjective_assessment_requires_schedule,
+        );
+      } else {
+        scheduleAt = new Date();
+      }
+
       // delayed job to start the interview
       if (assessment.type === AssessmentType.SUBJECTIVE) {
         this.backgroundServiceManager.assessmentStartJob(

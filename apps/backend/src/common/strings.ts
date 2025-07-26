@@ -170,6 +170,7 @@ export const APP_STRINGS = {
       },
       question_already_answered: 'Question already answered',
       question_not_found: 'Question not found',
+      subjective_assessment_requires_schedule: 'Subjective assessment requires a schedule',
     },
     metrics: {
       failed_to_retrieve_metrics: 'Failed to retrieve metrics',
