@@ -7,12 +7,14 @@ import { CronModule } from '@cron/cron.module';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 import { RouteNames } from '@common/route-names';
+import { AssessmentsQueueModule } from '@bg/queue/assessments/assessments-queue.module';
 
 @Module({
   imports: [
     BullModule.registerQueue(...QUEUE_LIST.map((name) => ({ name }))),
     EmailQueueModule,
     CronModule,
+    AssessmentsQueueModule,
     BullBoardModule.forRoot({
       route: RouteNames.QUEUES_UI,
       adapter: ExpressAdapter,

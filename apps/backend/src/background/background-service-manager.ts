@@ -12,6 +12,7 @@ export class BackgroundServiceManager {
   private readonly logger = new Logger(BackgroundServiceManager.name);
   constructor(
     @InjectQueue(QueueName.EMAIL) private emailQueue: Queue,
+    @InjectQueue(QueueName.ASSESSMENTS) private assessmentsQueue: Queue,
   ) {}
 
   async addJob<T>(
@@ -42,5 +43,41 @@ export class BackgroundServiceManager {
       );
       throw error;
     }
+  }
+
+  async removeAssessmentsQueueJob(jobId: string) {
+    return this.assessmentsQueue.remove(jobId);
+  }
+
+  async assessmentStartJob(jobId: string, delay: number) {
+    return this.addJob(
+      this.assessmentsQueue,
+      JobName.ASSESSMENT_START_JOB,
+      {},
+      {
+        delay,
+        jobId,
+      },
+    )
+  }
+
+  async assessmentEndJob(jobId: string, delay: number) {
+    return this.addJob(
+      this.assessmentsQueue,
+      JobName.ASSESSMENT_END_JOB,
+      {},
+      {
+        delay,
+        jobId,
+      },
+    );
+  }
+
+  async assessInterviewJob(id: string) {
+    return this.addJob(
+      this.assessmentsQueue,
+      JobName.ASSESS_INTERVIEW_JOB,
+      { id },
+    );
   }
 }

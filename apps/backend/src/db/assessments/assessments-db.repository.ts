@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DBService } from '@db/db.service';
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
@@ -246,14 +250,18 @@ export class AssessmentsDBRepository {
     }
   }
 
-  async createUserAssessment(userId: string, assessmentId: string) {
+  async createUserAssessment(
+    userId: string,
+    assessmentId: string,
+    scheduleAt?: Date,
+  ) {
     return this.prisma.user_assessments.create({
       data: {
         user_id: userId,
         assessment_id: assessmentId,
-        scheduled_at: new Date(),
-        status: 'in_progress',
-        started_at: new Date(),
+        scheduled_at: scheduleAt || new Date(),
+        status: scheduleAt ? 'scheduled' : 'in_progress',
+        started_at: scheduleAt || new Date(),
       },
       include: {
         assessments: {
@@ -337,6 +345,7 @@ export class AssessmentsDBRepository {
             id: true,
             max_score: true,
             total_questions: true,
+            type: true,
             questions: {
               where: {
                 id: questionId,
@@ -356,10 +365,10 @@ export class AssessmentsDBRepository {
     userAssessmentId: string,
     questionId: string,
     answer: string,
-    isCorrect: boolean,
-    pointsEarned: number,
-    totalScore: number,
-    percentageScore: number,
+    isCorrect?: boolean,
+    pointsEarned?: number,
+    totalScore?: number,
+    percentageScore?: number,
   ) {
     return this.prisma.user_assessments.update({
       where: {
@@ -471,13 +480,13 @@ export class AssessmentsDBRepository {
       if (existingAssessment.is_published) {
         throw new BadRequestException(
           APP_STRINGS.api_errors.assessments.cannot_update_published_assessment,
-        )
+        );
       }
 
       if (!existingAssessment.is_active) {
         throw new BadRequestException(
           APP_STRINGS.api_errors.assessments.cannot_update_inactive_assessment,
-        )
+        );
       }
     }
 
@@ -604,7 +613,7 @@ export class AssessmentsDBRepository {
   async getAssessmentWithQuestionsCount(assessmentId: string) {
     return this.prisma.assessments.findUnique({
       where: { id: assessmentId },
-      select: { 
+      select: {
         id: true,
         total_questions: true,
         is_published: true,
@@ -620,10 +629,85 @@ export class AssessmentsDBRepository {
   async publishAssessment(assessmentId: string) {
     return this.prisma.assessments.update({
       where: { id: assessmentId },
-      data: { 
+      data: {
         is_published: true,
         published_at: new Date(),
       },
     });
+  }
+
+  async getUserAnswers(userAssessmentId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const userAssessment = await tx.user_assessments.findUnique({
+        where: { id: userAssessmentId },
+        select: {
+          assessments: {
+            select: {
+              max_score: true,
+              questions: {
+                select: {
+                  id: true,
+                  question_text: true,
+                  user_answers: {
+                    where: {
+                      user_assessment_id: userAssessmentId,
+                    },
+                    select: {
+                      answer: true,
+                    },
+                  }
+                }
+              }
+            },
+          },
+        },
+      });
+
+      return {
+        maxScore: userAssessment.assessments.max_score,
+        userAnswers: userAssessment.assessments.questions.map((q) => ({
+          questionId: q.id,
+          questionText: q.question_text,
+          userAnswer: q.user_answers.length > 0 ? q.user_answers[0].answer : undefined,
+        })),
+      }
+    });
+  }
+
+  async updateInterviewScore(
+    result: AssessmentResult,
+    userAssessmentId: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      for (const question of result.questionAssessments) {
+        await tx.user_answers.upsert({
+          where: {
+            user_assessment_id_question_id: {
+              user_assessment_id: userAssessmentId,
+              question_id: question.questionId,
+            },
+          },
+          create: {
+            user_assessment_id: userAssessmentId,
+            question_id: question.questionId,
+            points_earned: question.score,
+          },
+          update: {
+            points_earned: question.score,
+          }
+        })
+      }
+
+      return tx.user_assessments.update({
+        where: { id: userAssessmentId },
+        data: {
+          total_score: result.overallScore,
+          percentage_score: result.percentage,
+          feedback: result.overallFeedback,
+          strong_areas: result.strongAreas,
+          weak_areas: result.weakAreas,
+        },
+      })
+    })
   }
 }

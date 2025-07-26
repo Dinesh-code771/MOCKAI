@@ -68,10 +68,15 @@ export class AssessmentsDBService {
     );
   }
 
-  async createUserAssessment(userId: string, assessmentId: string) {
+  async createUserAssessment(
+    userId: string,
+    assessmentId: string,
+    scheduleAt?: Date,
+  ) {
     return this.assessmentsRepository.createUserAssessment(
       userId,
       assessmentId,
+      scheduleAt,
     );
   }
 
@@ -101,10 +106,10 @@ export class AssessmentsDBService {
     userAssessmentId: string,
     questionId: string,
     answer: string,
-    isCorrect: boolean,
-    pointsEarned: number,
-    totalScore: number,
-    percentageScore: number,
+    isCorrect?: boolean,
+    pointsEarned?: number,
+    totalScore?: number,
+    percentageScore?: number,
   ) {
     return this.assessmentsRepository.storeUserAnswers(
       userAssessmentId,
@@ -159,6 +164,18 @@ export class AssessmentsDBService {
   async publishAssessment(assessmentId: string) {
     return this.assessmentsRepository.publishAssessment(assessmentId);
   }
-  
-  
+
+  async getUserAnswers(userAssessmentId: string) {
+    return this.assessmentsRepository.getUserAnswers(userAssessmentId);
+  }
+
+  async updateInterviewScore(
+    result: AssessmentResult,
+    userAssessmentId: string,
+  ) {
+    return this.assessmentsRepository.updateInterviewScore(
+      result,
+      userAssessmentId,
+    );
+  }
 }

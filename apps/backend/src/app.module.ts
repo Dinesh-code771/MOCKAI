@@ -28,6 +28,7 @@ import { StaticDataModule } from '@static-data/static-data.module';
 import { UsersModule } from '@users/users.module';
 import { AssessmentsModule } from '@assessments/assessments.module';
 import { CustomJwtService } from '@common/services/jwt.service';
+import { AiModule } from '@ai/ai.module';
 
 const configService = new ConfigService<EnvConfig>();
 
@@ -50,12 +51,12 @@ const rateLimit = ThrottlerModule.forRoot([
   {
     name: 'short',
     ttl: 1 * 60, // Time to live in seconds (1 minute)
-    limit: 100, // Maximum number of requests within the ttl
+    limit: 30, // Maximum number of requests within the ttl
   },
   {
     name: 'medium',
     ttl: 5 * 60, // 5 minutes
-    limit: 200,
+    limit: 100,
   },
   {
     name: 'long',
@@ -107,6 +108,7 @@ const cacheModule = CacheModule.registerAsync({
     StaticDataModule,
     UsersModule,
     AssessmentsModule,
+    AiModule,
   ],
   providers: [
     CustomJwtService,

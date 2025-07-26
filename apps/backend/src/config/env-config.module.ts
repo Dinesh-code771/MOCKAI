@@ -43,6 +43,7 @@ const envConfig = registerAs(
       BACKEND_URL: process.env.BACKEND_URL,
       PRIVATE_IMAGE_EXPIRATION: parseInt(process.env.PRIVATE_IMAGE_EXPIRATION),
       FILE_URL_EXPIRY_IN_MILLISECONDS: parseInt(process.env.FILE_URL_EXPIRY_IN_MILLISECONDS),
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     }) as EnvConfig,
   );
 
@@ -90,6 +91,7 @@ const validationSchema = Joi.object({
   BACKEND_URL: Joi.string().required(),
   PRIVATE_IMAGE_EXPIRATION: Joi.number().required(),
   FILE_URL_EXPIRY_IN_MILLISECONDS: Joi.number().required(),
+  GEMINI_API_KEY: Joi.string().required(),
 });
 
 

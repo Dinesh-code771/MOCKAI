@@ -146,4 +146,8 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsNumber()
   FILE_URL_EXPIRY_IN_MILLISECONDS: number;
+
+  @IsNotEmpty()
+  @IsString()
+  GEMINI_API_KEY: string;
 }
