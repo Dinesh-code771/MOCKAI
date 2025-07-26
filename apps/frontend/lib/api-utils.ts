@@ -1,4 +1,9 @@
-import { getAuthenticatedAuthApi } from './api-client';
+import {
+  getAuthenticatedAuthApi,
+  getAuthenticatedUsersApi,
+} from './api-client';
+import { UserListItemDto } from '@mockai/sdk';
+import { revalidatePath } from 'next/cache';
 
 // Health check utilities
 export const checkApiHealth = async () => {
@@ -71,4 +76,23 @@ export const handleApiError = (error: any) => {
     return error.message;
   }
   return 'An unexpected error occurred';
+};
+
+export const getStudentsList = async () => {
+  const authenticatedApi = getAuthenticatedUsersApi();
+  const response = await authenticatedApi.usersControllerGetUsersList({
+    page: 1,
+    limit: 10,
+  });
+  return response.data?.users;
+};
+
+export const addStudents = async (students: string[]) => {
+  const authenticatedApi = getAuthenticatedUsersApi();
+  const response = await authenticatedApi.usersControllerAddUsers({
+    addUsersDto: {
+      emails: students,
+    },
+  });
+  return response.data;
 };

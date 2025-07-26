@@ -96,7 +96,7 @@ export const useAuth = () => {
       setAuthState((prev) => ({
         ...prev,
         isLoading: false,
-        error: JSON.parse(validatedData.error.message)[2].message,
+        error: JSON.parse(validatedData.error.message)[2]?.message,
       }));
       return { success: false, error: validatedData.error.message };
     }
