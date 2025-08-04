@@ -25,6 +25,12 @@ export interface StartAssessmentBodyDto {
      * @memberof StartAssessmentBodyDto
      */
     assessmentId?: string;
+    /**
+     * User Assessment ID (required when assessmentId is not provided)
+     * @type {Date}
+     * @memberof StartAssessmentBodyDto
+     */
+    scheduleAt?: Date;
 }
 
 /**
@@ -45,6 +51,7 @@ export function StartAssessmentBodyDtoFromJSONTyped(json: any, ignoreDiscriminat
     return {
         
         'assessmentId': json['assessmentId'] == null ? undefined : json['assessmentId'],
+        'scheduleAt': json['scheduleAt'] == null ? undefined : (new Date(json['scheduleAt'])),
     };
 }
 
@@ -55,6 +62,7 @@ export function StartAssessmentBodyDtoToJSON(value?: StartAssessmentBodyDto | nu
     return {
         
         'assessmentId': value['assessmentId'],
+        'scheduleAt': value['scheduleAt'] == null ? undefined : ((value['scheduleAt']).toISOString()),
     };
 }
 

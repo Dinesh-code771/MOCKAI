@@ -112,6 +112,7 @@ export class AssessmentsController {
     const response = await this.assessmentsService.startAssessment(
       userId,
       body.assessmentId,
+      body.scheduleAt,
     );
     return ResponseUtil.success(
       response,

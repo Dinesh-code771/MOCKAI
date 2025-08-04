@@ -37,7 +37,8 @@
       "@auth/*": ["api/auth/*"],
       "@static-data/*": ["api/static-data/*"],
       "@users/*": ["api/users/*"],
-      "@assessments/*": ["api/assessments/*"]
+      "@assessments/*": ["api/assessments/*"],
+      "@ai/*": ["ai/*"],
     }
   }
 }

@@ -5,6 +5,8 @@ import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
 import { QuestionType } from '@assessments/enum/question-type.enum';
+import { IsFutureDate } from '@common/validators/is-future-date.validator';
+import { Type } from 'class-transformer';
 
 export class StartAssessmentBodyDto {
   @ApiPropertyOptional({
@@ -15,6 +17,15 @@ export class StartAssessmentBodyDto {
   @IsOptional()
   @IsUUID()
   assessmentId?: string;
+
+  @ApiPropertyOptional({
+    description: 'User Assessment ID (required when assessmentId is not provided)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsFutureDate()
+  scheduleAt?: Date;
 }
 
 export class CourseDto {

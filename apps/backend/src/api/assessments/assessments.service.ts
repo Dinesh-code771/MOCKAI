@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { AssessmentsDBService } from '@db/assessments/assessments-db.service';
 import { AssessmentsTransform } from '@assessments/assessments.transform';
@@ -29,12 +30,17 @@ import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
 import { QuestionType } from '@assessments/enum/question-type.enum';
 import { UserInfo } from '@common/types/auth.types';
 import { RoleType } from '@common/enums/auth-type.enum';
+import { AssessmentType } from '@assessments/enum/assessment-type.enum';
+import { BackgroundServiceManager } from '@bg/background-service-manager';
+import { AiService } from '@ai/ai.service';
 
 @Injectable()
 export class AssessmentsService {
   constructor(
     private readonly assessmentsDBService: AssessmentsDBService,
     private readonly assessmentsTransform: AssessmentsTransform,
+    private readonly backgroundServiceManager: BackgroundServiceManager,
+    private readonly aiService: AiService,
   ) {}
 
   async getAssessmentsList(
@@ -75,6 +81,7 @@ export class AssessmentsService {
   async startAssessment(
     userId: string,
     assessmentId: string,
+    scheduleAt?: Date,
   ): Promise<UserAssessmentResponseDto> {
     const assessment =
       await this.assessmentsDBService.findAssessmentById(assessmentId);
@@ -95,6 +102,31 @@ export class AssessmentsService {
       userAssessment = await this.assessmentsDBService.createUserAssessment(
         userId,
         assessmentId,
+        scheduleAt,
+      );
+
+      if (assessment.type === AssessmentType.SUBJECTIVE && !scheduleAt) {
+        throw new BadRequestException(
+          APP_STRINGS.api_errors.assessments.subjective_assessment_requires_schedule,
+        );
+      } else {
+        scheduleAt = new Date();
+      }
+
+      // delayed job to start the interview
+      if (assessment.type === AssessmentType.SUBJECTIVE) {
+        this.backgroundServiceManager.assessmentStartJob(
+          `assessment-start:${userAssessment.id}`,
+          scheduleAt.getTime() - new Date().getTime() - 1000 * 30,
+        );
+      }
+
+      this.backgroundServiceManager.assessmentEndJob(
+        `assessment-end:${userAssessment.id}`,
+        scheduleAt.getTime() -
+          new Date().getTime() +
+          userAssessment.assessments.duration_minutes * 60 * 1000 +
+          1000 * 30,
       );
     }
 
@@ -162,6 +194,11 @@ export class AssessmentsService {
     questionId: string,
     answer: string,
   ): Promise<UserAnswerDto> {
+    let isCorrect: boolean;
+    let pointsEarned: number;
+    let totalScore: number;
+    let percentageScore: number;
+
     const userAssessment =
       await this.assessmentsDBService.getQuestionWithUserAssignment(
         userAssessmentId,
@@ -194,20 +231,23 @@ export class AssessmentsService {
       );
     }
 
-    const question = userAssessment.assessments.questions[0];
-    const isCorrect = question.correct_answer === answer;
-    const pointsEarned = isCorrect
-      ? Number(userAssessment.assessments.max_score) /
-        Number(userAssessment.assessments.total_questions)
-      : 0;
-    let totalScore = 0;
-    let percentageScore = 0;
+    // Handle MCQ type assessments
+    if (userAssessment.assessments.type === AssessmentType.MCQ) {
+      const question = userAssessment.assessments.questions[0];
+      isCorrect = question.correct_answer === answer;
+      pointsEarned = isCorrect
+        ? Number(userAssessment.assessments.max_score) /
+          Number(userAssessment.assessments.total_questions)
+        : 0;
+      totalScore = 0;
+      percentageScore = 0;
 
-    totalScore = (userAssessment.total_score?.toNumber() || 0) + pointsEarned;
-    percentageScore =
-      (totalScore /
-        Number(userAssessment.assessments?.max_score?.toNumber() || 0)) *
-      100;
+      totalScore = (userAssessment.total_score?.toNumber() || 0) + pointsEarned;
+      percentageScore =
+        (totalScore /
+          Number(userAssessment.assessments?.max_score?.toNumber() || 0)) *
+        100;
+    }
 
     const userAnswer = await this.assessmentsDBService.storeUserAnswers(
       userAssessmentId,
@@ -347,25 +387,33 @@ export class AssessmentsService {
 
         if (question.options.length < 2) {
           throw new BadRequestException(
-            APP_STRINGS.api_errors.assessments.mcq_question_must_have_at_least_2_options(question.question_text),
+            APP_STRINGS.api_errors.assessments.mcq_question_must_have_at_least_2_options(
+              question.question_text,
+            ),
           );
         }
 
         if (question.options.length > 6) {
           throw new BadRequestException(
-            APP_STRINGS.api_errors.assessments.mcq_question_can_have_at_most_6_options(question.question_text),
+            APP_STRINGS.api_errors.assessments.mcq_question_can_have_at_most_6_options(
+              question.question_text,
+            ),
           );
         }
 
         if (!question.correct_answer) {
           throw new BadRequestException(
-            APP_STRINGS.api_errors.assessments.correct_answer_must_be_one_of_the_provided_options(question.question_text),
+            APP_STRINGS.api_errors.assessments.correct_answer_must_be_one_of_the_provided_options(
+              question.question_text,
+            ),
           );
         }
 
         if (!question.options.includes(question.correct_answer)) {
           throw new BadRequestException(
-            APP_STRINGS.api_errors.assessments.correct_answer_must_be_one_of_the_provided_options(question.question_text),
+            APP_STRINGS.api_errors.assessments.correct_answer_must_be_one_of_the_provided_options(
+              question.question_text,
+            ),
           );
         }
       }
@@ -374,7 +422,9 @@ export class AssessmentsService {
       if (question.question_type === QuestionType.SUBJECTIVE) {
         if (question.options && question.options.length > 0) {
           throw new BadRequestException(
-            APP_STRINGS.api_errors.assessments.subjective_question_should_not_have_options(question.question_text),
+            APP_STRINGS.api_errors.assessments.subjective_question_should_not_have_options(
+              question.question_text,
+            ),
           );
         }
       }
@@ -402,9 +452,10 @@ export class AssessmentsService {
   }
 
   async publishAssessment(assessmentId: string) {
-    const assessment = await this.assessmentsDBService.getAssessmentWithQuestionsCount(
-      assessmentId,
-    );
+    const assessment =
+      await this.assessmentsDBService.getAssessmentWithQuestionsCount(
+        assessmentId,
+      );
 
     if (!assessment) {
       throw new NotFoundException(
@@ -423,24 +474,103 @@ export class AssessmentsService {
         APP_STRINGS.api_errors.assessments.assessment_total_questions_mismatch,
       );
     }
-    
+
     await this.assessmentsDBService.publishAssessment(assessmentId);
   }
 
   async getAssessmentDetails(assessmentId: string) {
-    const assessment = await this.assessmentsDBService.getAssessmentDetails(
-      assessmentId,
-    );
+    const assessment =
+      await this.assessmentsDBService.getAssessmentDetails(assessmentId);
 
     if (!assessment) {
       throw new NotFoundException(
         APP_STRINGS.api_errors.assessments.assessment_not_found,
       );
     }
-    
+
     return this.assessmentsTransform.transformToUpsertAssessmentResponse(
       assessment,
       assessment.questions,
+    );
+  }
+
+  async startInterview(userAssessmentId: string) {
+    const userAssessment =
+      await this.assessmentsDBService.getUserAssessmentCompleteData(
+        userAssessmentId,
+      );
+
+    if (!userAssessment) {
+      Logger.warn(
+        `User assessment with ID ${userAssessmentId} not found. Cannot start the interview status.`,
+        'AssessmentsService',
+      );
+      return;
+    }
+
+    if (userAssessment.status === AssessmentStatus.IN_PROGRESS) {
+      Logger.warn(
+        `User assessment with ID ${userAssessmentId} is already in progress. Cannot start the interview.`,
+        'AssessmentsService',
+      );
+      return;
+    }
+
+    if (userAssessment.status === AssessmentStatus.CANCELLED) {
+      Logger.warn(
+        `User assessment with ID ${userAssessmentId} is cancelled. Cannot start the interview.`,
+        'AssessmentsService',
+      );
+      return;
+    }
+
+    await this.assessmentsDBService.updateUserAssessmentStatus(
+      userAssessmentId,
+      AssessmentStatus.IN_PROGRESS,
+    );
+  }
+
+  async endInterview(userAssessmentId: string) {
+    const userAssessment =
+      await this.assessmentsDBService.getUserAssessmentCompleteData(
+        userAssessmentId,
+      );
+
+    if (!userAssessment) {
+      Logger.warn(
+        `User assessment with ID ${userAssessmentId} not found. Cannot end the interview status.`,
+        'AssessmentsService',
+      );
+      return;
+    }
+
+    if (userAssessment.status !== AssessmentStatus.IN_PROGRESS) {
+      Logger.warn(
+        `User assessment with ID ${userAssessmentId} is not in progress. Cannot end the interview.`,
+        'AssessmentsService',
+      );
+      return;
+    }
+
+    await this.assessmentsDBService.updateUserAssessmentStatus(
+      userAssessmentId,
+      AssessmentStatus.COMPLETED,
+      null,
+      new Date(),
+    );
+
+    // AI will assess the interview and then update the status
+    this.backgroundServiceManager.assessInterviewJob(userAssessmentId);
+  }
+
+  async assessInterview(userAssessmentId: string) {
+    const { userAnswers, maxScore } = await this.assessmentsDBService.getUserAnswers(userAssessmentId);
+
+    const response = await this.aiService.assessInterview(userAnswers, maxScore.toNumber());
+
+    await this.assessmentsDBService.updateInterviewScore(
+      response,
+      userAssessmentId,
     );
   }
 }
