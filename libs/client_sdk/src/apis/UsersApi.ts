@@ -19,9 +19,11 @@ import type {
   DisableUserDto,
   ModelApiResponse,
   UpdateUserProfileDto,
+  UserAnalyticsApiResponse,
   UserIdDto,
   UserListApiResponse,
   UserProfileApiResponse,
+  UserRankingApiResponse,
 } from '../models/index';
 import {
     AddUsersDtoFromJSON,
@@ -32,12 +34,16 @@ import {
     ModelApiResponseToJSON,
     UpdateUserProfileDtoFromJSON,
     UpdateUserProfileDtoToJSON,
+    UserAnalyticsApiResponseFromJSON,
+    UserAnalyticsApiResponseToJSON,
     UserIdDtoFromJSON,
     UserIdDtoToJSON,
     UserListApiResponseFromJSON,
     UserListApiResponseToJSON,
     UserProfileApiResponseFromJSON,
     UserProfileApiResponseToJSON,
+    UserRankingApiResponseFromJSON,
+    UserRankingApiResponseToJSON,
 } from '../models/index';
 
 export interface UsersControllerAddUsersRequest {
@@ -203,6 +209,42 @@ export class UsersApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get individual user analytics including average score, rank, and last test taken time.
+     * API to get user personal analytics
+     */
+    async usersControllerGetUserAnalyticsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserAnalyticsApiResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/users/analytics`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserAnalyticsApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get individual user analytics including average score, rank, and last test taken time.
+     * API to get user personal analytics
+     */
+    async usersControllerGetUserAnalytics(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserAnalyticsApiResponse> {
+        const response = await this.usersControllerGetUserAnalyticsRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * API to get user profile with enrolled courses
      */
     async usersControllerGetUserProfileRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserProfileApiResponse>> {
@@ -233,6 +275,42 @@ export class UsersApi extends runtime.BaseAPI {
      */
     async usersControllerGetUserProfile(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserProfileApiResponse> {
         const response = await this.usersControllerGetUserProfileRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get user ranking information including top performers and community statistics. Shows top 10 users and current user ranking.
+     * API to get user ranking and community analytics
+     */
+    async usersControllerGetUserRankingRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserRankingApiResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/users/ranking`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserRankingApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get user ranking information including top performers and community statistics. Shows top 10 users and current user ranking.
+     * API to get user ranking and community analytics
+     */
+    async usersControllerGetUserRanking(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserRankingApiResponse> {
+        const response = await this.usersControllerGetUserRankingRaw(initOverrides);
         return await response.value();
     }
 

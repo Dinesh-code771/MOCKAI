@@ -16,6 +16,7 @@ src/models/AssessmentDetailsDto.ts
 src/models/AssessmentListApiResponse.ts
 src/models/AssessmentListResponseDto.ts
 src/models/AssessmentResponseDto.ts
+src/models/CommunityAnalyticsDto.ts
 src/models/CompleteAssessmentApiResponse.ts
 src/models/CompleteAssessmentResponseDto.ts
 src/models/CourseDto.ts
@@ -52,6 +53,9 @@ src/models/UpsertAssessmentDto.ts
 src/models/UpsertAssessmentResponseDto.ts
 src/models/UpsertQuestionDto.ts
 src/models/UpsertQuestionResponseDto.ts
+src/models/UserAnalyticsApiResponse.ts
+src/models/UserAnalyticsDto.ts
+src/models/UserAnalyticsResponseDto.ts
 src/models/UserAnswerDto.ts
 src/models/UserAssessmentData.ts
 src/models/UserAssessmentItemDto.ts
@@ -65,6 +69,9 @@ src/models/UserListResponseDto.ts
 src/models/UserProfileApiResponse.ts
 src/models/UserProfileDto.ts
 src/models/UserProfileResponseDto.ts
+src/models/UserRankingApiResponse.ts
+src/models/UserRankingDto.ts
+src/models/UserRankingResponseDto.ts
 src/models/UserResponseApiResponse.ts
 src/models/UserResponseDto.ts
 src/models/VerifyForgotPasswordOtpApiResponse.ts
