@@ -13,6 +13,19 @@
  */
 
 import { mapValues } from '../runtime';
+import type { CourseDto } from './CourseDto';
+import {
+    CourseDtoFromJSON,
+    CourseDtoFromJSONTyped,
+    CourseDtoToJSON,
+} from './CourseDto';
+import type { UserAssessmentData } from './UserAssessmentData';
+import {
+    UserAssessmentDataFromJSON,
+    UserAssessmentDataFromJSONTyped,
+    UserAssessmentDataToJSON,
+} from './UserAssessmentData';
+
 /**
  * 
  * @export
@@ -75,16 +88,16 @@ export interface UserAssessmentItemDto {
     created_at: Date;
     /**
      * User assessment details
-     * @type {object}
+     * @type {UserAssessmentData}
      * @memberof UserAssessmentItemDto
      */
-    user_assessment: object;
+    user_assessment: UserAssessmentData;
     /**
      * Course information
-     * @type {object}
+     * @type {CourseDto}
      * @memberof UserAssessmentItemDto
      */
-    course: object | null;
+    course: CourseDto | null;
 }
 
 
@@ -145,8 +158,8 @@ export function UserAssessmentItemDtoFromJSONTyped(json: any, ignoreDiscriminato
         'max_score': json['max_score'],
         'total_questions': json['total_questions'],
         'created_at': (new Date(json['created_at'])),
-        'user_assessment': json['user_assessment'],
-        'course': json['course'],
+        'user_assessment': UserAssessmentDataFromJSON(json['user_assessment']),
+        'course': CourseDtoFromJSON(json['course']),
     };
 }
 
@@ -165,8 +178,8 @@ export function UserAssessmentItemDtoToJSON(value?: UserAssessmentItemDto | null
         'max_score': value['max_score'],
         'total_questions': value['total_questions'],
         'created_at': ((value['created_at']).toISOString()),
-        'user_assessment': value['user_assessment'],
-        'course': value['course'],
+        'user_assessment': UserAssessmentDataToJSON(value['user_assessment']),
+        'course': CourseDtoToJSON(value['course']),
     };
 }
 

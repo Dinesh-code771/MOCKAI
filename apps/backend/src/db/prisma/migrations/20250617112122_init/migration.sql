@@ -120,6 +120,7 @@ CREATE TABLE user_assessments (
     scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
     started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE,
+    is_assessed BOOLEAN DEFAULT FALSE,
     status interview_status_enum DEFAULT 'scheduled',
     total_score DECIMAL(5,2),
     percentage_score DECIMAL(5,2),

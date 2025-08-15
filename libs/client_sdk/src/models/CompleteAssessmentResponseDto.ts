@@ -92,6 +92,30 @@ export interface CompleteAssessmentResponseDto {
      * @memberof CompleteAssessmentResponseDto
      */
     questions: Array<QuestionWithAnswersDto>;
+    /**
+     * Is the assessment assessed
+     * @type {boolean}
+     * @memberof CompleteAssessmentResponseDto
+     */
+    is_assessed?: boolean;
+    /**
+     * Strong areas
+     * @type {Array<string>}
+     * @memberof CompleteAssessmentResponseDto
+     */
+    strong_areas?: Array<string>;
+    /**
+     * Weak areas
+     * @type {Array<string>}
+     * @memberof CompleteAssessmentResponseDto
+     */
+    weak_areas?: Array<string>;
+    /**
+     * Feedback
+     * @type {string}
+     * @memberof CompleteAssessmentResponseDto
+     */
+    feedback?: string;
 }
 
 
@@ -144,6 +168,10 @@ export function CompleteAssessmentResponseDtoFromJSONTyped(json: any, ignoreDisc
         'percentage_score': json['percentage_score'],
         'assessment': AssessmentDetailsDtoFromJSON(json['assessment']),
         'questions': ((json['questions'] as Array<any>).map(QuestionWithAnswersDtoFromJSON)),
+        'is_assessed': json['is_assessed'] == null ? undefined : json['is_assessed'],
+        'strong_areas': json['strong_areas'] == null ? undefined : json['strong_areas'],
+        'weak_areas': json['weak_areas'] == null ? undefined : json['weak_areas'],
+        'feedback': json['feedback'] == null ? undefined : json['feedback'],
     };
 }
 
@@ -163,6 +191,10 @@ export function CompleteAssessmentResponseDtoToJSON(value?: CompleteAssessmentRe
         'percentage_score': value['percentage_score'],
         'assessment': AssessmentDetailsDtoToJSON(value['assessment']),
         'questions': ((value['questions'] as Array<any>).map(QuestionWithAnswersDtoToJSON)),
+        'is_assessed': value['is_assessed'],
+        'strong_areas': value['strong_areas'],
+        'weak_areas': value['weak_areas'],
+        'feedback': value['feedback'],
     };
 }
 

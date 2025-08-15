@@ -128,7 +128,24 @@ export class AssessmentsService {
           userAssessment.assessments.duration_minutes * 60 * 1000 +
           1000 * 30,
       );
+
+      if (assessment.type === AssessmentType.SUBJECTIVE) {
+        return this.assessmentsTransform.transformToStartAssessmentResponse({
+          userAssessment,
+          questions: [],
+          remainingTimeSeconds: null,
+          newSchedule: true,
+        });
+      }
     }
+
+    this.backgroundServiceManager.assessmentEndJob(
+      `assessment-end:${userAssessment.id}`,
+      scheduleAt.getTime() -
+        new Date().getTime() +
+        userAssessment.assessments.duration_minutes * 60 * 1000 +
+        1000 * 30,
+    );
 
     if (userAssessment.status !== AssessmentStatus.IN_PROGRESS) {
       throw new BadRequestException(
@@ -148,6 +165,7 @@ export class AssessmentsService {
       await this.assessmentsDBService.updateUserAssessmentStatus(
         userAssessment.id,
         AssessmentStatus.COMPLETED,
+        undefined,
         undefined,
         now,
       );
@@ -182,6 +200,7 @@ export class AssessmentsService {
       userAssessment,
       questions,
       remainingTimeSeconds,
+      newSchedule: false,
     };
 
     return this.assessmentsTransform.transformToStartAssessmentResponse(
@@ -265,10 +284,22 @@ export class AssessmentsService {
   }
 
   async completeAssessment(userAssessmentId: string) {
+    const userAssessmentData =
+      await this.assessmentsDBService.getUserAssessmentCompleteData(
+        userAssessmentId,
+      );
+
+    if (!userAssessmentData) {
+      throw new NotFoundException(
+        APP_STRINGS.api_errors.assessments.user_assessment_not_found,
+      );
+    }
+
     let userAssessment =
       await this.assessmentsDBService.updateUserAssessmentStatus(
         userAssessmentId,
         AssessmentStatus.COMPLETED,
+        userAssessmentData.assessments.type === AssessmentType.SUBJECTIVE ? true : undefined,
         null,
         new Date(),
       );
@@ -555,6 +586,7 @@ export class AssessmentsService {
     await this.assessmentsDBService.updateUserAssessmentStatus(
       userAssessmentId,
       AssessmentStatus.COMPLETED,
+      userAssessment.assessments.type === AssessmentType.SUBJECTIVE ? true : undefined,
       null,
       new Date(),
     );

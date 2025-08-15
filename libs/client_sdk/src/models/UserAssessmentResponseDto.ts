@@ -86,6 +86,12 @@ export interface UserAssessmentResponseDto {
      * @memberof UserAssessmentResponseDto
      */
     remaining_time_seconds?: number;
+    /**
+     * New schedule
+     * @type {boolean}
+     * @memberof UserAssessmentResponseDto
+     */
+    new_schedule?: boolean;
 }
 
 
@@ -135,6 +141,7 @@ export function UserAssessmentResponseDtoFromJSONTyped(json: any, ignoreDiscrimi
         'assessment': AssessmentDetailsDtoFromJSON(json['assessment']),
         'questions': ((json['questions'] as Array<any>).map(QuestionDtoFromJSON)),
         'remaining_time_seconds': json['remaining_time_seconds'] == null ? undefined : json['remaining_time_seconds'],
+        'new_schedule': json['new_schedule'] == null ? undefined : json['new_schedule'],
     };
 }
 
@@ -153,6 +160,7 @@ export function UserAssessmentResponseDtoToJSON(value?: UserAssessmentResponseDt
         'assessment': AssessmentDetailsDtoToJSON(value['assessment']),
         'questions': ((value['questions'] as Array<any>).map(QuestionDtoToJSON)),
         'remaining_time_seconds': value['remaining_time_seconds'],
+        'new_schedule': value['new_schedule'],
     };
 }
 

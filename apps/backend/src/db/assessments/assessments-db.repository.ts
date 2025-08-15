@@ -10,6 +10,7 @@ import { Prisma } from '@prisma/client';
 import { APP_STRINGS } from '@common/strings';
 import { UserAssessmentListQueryDto } from '@assessments/dto/assessment-list.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
 
 @Injectable()
 export class AssessmentsDBRepository {
@@ -126,6 +127,7 @@ export class AssessmentsDBRepository {
               status: true,
               scheduled_at: true,
               total_score: true,
+              is_assessed: true,
               percentage_score: true,
               feedback: true,
               completed_at: true,
@@ -208,12 +210,16 @@ export class AssessmentsDBRepository {
 
   async updateUserAssessmentStatus(
     userAssessmentId: string,
-    status: string,
+    status: AssessmentStatus,
+    isAssessed?: boolean,
     startedAt?: Date,
     completedAt?: Date,
   ) {
     try {
-      const updateData: any = { status };
+      const updateData: Prisma.user_assessmentsUpdateInput = {
+        status,
+        ...(isAssessed && { is_assessed: isAssessed }),
+      };
 
       if (startedAt) {
         updateData.started_at = startedAt;
@@ -701,6 +707,7 @@ export class AssessmentsDBRepository {
       return tx.user_assessments.update({
         where: { id: userAssessmentId },
         data: {
+          is_assessed: true,
           total_score: result.overallScore,
           percentage_score: result.percentage,
           feedback: result.overallFeedback,

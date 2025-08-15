@@ -42,6 +42,7 @@ export * from './UpsertAssessmentResponseDto';
 export * from './UpsertQuestionDto';
 export * from './UpsertQuestionResponseDto';
 export * from './UserAnswerDto';
+export * from './UserAssessmentData';
 export * from './UserAssessmentItemDto';
 export * from './UserAssessmentListApiResponse';
 export * from './UserAssessmentListResponseDto';

@@ -53,6 +53,7 @@ src/models/UpsertAssessmentResponseDto.ts
 src/models/UpsertQuestionDto.ts
 src/models/UpsertQuestionResponseDto.ts
 src/models/UserAnswerDto.ts
+src/models/UserAssessmentData.ts
 src/models/UserAssessmentItemDto.ts
 src/models/UserAssessmentListApiResponse.ts
 src/models/UserAssessmentListResponseDto.ts
