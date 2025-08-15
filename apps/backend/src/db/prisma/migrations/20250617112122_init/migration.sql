@@ -169,6 +169,29 @@ CREATE TABLE user_analytics (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- User ranking view
+CREATE OR REPLACE VIEW user_ranking_view AS
+SELECT 
+    ua.id,
+    ua.user_id,
+    u.full_name,
+    u.email,
+    u.avatar,
+    ua.total_percentage_score AS average_score,
+    ua.given_assessments,
+    ua.upcoming_assessments,
+    ua.test_taken_at,
+    RANK() OVER (ORDER BY ua.total_percentage_score DESC) AS rank,
+    PERCENT_RANK() OVER (ORDER BY ua.total_percentage_score DESC) * 100 AS percentile,
+    ua.created_at,
+    ua.updated_at
+FROM 
+    user_analytics ua
+JOIN 
+    users u ON ua.user_id = u.id
+WHERE 
+    ua.total_percentage_score IS NOT NULL;
+
 
 -- Create indexes for better performance
 CREATE INDEX idx_users_email ON users(email);

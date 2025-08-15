@@ -376,4 +376,61 @@ export class UsersDBRepository {
       throw error;
     }
   }
+
+  async getUserRanking(userId: string) {
+    return this.prisma.user_ranking_view.findMany({
+      where: {
+        OR: [
+          {
+            rank: {
+              lte: 10,
+            },
+          },
+          {
+            user_id: userId,
+          },
+        ],
+      },
+      orderBy: {
+        rank: 'asc',
+      },
+      select: {
+        id: true,
+        test_taken_at: true,
+        average_score: true,
+        rank: true,
+        user_id: true,
+        full_name: true,
+        email: true,
+        avatar: true,
+        given_assessments: true,
+        upcoming_assessments: true,
+      }
+    });
+  }
+
+  async getCommunityAnalytics() {
+    const count = await this.prisma.user_ranking_view.count({});
+    const averageScore = await this.prisma.user_ranking_view.aggregate({
+      _avg: {
+        average_score: true,
+      },
+    });
+
+    return { count, averageScore };
+  }
+
+  async getUserAnalytics(userId: string) {
+    return this.prisma.user_ranking_view.findFirst({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        given_assessments: true,
+        upcoming_assessments: true,
+        average_score: true,
+        rank: true,
+      },
+    });
+  }
 }

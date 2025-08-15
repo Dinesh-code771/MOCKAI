@@ -15,6 +15,10 @@ import {
   UserListResponseDto,
   UserStatus,
 } from '@users/dto/user-management.dto';
+import {
+  UserRankingResponseDto,
+  UserAnalyticsResponseDto,
+} from '@users/dto/user-ranking.dto';
 import { APP_STRINGS } from '@common/strings';
 import { Gender } from '@users/enum/gender.enum';
 import {
@@ -152,5 +156,29 @@ export class UsersService {
 
   async deleteUser(userId: string) {
     return await this.usersDBService.deleteUser(userId);
+  }
+
+  async getUserRanking(userId: string): Promise<UserRankingResponseDto> {
+    const rankings = await this.usersDBService.getUserRanking(userId);
+    const communityAnalytics =
+      await this.usersDBService.getCommunityAnalytics();
+
+    return {
+      rankings: rankings.map((ranking) =>
+        this.usersTransform.transformToUserRankingResponse(ranking),
+      ),
+      communityAnalytics:
+        this.usersTransform.transformToCommunityAnalyticsResponse(
+          communityAnalytics,
+        ),
+    };
+  }
+
+  async getUserAnalytics(userId: string): Promise<UserAnalyticsResponseDto> {
+    const analytics = await this.usersDBService.getUserAnalytics(userId);
+    return {
+      analytics:
+        this.usersTransform.transformToUserAnalyticsResponse(analytics),
+    };
   }
 }
