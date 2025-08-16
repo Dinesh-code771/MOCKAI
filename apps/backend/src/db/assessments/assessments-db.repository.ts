@@ -717,4 +717,32 @@ export class AssessmentsDBRepository {
       })
     })
   }
+
+  async getCompletedAssessmentsNotAssessed() {
+    return this.prisma.user_assessments.findMany({
+      where: {
+        OR: [
+          {
+            started_at: {
+              lte: new Date(Date.now() - 4 * 60 * 60 * 1000),
+            },
+            status: {
+              notIn: ['completed', 'cancelled'],
+            }
+          },
+          {
+            status: 'completed',
+          }
+        ],
+        is_assessed: false,
+      },
+      include: {
+        assessments: {
+          select: {
+            type: true,
+          },
+        },
+      },
+    });
+  }
 }

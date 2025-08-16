@@ -181,4 +181,8 @@ export class AssessmentsDBService {
       userAssessmentId,
     );
   }
+
+  async getCompletedAssessmentsNotAssessed() {
+    return this.assessmentsRepository.getCompletedAssessmentsNotAssessed();
+  }
 }

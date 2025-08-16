@@ -15,4 +15,10 @@ export class CronScheduler implements OnModuleInit {
   async scheduleDailyTasks() {
     this.logger.debug('Starting daily scheduled tasks');
   }
+
+  @Cron(CronExpression.EVERY_4_HOURS)
+  async jobForEvery4Hours() {
+    this.logger.debug('Starting job for every 4 hours');
+    await this.cronQueue.addAssessPendingAssessmentsJob();
+  }
 }

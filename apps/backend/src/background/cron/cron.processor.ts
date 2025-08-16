@@ -1,4 +1,4 @@
-import { QueueName } from '@bg/constants/job.constant';
+import { CronJobName, QueueName } from '@bg/constants/job.constant';
 import { ICronJob } from '@bg/interfaces/job.interface';
 import { APP_STRINGS } from '@common/strings';
 import { CronService } from '@cron/cron.service';
@@ -37,6 +37,9 @@ export class CronProcessor extends WorkerHost {
     try {
       let result;
       switch (job.name) {
+        case CronJobName.ASSESS_PENDING_ASSESSMENTS:
+          result = await this.cronService.AssessPendingAssessments();
+          break;
         default:
           throw new Error(
             APP_STRINGS.background.cron.processor.unknown_job_name(job.name),

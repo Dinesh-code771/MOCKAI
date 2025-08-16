@@ -595,7 +595,21 @@ export class AssessmentsService {
     this.backgroundServiceManager.assessInterviewJob(userAssessmentId);
   }
 
-  async assessInterview(userAssessmentId: string) {
+  async assessInterview(userAssessmentId: string, type?: AssessmentType) {
+    if (type) {
+      await this.assessmentsDBService.updateUserAssessmentStatus(
+        userAssessmentId,
+        AssessmentStatus.COMPLETED,
+        type === AssessmentType.SUBJECTIVE ? true : undefined,
+        null,
+        new Date(),
+      );
+  
+      if (type !== AssessmentType.SUBJECTIVE) {
+        return;
+      }
+    }
+
     const { userAnswers, maxScore } = await this.assessmentsDBService.getUserAnswers(userAssessmentId);
 
     const response = await this.aiService.assessInterview(userAnswers, maxScore.toNumber());
@@ -604,5 +618,12 @@ export class AssessmentsService {
       response,
       userAssessmentId,
     );
+  }
+
+  async getCompletedAssessmentsNotAssessed() {
+    const assessments = await this.assessmentsDBService.getCompletedAssessmentsNotAssessed();
+    for (const assessment of assessments) {
+      await this.assessInterview(assessment.id, assessment.assessments.type as AssessmentType);
+    }
   }
 }
