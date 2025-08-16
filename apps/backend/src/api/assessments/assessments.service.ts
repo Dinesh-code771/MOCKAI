@@ -622,6 +622,7 @@ export class AssessmentsService {
 
   async getCompletedAssessmentsNotAssessed() {
     const assessments = await this.assessmentsDBService.getCompletedAssessmentsNotAssessed();
+    console.log('pending assessments', assessments);
     for (const assessment of assessments) {
       await this.assessInterview(assessment.id, assessment.assessments.type as AssessmentType);
     }
