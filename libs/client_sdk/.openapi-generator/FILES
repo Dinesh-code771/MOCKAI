@@ -12,6 +12,8 @@ src/apis/UsersApi.ts
 src/apis/index.ts
 src/index.ts
 src/models/AddUsersDto.ts
+src/models/AdminDashboardAnalyticResponse.ts
+src/models/AdminDashboardAnalyticsApiResponse.ts
 src/models/AssessmentDetailsDto.ts
 src/models/AssessmentListApiResponse.ts
 src/models/AssessmentListResponseDto.ts

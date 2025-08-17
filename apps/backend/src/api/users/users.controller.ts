@@ -10,7 +10,7 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ApiResponse } from '@nestjs/swagger';
 import { UsersService } from '@users/users.service';
 import { ResponseUtil } from '@common/helpers/response.utils';
@@ -32,8 +32,10 @@ import {
 import {
   UserRankingApiResponse,
   UserAnalyticsApiResponse,
+  AdminDashboardAnalyticsApiResponse,
 } from '@users/dto/user-ranking.dto';
 import { ApiResponse as apiResponse } from '@common/dto/api-response';
+import { OptionalParseIntPipe } from '@common/pipes/optional-parse-int.pipe';
 
 @Controller(RouteNames.USERS)
 @ApiTags('Users')
@@ -289,10 +291,24 @@ export class UsersController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Internal server error.',
   })
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: false,
+    description: 'Page number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: false,
+    description: 'Limit number',
+  })
   async getUserRanking(
     @User('id') userId: string,
+    @Query('page', new OptionalParseIntPipe) page: number = 1,
+    @Query('limit', new OptionalParseIntPipe) limit: number = 10,
   ): Promise<UserRankingApiResponse> {
-    const response = await this.usersService.getUserRanking(userId);
+    const response = await this.usersService.getUserRanking(userId, page, limit);
     return ResponseUtil.success(
       response,
       'User ranking data retrieved successfully',
@@ -328,6 +344,35 @@ export class UsersController {
     return ResponseUtil.success(
       response,
       'User analytics data retrieved successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Get(RouteNames.ADMIN_DASHBOARD_ANALYTICS)
+  @Auth(AuthType.JWT)
+  @Roles(RoleType.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'API to get admin dashboard analytics',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Admin dashboard analytics retrieved successfully',
+    type: AdminDashboardAnalyticsApiResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized - Invalid access token.',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error.',
+  })
+  async adminDashboardAnalytics() {
+    const response = await this.usersService.adminDashboardAnalytics();
+    return ResponseUtil.success(
+      response,
+      'Admin dashboard analytics retrieved successfully',
       HttpStatus.OK,
     );
   }
