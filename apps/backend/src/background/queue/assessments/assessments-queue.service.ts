@@ -1,4 +1,5 @@
 import { AssessmentsService } from '@assessments/assessments.service';
+import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
@@ -43,13 +44,13 @@ export class AssessmentQueueService {
     }
   }
 
-  async AssessInterview(id: string) {
+  async AssessInterview(id: string, type?: AssessmentType) {
     try {
       this.logger.debug(
         `Adding Assessment interview job for id ${id}`,
         'AssessmentQueueService',
       );
-      await this.assessmentsService.assessInterview(id);
+      await this.assessmentsService.assessInterview(id, type);
     } catch (error) {
       this.logger.error(
         `Error adding assessment interview job for id ${id}: ${error.message}`,

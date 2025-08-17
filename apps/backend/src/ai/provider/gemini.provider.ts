@@ -22,6 +22,8 @@ export class GeminiProvider {
   ): Promise<AssessmentResult> {
     const maxQuestionScore = Math.floor(maxScore / responses.length);
 
+    Logger.log('Assessing interview responses');
+
     const prompt = `
       You are an expert interview assessor with extensive experience in evaluating candidates across various domains. Your task is to comprehensively assess the following interview responses and provide detailed feedback.
 
@@ -97,6 +99,7 @@ export class GeminiProvider {
 
     try {
       const result = await this.model.generateContent(prompt);
+      Logger.log(`Gemini response: ${result.response.text()}`);
       const responseText = result.response.text();
 
       // Parse the JSON response

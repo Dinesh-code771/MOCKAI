@@ -56,4 +56,16 @@ export class UsersDBService {
   async deleteUser(userId: string) {
     return this.usersRepository.deleteUser(userId);
   }
+
+  async getUserRanking(userId: string) {
+    return this.usersRepository.getUserRanking(userId);
+  }
+
+  async getCommunityAnalytics() {
+    return this.usersRepository.getCommunityAnalytics();
+  }
+
+  async getUserAnalytics(userId: string) {
+    return this.usersRepository.getUserAnalytics(userId);
+  }
 }

@@ -8,6 +8,11 @@ import {
   UserListItemDto,
   UserListResponseDto,
 } from '@users/dto/user-management.dto';
+import {
+  UserRankingDto,
+  CommunityAnalyticsDto,
+  UserAnalyticsDto,
+} from '@users/dto/user-ranking.dto';
 import { PaginationDetailsDto } from '@common/dto/pagination.dto';
 
 @Injectable()
@@ -70,6 +75,44 @@ export class UsersTransform {
     return {
       users: users.map((user) => this.transformToUserListItem(user)),
       pagination,
+    };
+  }
+
+  transformToUserRankingResponse(ranking: any): UserRankingDto {
+    return {
+      id: ranking.id,
+      user_id: ranking.user_id,
+      full_name: ranking.full_name,
+      email: ranking.email,
+      avatar: ranking.avatar,
+      average_score: ranking.average_score
+        ? Number(ranking.average_score)
+        : null,
+      test_taken_at: ranking.test_taken_at,
+      rank: ranking.rank ? Number(ranking.rank) : null,
+      given_assessments: ranking.given_assessments || null,
+      upcoming_assessments: ranking.upcoming_assessments || null,
+    };
+  }
+
+  transformToCommunityAnalyticsResponse(analytics: any): CommunityAnalyticsDto {
+    return {
+      total_users: analytics.count || 0,
+      community_average_score: analytics.averageScore?._avg?.average_score
+        ? Number(analytics.averageScore._avg.average_score)
+        : null,
+    };
+  }
+
+  transformToUserAnalyticsResponse(analytics: any): UserAnalyticsDto {
+    return {
+      test_taken_at: analytics?.test_taken_at || null,
+      average_score: analytics?.average_score
+        ? Number(analytics.average_score)
+        : null,
+      rank: analytics?.rank ? Number(analytics.rank) : null,
+      given_assessments: analytics?.given_assessments || null,
+      upcoming_assessments: analytics?.upcoming_assessments || null,
     };
   }
 }

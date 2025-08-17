@@ -14,4 +14,8 @@ export class CronQueue {
     this.logger.debug(`Added ${jobName} job with ID ${job.id}`);
     return job;
   }
+
+  async addAssessPendingAssessmentsJob() {
+    await this.addCronJob(CronJobName.ASSESS_PENDING_ASSESSMENTS);
+  }
 }

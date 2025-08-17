@@ -240,6 +240,12 @@ export class UserAssessmentResponseDto {
     description: 'Remaining time in seconds',
   })
   remaining_time_seconds?: number;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'New schedule',
+  })
+  new_schedule?: boolean;
 }
 
 export class CompleteAssessmentResponseDto {
@@ -303,6 +309,30 @@ export class CompleteAssessmentResponseDto {
     type: [QuestionWithAnswersDto],
   })
   questions: QuestionWithAnswersDto[];
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Is the assessment assessed',
+  })
+  is_assessed?: boolean;
+
+  @ApiPropertyOptional({
+    example: ['JavaScript', 'React'],
+    description: 'Strong areas',
+  })
+  strong_areas?: string[];
+
+  @ApiPropertyOptional({
+    example: ['JavaScript', 'React'],
+    description: 'Weak areas',
+  })
+  weak_areas?: string[];
+
+  @ApiPropertyOptional({
+    example: 'You are doing great!',
+    description: 'Feedback',
+  })
+  feedback?: string;
 }
 
 export class StartAssessmentApiResponse extends ApiResponse<UserAssessmentResponseDto> {

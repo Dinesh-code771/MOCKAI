@@ -38,5 +38,5 @@ export enum JobName {
 }
 
 export enum CronJobName {
-  PLACE = 'place'
+  ASSESS_PENDING_ASSESSMENTS = 'assess_pending_assessments',
 }

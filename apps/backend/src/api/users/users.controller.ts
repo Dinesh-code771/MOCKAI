@@ -29,6 +29,10 @@ import {
   DisableUserDto,
   UserIdDto,
 } from '@users/dto/user-management.dto';
+import {
+  UserRankingApiResponse,
+  UserAnalyticsApiResponse,
+} from '@users/dto/user-ranking.dto';
 import { ApiResponse as apiResponse } from '@common/dto/api-response';
 
 @Controller(RouteNames.USERS)
@@ -260,6 +264,70 @@ export class UsersController {
     return ResponseUtil.success(
       null,
       'User deleted successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Get(RouteNames.USERS_RANKING)
+  @Auth(AuthType.JWT)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'API to get user ranking and community analytics',
+    description:
+      'Get user ranking information including top performers and community statistics. Shows top 10 users and current user ranking.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User ranking data retrieved successfully',
+    type: UserRankingApiResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized - Invalid access token.',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error.',
+  })
+  async getUserRanking(
+    @User('id') userId: string,
+  ): Promise<UserRankingApiResponse> {
+    const response = await this.usersService.getUserRanking(userId);
+    return ResponseUtil.success(
+      response,
+      'User ranking data retrieved successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Get(RouteNames.USERS_ANALYTICS)
+  @Auth(AuthType.JWT)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'API to get user personal analytics',
+    description:
+      'Get individual user analytics including average score, rank, and last test taken time.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User analytics data retrieved successfully',
+    type: UserAnalyticsApiResponse,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized - Invalid access token.',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error.',
+  })
+  async getUserAnalytics(
+    @User('id') userId: string,
+  ): Promise<UserAnalyticsApiResponse> {
+    const response = await this.usersService.getUserAnalytics(userId);
+    return ResponseUtil.success(
+      response,
+      'User analytics data retrieved successfully',
       HttpStatus.OK,
     );
   }

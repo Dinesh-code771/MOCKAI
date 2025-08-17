@@ -87,6 +87,7 @@ export class AssessmentsTransform {
         status: userAssessment.status,
         started_at: userAssessment.started_at,
         completed_at: userAssessment.completed_at,
+        is_assessed: userAssessment.is_assessed,
         total_score: shouldShowScores ? userAssessment.total_score : null,
         percentage_score: shouldShowScores
           ? userAssessment.percentage_score
@@ -107,7 +108,7 @@ export class AssessmentsTransform {
   }
 
   transformToStartAssessmentResponse(data: any): UserAssessmentResponseDto {
-    const { userAssessment, questions, remainingTimeSeconds } = data;
+    const { userAssessment, questions, remainingTimeSeconds, newSchedule } = data;
 
     return {
       id: userAssessment.id,
@@ -151,6 +152,7 @@ export class AssessmentsTransform {
           : null,
       })),
       remaining_time_seconds: remainingTimeSeconds,
+      new_schedule: newSchedule,
     };
   }
 
@@ -177,6 +179,10 @@ export class AssessmentsTransform {
       status: userAssessment.status,
       total_score: Number(userAssessment?.total_score || 0),
       percentage_score: Number(userAssessment?.percentage_score || 0),
+      is_assessed: userAssessment.is_assessed,
+      strong_areas: userAssessment.strong_areas,
+      weak_areas: userAssessment.weak_areas,
+      feedback: userAssessment.feedback,
       assessment: {
         id: userAssessment.assessments.id,
         name: userAssessment.assessments.name,
@@ -236,6 +242,7 @@ export class AssessmentsTransform {
               id: assessment.user_assessments[0].id,
               status: assessment.user_assessments[0].status,
               started_at: assessment.user_assessments[0].started_at,
+              is_assessed: assessment.user_assessments[0].is_assessed,
               completed_at: assessment.user_assessments[0].completed_at,
               total_score:
                 assessment.user_assessments[0].status === 'scheduled' ||

@@ -42,6 +42,8 @@ export enum RouteNames {
   USERS_LIST = 'list',
   USERS_DISABLE = 'disable',
   USERS_DELETE = 'delete',
+  USERS_RANKING = 'ranking',
+  USERS_ANALYTICS = 'analytics',
 
   // --- ASSESSMENTS ROUTES ---
   ASSESSMENTS_LIST = 'list',

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
 import { PaginationDetailsDto } from '@common/dto/pagination.dto';
@@ -6,6 +6,7 @@ import { ApiResponse } from '@common/dto/api-response';
 import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
 import { Type } from 'class-transformer';
 import { IsOptional, IsEnum, IsString, IsInt, Min } from 'class-validator';
+import { CourseDto } from '@static-data/dto/course.dto';
 
 export class UserAssessmentQueryDto {
   @ApiProperty({
@@ -68,6 +69,86 @@ export class UserAssessmentQueryDto {
   limit?: number = 10;
 }
 
+export class userAssessmentData {
+  @ApiProperty({
+    description: 'Assessment ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'Assessment name',
+    example: 'JavaScript Fundamentals Test',
+  })
+  status: AssessmentStatus;
+
+  @ApiPropertyOptional({
+    description: 'Assessment started at',
+    example: '2024-01-15T10:30:00Z',
+    nullable: true,
+  })
+  started_at?: string | null;
+  
+  @ApiPropertyOptional({
+    description: 'Assessment completed at',
+    example: '2024-01-15T10:30:00Z',
+    nullable: true,
+  })
+  completed_at?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Assessment total score',
+    example: 100,
+    nullable: true,
+  })
+  total_score?: number | null;
+
+  @ApiProperty({
+    description: 'Assessment is assessed',
+    example: true,
+  })
+  is_assessed: boolean;
+  
+  @ApiPropertyOptional({
+    description: 'Assessment percentage score',
+    example: 100,
+    nullable: true,
+  })
+  percentage_score?: number | null;
+  
+  @ApiPropertyOptional({
+    description: 'Assessment feedback',
+    example: 'You are doing great!',
+    nullable: true,
+  })
+  feedback?: string | null;
+  
+  @ApiProperty({
+    description: 'Assessment scheduled at',
+    example: '2024-01-15T10:30:00Z',
+  })
+  scheduled_at: string;
+  
+  @ApiProperty({
+    description: 'Assessment weak areas',
+    example: ['JavaScript', 'React'],
+  })
+  weak_areas: string[];
+  
+  @ApiProperty({
+    description: 'Assessment strong areas',
+    example: ['JavaScript', 'React'],
+  })
+  strong_areas: string[];
+  
+  @ApiProperty({
+    description: 'Assessment created at',
+    example: '2024-01-15T10:30:00Z',
+  })
+  created_at: Date;
+}
+
+
 export class UserAssessmentItemDto {
   @ApiProperty({
     description: 'Assessment ID',
@@ -127,30 +208,17 @@ export class UserAssessmentItemDto {
   created_at: Date;
 
   @ApiProperty({
+    type: userAssessmentData,
     description: 'User assessment details',
   })
-  user_assessment: {
-    id: string;
-    status: AssessmentStatus;
-    started_at: string | null;
-    completed_at: string | null;
-    total_score: number | null;
-    percentage_score: number | null;
-    feedback: string | null;
-    scheduled_at: string;
-    weak_areas: string[];
-    strong_areas: string[];
-    created_at: Date;
-  };
+  user_assessment: userAssessmentData;
 
   @ApiProperty({
     description: 'Course information',
     nullable: true,
+    type: CourseDto
   })
-  course: {
-    id: string;
-    name: string;
-  } | null;
+  course: CourseDto;
 }
 
 export class UserAssessmentListResponseDto {

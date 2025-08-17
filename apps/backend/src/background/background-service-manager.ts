@@ -6,6 +6,7 @@ import {
   JobName,
   DEFAULT_JOB_OPTIONS,
 } from '@bg/constants/job.constant';
+import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 
 @Injectable()
 export class BackgroundServiceManager {
@@ -73,11 +74,11 @@ export class BackgroundServiceManager {
     );
   }
 
-  async assessInterviewJob(id: string) {
+  async assessInterviewJob(id: string, type?: AssessmentType) {
     return this.addJob(
       this.assessmentsQueue,
       JobName.ASSESS_INTERVIEW_JOB,
-      { id },
+      { id, type },
     );
   }
 }

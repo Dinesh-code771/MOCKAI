@@ -3,6 +3,7 @@ import { AssessmentsDBRepository } from '@db/assessments/assessments-db.reposito
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
 import { UserAssessmentListQueryDto } from '@assessments/dto/assessment-list.dto';
+import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
 
 @Injectable()
 export class AssessmentsDBService {
@@ -56,13 +57,15 @@ export class AssessmentsDBService {
 
   async updateUserAssessmentStatus(
     userAssessmentId: string,
-    status: string,
+    status: AssessmentStatus,
+    isAssessed?: boolean,
     startedAt?: Date,
     completedAt?: Date,
   ) {
     return this.assessmentsRepository.updateUserAssessmentStatus(
       userAssessmentId,
       status,
+      isAssessed,
       startedAt,
       completedAt,
     );
@@ -177,5 +180,9 @@ export class AssessmentsDBService {
       result,
       userAssessmentId,
     );
+  }
+
+  async getCompletedAssessmentsNotAssessed() {
+    return this.assessmentsRepository.getCompletedAssessmentsNotAssessed();
   }
 }

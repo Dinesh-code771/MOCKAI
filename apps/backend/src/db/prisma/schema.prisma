@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -192,6 +193,7 @@ model user_assessments {
   scheduled_at     DateTime               @db.Timestamptz(6)
   started_at       DateTime?              @db.Timestamptz(6)
   completed_at     DateTime?              @db.Timestamptz(6)
+  is_assessed      Boolean?               @default(false)
   status           interview_status_enum? @default(scheduled)
   total_score      Decimal?               @db.Decimal(5, 2)
   percentage_score Decimal?               @db.Decimal(5, 2)
@@ -208,6 +210,22 @@ model user_assessments {
   @@index([scheduled_at], map: "idx_user_assessments_scheduled")
   @@index([status], map: "idx_user_assessments_status")
   @@index([user_id], map: "idx_user_assessments_user")
+}
+
+view user_ranking_view {
+  id                   String    @unique @db.Uuid
+  user_id              String?   @db.Uuid
+  full_name            String?   @db.VarChar(255)
+  email                String?   @db.VarChar(255)
+  avatar               String?
+  average_score        Decimal?  @db.Decimal(5, 2)
+  given_assessments    Int?
+  upcoming_assessments Int?
+  test_taken_at        DateTime? @db.Timestamptz(6)
+  rank                 BigInt?
+  percentile           Float?
+  created_at           DateTime? @db.Timestamptz(6)
+  updated_at           DateTime? @db.Timestamptz(6)
 }
 
 enum difficulty_enum {

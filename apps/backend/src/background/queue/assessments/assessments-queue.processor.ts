@@ -5,6 +5,7 @@ import { Job } from 'bullmq';
 import { DeadLetterQueueService } from '@dead-letter-queue/dead-letter-queue.service';
 import { APP_STRINGS } from '@common/strings';
 import { AssessmentQueueService } from '@bg/queue/assessments/assessments-queue.service';
+import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 
 @Processor(QueueName.ASSESSMENTS, {
   concurrency: 5,
@@ -46,6 +47,7 @@ export class AssessmentsQueueProcessor extends WorkerHost {
         case JobName.ASSESS_INTERVIEW_JOB:
           await this.assessmentsQueueService.AssessInterview(
             job.data.id as string,
+            job.data.type as AssessmentType,
           );
           break;
         default:
