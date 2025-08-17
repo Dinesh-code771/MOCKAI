@@ -8,9 +8,9 @@ import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
 import { Prisma } from '@prisma/client';
 import { APP_STRINGS } from '@common/strings';
-import { UserAssessmentListQueryDto } from '@assessments/dto/assessment-list.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
+import { UserAssessmentQueryDto } from '@assessments/dto/user-assessment-list.dto';
 
 @Injectable()
 export class AssessmentsDBRepository {
@@ -77,7 +77,7 @@ export class AssessmentsDBRepository {
   }
 
   async getUserAssessmentsList(
-    query: UserAssessmentListQueryDto,
+    query: UserAssessmentQueryDto,
     userId: string,
     skip: number,
     take: number,

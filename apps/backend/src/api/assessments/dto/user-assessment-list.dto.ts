@@ -42,6 +42,7 @@ export class UserAssessmentQueryDto {
     isArray: true,
   })
   @IsOptional()
+  @IsArray()
   @IsEnum(AssessmentStatus, { each: true })
   status?: AssessmentStatus[];
 
