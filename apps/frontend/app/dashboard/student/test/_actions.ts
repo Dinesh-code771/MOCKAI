@@ -24,8 +24,6 @@ export const getTests = async (
     const response =
       await authenticatedApi.assessmentsControllerGetAssessmentsList({
         type: type,
-        difficulty:
-          AssessmentsControllerGetAssessmentsListDifficultyEnum.Intermediate,
         page: 1,
         limit: 10,
         draftAssessment:
@@ -81,6 +79,36 @@ export const getInProgressTests = async (
     return response.data;
   } catch (error) {
     console.error('Error fetching in-progress tests:', error);
+    // Return proper structure as fallback
+    return {
+      assessments: [],
+      pagination: {
+        pageNo: 1,
+        pageSize: 10,
+        totalCount: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
+  }
+};
+
+export const getScheduledTests = async (
+  type: AssessmentsControllerGetUserAssessmentsTypeEnum,
+) => {
+  try {
+    const authenticatedApi = getAuthenticatedAssessmentsApi();
+    const response =
+      await authenticatedApi.assessmentsControllerGetUserAssessments({
+        type: type,
+        page: 1,
+        limit: 20,
+        status: AssessmentsControllerGetUserAssessmentsStatusEnum.Scheduled,
+      });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching scheduled tests:', error);
     // Return proper structure as fallback
     return {
       assessments: [],

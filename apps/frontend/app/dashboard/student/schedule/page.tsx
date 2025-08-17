@@ -100,12 +100,8 @@ export default function ScheduleInterview() {
       const response =
         await assessmentApi.assessmentsControllerGetAssessmentsList({
           type: AssessmentsControllerGetAssessmentsListTypeEnum.Subjective,
-          difficulty:
-            AssessmentsControllerGetAssessmentsListDifficultyEnum.Intermediate,
           page: 1,
           limit: 20,
-          draftAssessment:
-            AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.True,
         });
 
       if (response.data?.assessments) {
@@ -125,6 +121,7 @@ export default function ScheduleInterview() {
       return;
     }
     if (!selectedDate || !selectedTime) {
+      frontend;
       toast.error('Please select both date and time');
       return;
     }
@@ -348,7 +345,7 @@ export default function ScheduleInterview() {
                         No interviews available
                       </div>
                     ) : (
-                      <div className="py-2 flex">
+                      <div className="py-2 flex flex-col gap-2">
                         {interviews.map((interview) => (
                           <button
                             key={interview.id}

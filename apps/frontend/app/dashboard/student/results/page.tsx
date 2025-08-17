@@ -24,6 +24,15 @@ import {
   CompleteAssessmentResponseDto,
 } from '@mockai/sdk';
 
+// Extend the CompleteAssessmentResponseDto interface to include subjective assessment fields
+interface ExtendedCompleteAssessmentResponseDto
+  extends CompleteAssessmentResponseDto {
+  is_assessed?: boolean;
+  strong_areas?: string[];
+  weak_areas?: string[];
+  feedback?: string;
+}
+
 interface QuestionWithAnswers {
   id: string;
   question_text: string;
@@ -46,7 +55,7 @@ export default function ResultsPage() {
     [],
   );
   const [selectedTest, setSelectedTest] =
-    useState<CompleteAssessmentResponseDto | null>(null);
+    useState<ExtendedCompleteAssessmentResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewingResults, setViewingResults] = useState(false);
 
@@ -87,8 +96,30 @@ export default function ResultsPage() {
         });
 
       if (response?.data) {
-        setSelectedTest(response.data);
-        setViewingResults(true);
+        const assessmentData = response.data;
+
+        // Check if it's MCQ type - show results immediately
+        if (assessmentData.assessment.type?.toLowerCase() === 'mcq') {
+          setSelectedTest(assessmentData);
+          setViewingResults(true);
+          return;
+        }
+
+        // For subjective assessments, check if it's assessed
+        if (assessmentData.assessment.type?.toLowerCase() === 'subjective') {
+          if (assessmentData.is_assessed) {
+            setSelectedTest(assessmentData);
+            setViewingResults(true);
+          } else {
+            toast.info(
+              'Your subjective assessment is being evaluated. Results will be available soon.',
+            );
+          }
+        } else {
+          // For other types, show results
+          setSelectedTest(assessmentData);
+          setViewingResults(true);
+        }
       } else {
         toast.error('No assessment data found');
       }
@@ -253,6 +284,85 @@ export default function ResultsPage() {
               </div>
             </div>
           </div>
+
+          {/* Subjective Assessment Feedback - Only show for subjective assessments */}
+          {selectedTest.assessment.type?.toLowerCase() === 'subjective' &&
+            selectedTest.is_assessed && (
+              <div className="bg-white/80 backdrop-blur-lg border border-white/20 rounded-lg shadow-sm">
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Assessment Feedback
+                  </h3>
+
+                  {/* Strong Areas */}
+                  {selectedTest.strong_areas &&
+                    selectedTest.strong_areas.length > 0 && (
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-green-700 mb-3 flex items-center">
+                          <CheckCircle className="h-5 w-5 mr-2" />
+                          Strong Areas
+                        </h4>
+                        <div className="bg-green-50 rounded-lg p-4">
+                          <ul className="space-y-2">
+                            {selectedTest.strong_areas.map(
+                              (area: string, index: number) => (
+                                <li
+                                  key={index}
+                                  className="flex items-start space-x-2"
+                                >
+                                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span className="text-green-800">{area}</span>
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Weak Areas */}
+                  {selectedTest.weak_areas &&
+                    selectedTest.weak_areas.length > 0 && (
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-red-700 mb-3 flex items-center">
+                          <AlertCircle className="h-5 w-5 mr-2" />
+                          Areas for Improvement
+                        </h4>
+                        <div className="bg-red-50 rounded-lg p-4">
+                          <ul className="space-y-2">
+                            {selectedTest.weak_areas.map(
+                              (area: string, index: number) => (
+                                <li
+                                  key={index}
+                                  className="flex items-start space-x-2"
+                                >
+                                  <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span className="text-red-800">{area}</span>
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* General Feedback */}
+                  {selectedTest.feedback && (
+                    <div>
+                      <h4 className="text-md font-medium text-blue-700 mb-3 flex items-center">
+                        <BookOpen className="h-5 w-5 mr-2" />
+                        General Feedback
+                      </h4>
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <p className="text-blue-800 leading-relaxed">
+                          {selectedTest.feedback}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
           {/* Question Review */}
           <div className="bg-white/80 backdrop-blur-lg border border-white/20 rounded-lg shadow-sm">

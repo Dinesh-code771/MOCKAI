@@ -26,7 +26,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { startTest } from '../_actions';
 import { getAuthenticatedAssessmentsApi } from '@/lib/api-client';
@@ -60,9 +60,16 @@ interface TestData {
 
 export default function TakeTestPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams();
   const testId = params.testId as string;
+  const noQuestion = searchParams.get('noQuestion') as string;
+  const time = searchParams.get('time') as string;
+  const score = searchParams.get('score') as string;
 
+  console.log(noQuestion, 'noQuestion');
+  console.log(time, 'time');
+  console.log(score, 'score');
   const [testData, setTestData] = useState<TestData | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: number }>(
@@ -73,6 +80,7 @@ export default function TakeTestPage() {
   );
   const [questionTimer, setQuestionTimer] = useState(25);
   const [testStarted, setTestStarted] = useState(false);
+  const [userStartedTest, setUserStartedTest] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(
@@ -380,6 +388,7 @@ export default function TakeTestPage() {
 
   // Load test data on component mount
   useEffect(() => {
+    if (userStartedTest) return;
     const getTestData = async () => {
       try {
         const response = await startTest(testId);
@@ -401,6 +410,7 @@ export default function TakeTestPage() {
   }, [testId]);
 
   const handleStartTest = async () => {
+    setUserStartedTest(true);
     setTestStarted(true);
     await startCamera();
     toast.success('Test started! Good luck!');
@@ -448,18 +458,20 @@ export default function TakeTestPage() {
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">
-                      {testData.totalQuestions}
+                      {noQuestion}
                     </div>
                     <div className="text-sm text-gray-600">Questions</div>
                   </div>
                   <div className="p-4 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      {testData.duration}s
+                      {time}s
                     </div>
                     <div className="text-sm text-gray-600">Per Question</div>
                   </div>
                   <div className="p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">100</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {score}
+                    </div>
                     <div className="text-sm text-gray-600">Max Score</div>
                   </div>
                 </div>
