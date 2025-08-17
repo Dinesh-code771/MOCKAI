@@ -102,7 +102,7 @@ export class AssessmentsDBRepository {
     whereCondition.user_assessments = {
       some: {
         user_id: userId,
-        ...(query.status && { status: query.status }),
+        ...(query.status && { status: { in: query.status } }),
       },
     };
 
@@ -119,7 +119,7 @@ export class AssessmentsDBRepository {
           user_assessments: {
             where: {
               user_id: userId,
-              ...(query.status && { status: query.status }),
+              ...(query.status && { status: { in: query.status } }),
             },
             select: {
               id: true,
@@ -259,14 +259,23 @@ export class AssessmentsDBRepository {
   async createUserAssessment(
     userId: string,
     assessmentId: string,
+    status: AssessmentStatus,
     scheduleAt?: Date,
   ) {
     return this.prisma.user_assessments.create({
       data: {
-        user_id: userId,
-        assessment_id: assessmentId,
-        scheduled_at: scheduleAt || new Date(),
-        status: scheduleAt ? 'scheduled' : 'in_progress',
+        users: {
+          connect: {
+            id: userId,
+          },
+        },
+        assessments: {
+          connect: {
+            id: assessmentId,
+          },
+        },
+        ...(scheduleAt && { scheduled_at: scheduleAt }),
+        status: status,
         started_at: scheduleAt || new Date(),
       },
       include: {

@@ -175,10 +175,10 @@ export class UsersService {
   }
 
   async getUserAnalytics(userId: string): Promise<UserAnalyticsResponseDto> {
-    const analytics = await this.usersDBService.getUserAnalytics(userId);
+    const { userAnalytics, ranking } = await this.usersDBService.getUserAnalytics(userId);
     return {
       analytics:
-        this.usersTransform.transformToUserAnalyticsResponse(analytics),
+        this.usersTransform.transformToUserAnalyticsResponse(ranking, userAnalytics?.given_assessments, userAnalytics?.upcoming_assessments),
     };
   }
 }

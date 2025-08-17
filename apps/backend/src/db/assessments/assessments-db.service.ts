@@ -74,11 +74,13 @@ export class AssessmentsDBService {
   async createUserAssessment(
     userId: string,
     assessmentId: string,
+    status: AssessmentStatus,
     scheduleAt?: Date,
   ) {
     return this.assessmentsRepository.createUserAssessment(
       userId,
       assessmentId,
+      status,
       scheduleAt,
     );
   }

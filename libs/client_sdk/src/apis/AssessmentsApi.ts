@@ -71,7 +71,7 @@ export interface AssessmentsControllerGetUserAssessmentsRequest {
     type?: AssessmentsControllerGetUserAssessmentsTypeEnum;
     courseId?: string;
     difficulty?: AssessmentsControllerGetUserAssessmentsDifficultyEnum;
-    status?: AssessmentsControllerGetUserAssessmentsStatusEnum;
+    status?: Array<AssessmentsControllerGetUserAssessmentsStatusEnum>;
     page?: number;
     limit?: number;
 }
