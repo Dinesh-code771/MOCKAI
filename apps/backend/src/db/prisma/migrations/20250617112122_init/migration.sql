@@ -117,7 +117,7 @@ CREATE TABLE user_assessments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
-    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    scheduled_at TIMESTAMP WITH TIME ZONE,
     started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE,
     is_assessed BOOLEAN DEFAULT FALSE,
