@@ -104,15 +104,15 @@ export class UsersTransform {
     };
   }
 
-  transformToUserAnalyticsResponse(analytics: any): UserAnalyticsDto {
+  transformToUserAnalyticsResponse(analytics: any, given_assessments?: number, upcoming_assessments?: number): UserAnalyticsDto {
     return {
       test_taken_at: analytics?.test_taken_at || null,
       average_score: analytics?.average_score
         ? Number(analytics.average_score)
         : null,
       rank: analytics?.rank ? Number(analytics.rank) : null,
-      given_assessments: analytics?.given_assessments || null,
-      upcoming_assessments: analytics?.upcoming_assessments || null,
+      given_assessments: given_assessments || null,
+      upcoming_assessments: upcoming_assessments || null,
     };
   }
 }

@@ -5,7 +5,7 @@ import { PaginationDetailsDto } from '@common/dto/pagination.dto';
 import { ApiResponse } from '@common/dto/api-response';
 import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
 import { Type } from 'class-transformer';
-import { IsOptional, IsEnum, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsEnum, IsString, IsInt, Min, IsArray } from 'class-validator';
 import { CourseDto } from '@static-data/dto/course.dto';
 
 export class UserAssessmentQueryDto {
@@ -39,10 +39,11 @@ export class UserAssessmentQueryDto {
     description: 'Assessment status filter',
     enum: AssessmentStatus,
     required: false,
+    isArray: true,
   })
   @IsOptional()
-  @IsEnum(AssessmentStatus)
-  status?: AssessmentStatus;
+  @IsEnum(AssessmentStatus, { each: true })
+  status?: AssessmentStatus[];
 
   @ApiProperty({
     description: 'Page number for pagination',

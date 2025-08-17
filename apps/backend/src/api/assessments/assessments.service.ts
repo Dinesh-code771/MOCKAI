@@ -52,6 +52,7 @@ export class AssessmentsService {
 
     if (user.roles.some((role) => role.name === RoleType.STUDENT)) {
       userId = user.id;
+      query.draft_assessment = undefined;
     }
 
     const { assessments, totalCount } =
@@ -62,7 +63,7 @@ export class AssessmentsService {
         userId,
         skip,
         take,
-        draft_assessment: query.draft_assessment === DraftAssessmentFilter.TRUE,
+        draft_assessment: query.draft_assessment ? query.draft_assessment === DraftAssessmentFilter.TRUE : undefined,
       });
 
     const pagination = {
@@ -99,9 +100,17 @@ export class AssessmentsService {
       );
 
     if (!userAssessment) {
+      let status: AssessmentStatus;
+      if (scheduleAt) {
+        status = AssessmentStatus.SCHEDULED;
+      } else {
+        status = AssessmentStatus.IN_PROGRESS;
+      }
+      console.log('status', status);
       userAssessment = await this.assessmentsDBService.createUserAssessment(
         userId,
         assessmentId,
+        status,
         scheduleAt,
       );
 
@@ -114,10 +123,13 @@ export class AssessmentsService {
       }
 
       // delayed job to start the interview
+      console.log('userAssessment.started_at', userAssessment.started_at);
+      const delay = userAssessment.started_at.getTime() - new Date().getTime() - 1000 * 30;
+      console.log('delay', delay);
       if (assessment.type === AssessmentType.SUBJECTIVE) {
         this.backgroundServiceManager.assessmentStartJob(
           `assessment-start:${userAssessment.id}`,
-          scheduleAt.getTime() - new Date().getTime() - 1000 * 30,
+          delay,
         );
       }
 
@@ -139,14 +151,6 @@ export class AssessmentsService {
       }
     }
 
-    this.backgroundServiceManager.assessmentEndJob(
-      `assessment-end:${userAssessment.id}`,
-      scheduleAt.getTime() -
-        new Date().getTime() +
-        userAssessment.assessments.duration_minutes * 60 * 1000 +
-        1000 * 30,
-    );
-
     if (userAssessment.status !== AssessmentStatus.IN_PROGRESS) {
       throw new BadRequestException(
         APP_STRINGS.api_errors.assessments.cannot_start_assessment(
@@ -154,12 +158,12 @@ export class AssessmentsService {
         ),
       );
     }
-
+    
     const now = new Date();
     const startedAt = new Date(userAssessment.started_at);
     const durationMinutes = userAssessment.assessments.duration_minutes || 60;
     const elapsedMinutes = (now.getTime() - startedAt.getTime()) / (1000 * 60);
-
+    
     if (elapsedMinutes >= durationMinutes) {
       // update status to completed
       await this.assessmentsDBService.updateUserAssessmentStatus(
@@ -169,12 +173,20 @@ export class AssessmentsService {
         undefined,
         now,
       );
-
       throw new BadRequestException(
         APP_STRINGS.api_errors.assessments.assessment_time_expired,
       );
     }
+    const remainingTime = durationMinutes * 60 * 1000 - (now.getTime() - startedAt.getTime());
 
+    // Only schedule if there's remaining time
+    if (remainingTime > 0) {
+      await this.backgroundServiceManager.assessmentEndJob(
+        `assessment-end:${userAssessment.id}`,
+        remainingTime,
+      );
+    }
+    
     // Get the questions for this assessment (with user submitted answers)
     const questions =
       await this.assessmentsDBService.findQuestionsByAssessmentId(
@@ -299,7 +311,7 @@ export class AssessmentsService {
       await this.assessmentsDBService.updateUserAssessmentStatus(
         userAssessmentId,
         AssessmentStatus.COMPLETED,
-        userAssessmentData.assessments.type === AssessmentType.SUBJECTIVE ? true : undefined,
+        userAssessmentData.assessments.type === AssessmentType.MCQ ? true : undefined,
         null,
         new Date(),
       );
@@ -526,6 +538,7 @@ export class AssessmentsService {
   }
 
   async startInterview(userAssessmentId: string) {
+    console.log('here startInterview job');
     const userAssessment =
       await this.assessmentsDBService.getUserAssessmentCompleteData(
         userAssessmentId,
@@ -586,7 +599,7 @@ export class AssessmentsService {
     await this.assessmentsDBService.updateUserAssessmentStatus(
       userAssessmentId,
       AssessmentStatus.COMPLETED,
-      userAssessment.assessments.type === AssessmentType.SUBJECTIVE ? true : undefined,
+      userAssessment.assessments.type === AssessmentType.MCQ ? true : undefined,
       null,
       new Date(),
     );
@@ -600,7 +613,7 @@ export class AssessmentsService {
       await this.assessmentsDBService.updateUserAssessmentStatus(
         userAssessmentId,
         AssessmentStatus.COMPLETED,
-        type === AssessmentType.SUBJECTIVE ? true : undefined,
+        type === AssessmentType.MCQ ? true : undefined,
         null,
         new Date(),
       );

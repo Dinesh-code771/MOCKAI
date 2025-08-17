@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
+import { GenerativeModel, GoogleGenerativeAI, Schema, SchemaType } from '@google/generative-ai';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '@config/env.config';
 
@@ -8,11 +8,47 @@ export class GeminiProvider {
   private readonly model: GenerativeModel;
 
   constructor(private readonly configService: ConfigService<EnvConfig>) {
+    const assessmentSchema: Schema = {
+      type: SchemaType.OBJECT,
+      properties: {
+        overallScore: { type: SchemaType.NUMBER },
+        maxScore: { type: SchemaType.NUMBER },
+        percentage: { type: SchemaType.NUMBER },
+        overallFeedback: { type: SchemaType.STRING },
+        questionAssessments: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              questionId: { type: SchemaType.STRING },
+              questionText: { type: SchemaType.STRING },
+              userAnswer: { type: SchemaType.STRING },
+              score: { type: SchemaType.NUMBER },
+              maxQuestionScore: { type: SchemaType.NUMBER },
+              feedback: { type: SchemaType.STRING },
+            },
+          },
+        },
+        strongAreas: {
+          type: SchemaType.ARRAY,
+          items: { type: SchemaType.STRING },
+        },
+        weakAreas: {
+          type: SchemaType.ARRAY,
+          items: { type: SchemaType.STRING },
+        },
+      },
+    };
+
     const genAI = new GoogleGenerativeAI(
       this.configService.get('GEMINI_API_KEY'),
     );
     this.model = genAI.getGenerativeModel({
       model: 'gemini-2.5-pro',
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: assessmentSchema,
+      }
     });
   }
 
@@ -73,12 +109,14 @@ export class GeminiProvider {
         "strongAreas": [
           "[specific strength area 1 - be specific, e.g., 'Strong understanding of database optimization techniques']",
           "[specific strength area 2]",
-          "[specific strength area 3]"
+          "[specific strength area 3]",
+          ... and so on
         ],
         "weakAreas": [
           "[specific weakness area 1 - be constructive, e.g., 'Limited knowledge of cloud architecture patterns']",
           "[specific weakness area 2]",
-          "[specific weakness area 3]"
+          "[specific weakness area 3]",
+          ... and so on
         ]
       }
 
@@ -97,13 +135,24 @@ export class GeminiProvider {
 
       Begin your assessment:`;
 
-    try {
+    try {      
       const result = await this.model.generateContent(prompt);
       Logger.log(`Gemini response: ${result.response.text()}`);
       const responseText = result.response.text();
 
       // Parse the JSON response
-      const assessment: AssessmentResult = JSON.parse(responseText);
+      const rawAssessment: AssessmentResult = JSON.parse(responseText);
+
+      const assessment: AssessmentResult = {
+        overallScore: rawAssessment.overallScore || 0,
+        maxScore: maxScore,
+        percentage: Number(((rawAssessment.overallScore || 0) / maxScore * 100).toFixed(1)),
+        overallFeedback: rawAssessment.overallFeedback || 'Assessment completed.',
+        questionAssessments: rawAssessment.questionAssessments,
+        strongAreas: rawAssessment.strongAreas || [],
+        weakAreas: rawAssessment.weakAreas || []
+      };
+  
 
       // Validate and sanitize the response
       return this.validateAndSanitizeAssessment(

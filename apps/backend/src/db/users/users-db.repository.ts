@@ -421,7 +421,7 @@ export class UsersDBRepository {
   }
 
   async getUserAnalytics(userId: string) {
-    return this.prisma.user_ranking_view.findFirst({
+    const ranking = await this.prisma.user_ranking_view.findFirst({
       where: {
         user_id: userId,
       },
@@ -432,5 +432,13 @@ export class UsersDBRepository {
         rank: true,
       },
     });
+
+    const userAnalytics = await this.prisma.user_analytics.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    return { ranking, userAnalytics };
   }
 }

@@ -86,11 +86,12 @@ export class UserAssessmentListQueryDto extends AssessmentListQueryDto {
     description: 'Assessment status filter',
     enum: AssessmentStatus,
     required: false,
-    example: AssessmentStatus.COMPLETED,
+    isArray: true,
+    example: [AssessmentStatus.COMPLETED],
   })
   @IsOptional()
-  @IsEnum(AssessmentStatus)
-  status?: AssessmentStatus;
+  @IsEnum(AssessmentStatus, { each: true })
+  status?: AssessmentStatus[];
 }
 
 export class AssessmentResponseDto {
