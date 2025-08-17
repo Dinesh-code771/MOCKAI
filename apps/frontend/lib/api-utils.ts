@@ -59,12 +59,13 @@ export const logoutUser = async () => {
 // Google OAuth utilities
 export const initiateGoogleLogin = (nextUrl?: string) => {
   const baseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
   const url = new URL('/v1/auth/google', baseUrl);
   if (nextUrl) {
     url.searchParams.set('next_url', nextUrl);
   }
   window.location.href = url.toString();
+  console.log('url', url.toString());
 };
 
 // Error handling utility

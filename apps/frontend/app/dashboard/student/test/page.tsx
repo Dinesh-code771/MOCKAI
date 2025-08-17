@@ -15,6 +15,7 @@ import TestCard from '@/components/Tests/TestCard';
 import { getInProgressTests, getTests } from './_actions';
 import TestStats from '@/components/Tests/TestStats';
 import { assessmentApi } from '@/lib/api-client';
+import { AssessmentsControllerGetAssessmentsListTypeEnum, AssessmentsControllerGetUserAssessmentsTypeEnum } from '@mockai/sdk';
 
 const recentAttempts = [
   {
@@ -37,10 +38,18 @@ const recentAttempts = [
 
 export default async function TakeTest() {
   //tests which are not taken by the user
-  const tests = await getTests();
+  const tests = await getTests(
+    AssessmentsControllerGetAssessmentsListTypeEnum.Mcq,
+  );
+
 
   //in-progress tests
-  const inProgressTests = await getInProgressTests();
+  const inProgressTests = await getInProgressTests(
+    AssessmentsControllerGetUserAssessmentsTypeEnum.Mcq,
+  );
+
+  console.log(tests, 'tests');
+  console.log(inProgressTests, 'inProgressTests');
 
 
   return (

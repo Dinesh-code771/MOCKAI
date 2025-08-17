@@ -27,25 +27,9 @@ import {
   Mic,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-const upcomingInterviews = [
-  {
-    id: 1,
-    title: 'Frontend Developer Interview',
-    company: 'TechCorp',
-    date: '2024-01-15',
-    time: '10:00 AM',
-    type: 'Technical',
-  },
-  {
-    id: 2,
-    title: 'Product Manager Interview',
-    company: 'StartupXYZ',
-    date: '2024-01-18',
-    time: '2:00 PM',
-    type: 'Behavioral',
-  },
-];
+import { useEffect, useState } from 'react';
+import { getInProgressTests, getTests } from './test/_actions';
+import { AssessmentsControllerGetUserAssessmentsTypeEnum } from '@mockai/sdk';
 
 const recentTests = [
   {
@@ -74,6 +58,7 @@ const achievements = [
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const [upcomingInterviews, setInterViews] = useState([]);
 
   const cards = [
     {
@@ -98,7 +83,17 @@ export default function StudentDashboard() {
       href: '/dashboard/student/results',
     },
   ];
-
+  useEffect(() => {
+    async function fetchInterviews() {
+      //tests which are not taken by the user
+      const inProgressTests = await getInProgressTests(
+        AssessmentsControllerGetUserAssessmentsTypeEnum.Subjective,
+      );
+      console.log('tests', inProgressTests);
+      setInterViews(inProgressTests?.assessments as any);
+    }
+    fetchInterviews();
+  }, []);
   return (
     <DashboardLayout role="student" currentPath="/dashboard/student">
       <div className="space-y-6">
@@ -250,7 +245,7 @@ export default function StudentDashboard() {
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                       <h3 className="font-semibold text-gray-800 mb-2">
-                        {card.title}
+                        {card.name}
                       </h3>
                       <p className="text-sm text-gray-600 mb-4">
                         {card.description}
@@ -286,27 +281,26 @@ export default function StudentDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {upcomingInterviews.map((interview) => (
+                {upcomingInterviews.map((interview: any) => (
                   <div
                     key={interview.id}
                     className="flex items-center justify-between p-4 bg-gray-50/50 rounded-lg"
                   >
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-800">
-                        {interview.title}
+                        {interview?.name?.charAt(0).toUpperCase() +
+                          interview?.name?.slice(1)}
                       </h4>
-                      <p className="text-sm text-gray-600">
-                        {interview.company}
-                      </p>
+                      <p className="text-sm text-gray-600">{'inspanner'}</p>
                       <div className="flex items-center mt-2 space-x-4">
                         <span className="text-xs text-gray-500">
-                          {interview.date}
+                          {interview.created_at.toLocaleDateString()}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {interview.time}
+                          {interview.duration_minutes} minutes
                         </span>
                         <Badge variant="outline" className="text-xs">
-                          {interview.type}
+                          {interview.difficulty}
                         </Badge>
                       </div>
                     </div>
@@ -314,7 +308,9 @@ export default function StudentDashboard() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        router.push('/dashboard/student/interview')
+                        router.push(
+                          `/dashboard/student/interview/${interview.id}`,
+                        )
                       }
                     >
                       Join

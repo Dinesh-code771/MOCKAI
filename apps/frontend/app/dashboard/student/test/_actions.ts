@@ -5,6 +5,9 @@ import { getToken } from '@/app/auth/actions';
 import {
   AssessmentsControllerGetUserAssessmentsStatusEnum,
   AssessmentsControllerGetUserAssessmentsTypeEnum,
+  AssessmentsControllerGetAssessmentsListTypeEnum,
+  AssessmentsControllerGetAssessmentsListDifficultyEnum,
+  AssessmentsControllerGetAssessmentsListDraftAssessmentEnum,
 } from '@mockai/sdk';
 
 enum AssessmentTypeEnum {
@@ -13,11 +16,21 @@ enum AssessmentTypeEnum {
   SAQ_WITH_TEXT = 'saq_with_text  ',
 }
 
-export const getTests = async () => {
+export const getTests = async (
+  type: AssessmentsControllerGetAssessmentsListTypeEnum,
+) => {
   try {
     const authenticatedApi = getAuthenticatedAssessmentsApi();
     const response =
-      await authenticatedApi.assessmentsControllerGetAssessmentsList();
+      await authenticatedApi.assessmentsControllerGetAssessmentsList({
+        type: type,
+        difficulty:
+          AssessmentsControllerGetAssessmentsListDifficultyEnum.Intermediate,
+        page: 1,
+        limit: 10,
+        draftAssessment:
+          AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.False,
+      });
     return response.data;
   } catch (error) {
     console.error('Error fetching tests:', error);
@@ -45,7 +58,7 @@ export const startTest = async (id: string) => {
           assessmentId: id,
         },
       });
-    console.log(response, 'start test');
+    console.log(response, 'response start test');
     return response.data;
   } catch (error) {
     console.error('Error fetching test by id:', error);
@@ -53,15 +66,17 @@ export const startTest = async (id: string) => {
   }
 };
 
-export const getInProgressTests = async () => {
+export const getInProgressTests = async (
+  type: AssessmentsControllerGetUserAssessmentsTypeEnum,
+) => {
   try {
     const authenticatedApi = getAuthenticatedAssessmentsApi();
     const response =
       await authenticatedApi.assessmentsControllerGetUserAssessments({
-        type: AssessmentsControllerGetUserAssessmentsTypeEnum.Mcq,
+        type: type,
         page: 1,
-        limit: 10,
-        // status: AssessmentsControllerGetUserAssessmentsStatusEnum.InProgress,
+        limit: 20,
+        status: AssessmentsControllerGetUserAssessmentsStatusEnum.InProgress,
       });
     return response.data;
   } catch (error) {
