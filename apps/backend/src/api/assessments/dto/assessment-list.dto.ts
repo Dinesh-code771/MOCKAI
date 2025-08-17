@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsOptional, IsUUID, IsInt, Min, IsBoolean } from 'class-validator';
+import { IsEnum, IsOptional, IsUUID, IsInt, Min, IsBoolean, IsArray } from 'class-validator';
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
 import { PaginationDetailsDto } from '@common/dto/pagination.dto';
@@ -90,6 +90,7 @@ export class UserAssessmentListQueryDto extends AssessmentListQueryDto {
     example: [AssessmentStatus.COMPLETED],
   })
   @IsOptional()
+  @IsArray()
   @IsEnum(AssessmentStatus, { each: true })
   status?: AssessmentStatus[];
 }

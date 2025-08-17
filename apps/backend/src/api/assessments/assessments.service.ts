@@ -33,6 +33,7 @@ import { RoleType } from '@common/enums/auth-type.enum';
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { BackgroundServiceManager } from '@bg/background-service-manager';
 import { AiService } from '@ai/ai.service';
+import { UserAssessmentQueryDto } from '@assessments/dto/user-assessment-list.dto';
 
 @Injectable()
 export class AssessmentsService {
@@ -346,7 +347,7 @@ export class AssessmentsService {
     );
   }
 
-  async getUserAssessments(userId: string, query: UserAssessmentListQueryDto) {
+  async getUserAssessments(userId: string, query: UserAssessmentQueryDto) {
     const { skip, take } = calculateSkipAndTake(query.page, query.limit);
 
     const { assessments, totalCount } =

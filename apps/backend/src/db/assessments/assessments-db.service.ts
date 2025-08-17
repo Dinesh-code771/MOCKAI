@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { AssessmentsDBRepository } from '@db/assessments/assessments-db.repository';
 import { AssessmentType } from '@assessments/enum/assessment-type.enum';
 import { Difficulty } from '@assessments/enum/difficulty.enum';
-import { UserAssessmentListQueryDto } from '@assessments/dto/assessment-list.dto';
 import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
+import { UserAssessmentQueryDto } from '@assessments/dto/user-assessment-list.dto';
 
 @Injectable()
 export class AssessmentsDBService {
@@ -24,7 +24,7 @@ export class AssessmentsDBService {
   }
 
   async getUserAssessmentsList(
-    query: UserAssessmentListQueryDto,
+    query: UserAssessmentQueryDto,
     userId: string,
     skip: number,
     take: number,
