@@ -20,7 +20,7 @@ import { AssessmentsQueueModule } from '@bg/queue/assessments/assessments-queue.
       adapter: ExpressAdapter,
       boardOptions: {
         uiConfig: {
-          boardTitle: 'SaleMate Queues',
+          boardTitle: 'MockAI Queues',
         },
       },
     }),
