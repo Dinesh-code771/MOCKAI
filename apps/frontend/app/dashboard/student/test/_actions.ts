@@ -104,7 +104,10 @@ export const getScheduledTests = async (
         type: type,
         page: 1,
         limit: 20,
-        status: AssessmentsControllerGetUserAssessmentsStatusEnum.Scheduled,
+        status: [
+          AssessmentsControllerGetUserAssessmentsStatusEnum.Scheduled,
+          AssessmentsControllerGetUserAssessmentsStatusEnum.InProgress,
+        ],
       });
     return response.data;
   } catch (error) {

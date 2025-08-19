@@ -67,7 +67,10 @@ export default function ResultsPage() {
           await assessmentApi.assessmentsControllerGetUserAssessments({
             page: 1,
             limit: 50,
-            status: AssessmentsControllerGetUserAssessmentsStatusEnum.Completed,
+            status: [
+              AssessmentsControllerGetUserAssessmentsStatusEnum.Completed,
+              AssessmentsControllerGetUserAssessmentsStatusEnum.InProgress,
+            ],
           });
 
         if (response?.data?.assessments) {
