@@ -16,6 +16,7 @@
 import * as runtime from '../runtime';
 import type {
   AddUsersDto,
+  AdminDashboardAnalyticsApiResponse,
   DisableUserDto,
   ModelApiResponse,
   UpdateUserProfileDto,
@@ -28,6 +29,8 @@ import type {
 import {
     AddUsersDtoFromJSON,
     AddUsersDtoToJSON,
+    AdminDashboardAnalyticsApiResponseFromJSON,
+    AdminDashboardAnalyticsApiResponseToJSON,
     DisableUserDtoFromJSON,
     DisableUserDtoToJSON,
     ModelApiResponseFromJSON,
@@ -56,6 +59,11 @@ export interface UsersControllerDeleteUserRequest {
 
 export interface UsersControllerDisableUserRequest {
     disableUserDto: DisableUserDto;
+}
+
+export interface UsersControllerGetUserRankingRequest {
+    page?: number;
+    limit?: number;
 }
 
 export interface UsersControllerGetUsersListRequest {
@@ -117,6 +125,40 @@ export class UsersApi extends runtime.BaseAPI {
      */
     async usersControllerAddUsers(requestParameters: UsersControllerAddUsersRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ModelApiResponse> {
         const response = await this.usersControllerAddUsersRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * API to get admin dashboard analytics
+     */
+    async usersControllerAdminDashboardAnalyticsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AdminDashboardAnalyticsApiResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/users/admin/analytics`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AdminDashboardAnalyticsApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * API to get admin dashboard analytics
+     */
+    async usersControllerAdminDashboardAnalytics(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AdminDashboardAnalyticsApiResponse> {
+        const response = await this.usersControllerAdminDashboardAnalyticsRaw(initOverrides);
         return await response.value();
     }
 
@@ -282,8 +324,16 @@ export class UsersApi extends runtime.BaseAPI {
      * Get user ranking information including top performers and community statistics. Shows top 10 users and current user ranking.
      * API to get user ranking and community analytics
      */
-    async usersControllerGetUserRankingRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserRankingApiResponse>> {
+    async usersControllerGetUserRankingRaw(requestParameters: UsersControllerGetUserRankingRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserRankingApiResponse>> {
         const queryParameters: any = {};
+
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -309,8 +359,8 @@ export class UsersApi extends runtime.BaseAPI {
      * Get user ranking information including top performers and community statistics. Shows top 10 users and current user ranking.
      * API to get user ranking and community analytics
      */
-    async usersControllerGetUserRanking(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserRankingApiResponse> {
-        const response = await this.usersControllerGetUserRankingRaw(initOverrides);
+    async usersControllerGetUserRanking(requestParameters: UsersControllerGetUserRankingRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserRankingApiResponse> {
+        const response = await this.usersControllerGetUserRankingRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

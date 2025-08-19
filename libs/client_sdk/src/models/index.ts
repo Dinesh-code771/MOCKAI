@@ -1,6 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AddUsersDto';
+export * from './AdminDashboardAnalyticResponse';
+export * from './AdminDashboardAnalyticsApiResponse';
 export * from './AssessmentDetailsDto';
 export * from './AssessmentListApiResponse';
 export * from './AssessmentListResponseDto';

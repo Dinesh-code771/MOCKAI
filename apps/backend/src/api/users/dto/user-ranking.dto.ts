@@ -169,3 +169,41 @@ export class UserAnalyticsApiResponse extends ApiResponse<UserAnalyticsResponseD
   })
   declare data?: UserAnalyticsResponseDto;
 }
+
+export class AdminDashboardAnalyticResponse {
+  @ApiProperty({
+    description: 'Total number of users',
+    example: 42,
+    type: Number,
+  })
+  totalUsers: number;
+
+  @ApiProperty({
+    description: 'Average score across all users (formatted as string)',
+    example: '78.5',
+    type: String,
+  })
+  averageScore: string;
+
+  @ApiProperty({
+    description: 'Total number of assessments taken',
+    example: 100,
+    type: Number,
+  })
+  totalAssessments: number;
+
+  @ApiProperty({
+    description: 'Total number of questions across all assessments',
+    example: 500,
+    type: Number,
+  })
+  totalQuestions: number;
+}
+
+export class AdminDashboardAnalyticsApiResponse extends ApiResponse<AdminDashboardAnalyticResponse> {
+  @ApiProperty({
+    description: 'Admin dashboard analytics response data',
+    type: AdminDashboardAnalyticResponse,
+  })
+  declare data?: AdminDashboardAnalyticResponse;
+}

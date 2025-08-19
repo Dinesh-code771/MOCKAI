@@ -57,8 +57,8 @@ export class UsersDBService {
     return this.usersRepository.deleteUser(userId);
   }
 
-  async getUserRanking(userId: string) {
-    return this.usersRepository.getUserRanking(userId);
+  async getUserRanking(userId: string, page: number, limit: number) {
+    return this.usersRepository.getUserRanking(userId, page, limit);
   }
 
   async getCommunityAnalytics() {
@@ -67,5 +67,9 @@ export class UsersDBService {
 
   async getUserAnalytics(userId: string) {
     return this.usersRepository.getUserAnalytics(userId);
+  }
+
+  async adminDashboardAnalytics() {
+    return this.usersRepository.adminDashboardAnalytics();
   }
 }

@@ -377,13 +377,15 @@ export class UsersDBRepository {
     }
   }
 
-  async getUserRanking(userId: string) {
+  async getUserRanking(userId: string, page: number, limit: number) {
+    const offset = (page - 1) * limit;
     return this.prisma.user_ranking_view.findMany({
       where: {
         OR: [
           {
             rank: {
-              lte: 10,
+              gt: offset,
+              lte: offset + limit,
             },
           },
           {
@@ -440,5 +442,18 @@ export class UsersDBRepository {
     });
 
     return { ranking, userAnalytics };
+  }
+
+  async adminDashboardAnalytics() {
+    const count = await this.prisma.user_ranking_view.count({});
+    const averageScore = await this.prisma.user_ranking_view.aggregate({
+      _avg: {
+        average_score: true,
+      },
+    });
+    const totalAssessments = await this.prisma.assessments.count({ where: { is_active: true, is_published: true } });
+    const totalQuestions = await this.prisma.questions.count({});
+
+    return { count, averageScore, totalAssessments, totalQuestions };
   }
 }

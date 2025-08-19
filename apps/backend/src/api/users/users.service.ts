@@ -158,8 +158,8 @@ export class UsersService {
     return await this.usersDBService.deleteUser(userId);
   }
 
-  async getUserRanking(userId: string): Promise<UserRankingResponseDto> {
-    const rankings = await this.usersDBService.getUserRanking(userId);
+  async getUserRanking(userId: string, page: number, limit: number): Promise<UserRankingResponseDto> {
+    const rankings = await this.usersDBService.getUserRanking(userId, page, limit);
     const communityAnalytics =
       await this.usersDBService.getCommunityAnalytics();
 
@@ -179,6 +179,16 @@ export class UsersService {
     return {
       analytics:
         this.usersTransform.transformToUserAnalyticsResponse(ranking, userAnalytics?.given_assessments, userAnalytics?.upcoming_assessments),
+    };
+  }
+
+  async adminDashboardAnalytics() {
+    const { count: totalUsers, averageScore, totalAssessments, totalQuestions } = await this.usersDBService.adminDashboardAnalytics();
+    return {
+      totalUsers,
+      averageScore: averageScore._avg.average_score.toFixed(2),
+      totalAssessments,
+      totalQuestions,
     };
   }
 }
