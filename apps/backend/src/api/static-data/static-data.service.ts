@@ -14,4 +14,9 @@ export class StaticDataService {
     const courses = await this.staticDataDBService.getActiveCourses();
     return this.staticDataTransform.transformToCoursesResponse(courses);
   }
+
+  async addCourse(course: string): Promise<CoursesResponseDto> {
+    const courses = await this.staticDataDBService.addCourse(course);
+    return this.staticDataTransform.transformToCoursesResponse([courses]);
+  }
 }

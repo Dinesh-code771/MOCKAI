@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from './AddCourseRequestDto';
 export * from './AddUsersDto';
 export * from './AdminDashboardAnalyticResponse';
 export * from './AdminDashboardAnalyticsApiResponse';

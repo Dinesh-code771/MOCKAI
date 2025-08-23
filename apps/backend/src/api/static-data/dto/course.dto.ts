@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ApiResponse } from '@common/dto/api-response';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class CourseDto {
   @ApiProperty({
@@ -26,4 +27,15 @@ export class CoursesResponseDto {
 export class CoursesApiResponse extends ApiResponse<CoursesResponseDto> {
   @ApiPropertyOptional({ type: CoursesResponseDto })
   declare data?: CoursesResponseDto;
+}
+
+export class AddCourseRequestDto {
+  @ApiProperty({
+    example: 'JavaScript Fundamentals',
+    description: 'Course name',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  course: string;
 }

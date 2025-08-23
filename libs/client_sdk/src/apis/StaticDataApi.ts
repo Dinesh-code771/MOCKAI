@@ -15,17 +15,68 @@
 
 import * as runtime from '../runtime';
 import type {
+  AddCourseRequestDto,
   CoursesApiResponse,
 } from '../models/index';
 import {
+    AddCourseRequestDtoFromJSON,
+    AddCourseRequestDtoToJSON,
     CoursesApiResponseFromJSON,
     CoursesApiResponseToJSON,
 } from '../models/index';
+
+export interface StaticDataControllerAddCourseRequest {
+    addCourseRequestDto: AddCourseRequestDto;
+}
 
 /**
  * 
  */
 export class StaticDataApi extends runtime.BaseAPI {
+
+    /**
+     * API to add a course
+     */
+    async staticDataControllerAddCourseRaw(requestParameters: StaticDataControllerAddCourseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CoursesApiResponse>> {
+        if (requestParameters['addCourseRequestDto'] == null) {
+            throw new runtime.RequiredError(
+                'addCourseRequestDto',
+                'Required parameter "addCourseRequestDto" was null or undefined when calling staticDataControllerAddCourse().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/v1/static-data/courses`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AddCourseRequestDtoToJSON(requestParameters['addCourseRequestDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CoursesApiResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * API to add a course
+     */
+    async staticDataControllerAddCourse(requestParameters: StaticDataControllerAddCourseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CoursesApiResponse> {
+        const response = await this.staticDataControllerAddCourseRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * API to get all active courses
