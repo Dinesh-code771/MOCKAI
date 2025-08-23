@@ -232,6 +232,16 @@ export class AuthDBRepository {
           } : {}),
         },
         include: {
+          user_courses: {
+            select: {
+              courses: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
           user_roles: {
             include: {
               roles: {

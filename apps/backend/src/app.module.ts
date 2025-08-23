@@ -29,6 +29,8 @@ import { UsersModule } from '@users/users.module';
 import { AssessmentsModule } from '@assessments/assessments.module';
 import { CustomJwtService } from '@common/services/jwt.service';
 import { AiModule } from '@ai/ai.module';
+import { DevToolsMiddleware } from '@middlewares/dev-tools.middleware';
+import { RouteNames } from '@common/route-names';
 
 const configService = new ConfigService<EnvConfig>();
 
@@ -134,5 +136,9 @@ const cacheModule = CacheModule.registerAsync({
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(CookieAuthMiddleware).forRoutes('*');
+    consumer.apply(DevToolsMiddleware).forRoutes(
+      `*/${RouteNames.API_DOCS}`,
+      `*/${RouteNames.QUEUES_UI}`,
+    );
   }
 }
