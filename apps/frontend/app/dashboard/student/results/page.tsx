@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import {
@@ -23,6 +23,7 @@ import {
   UserAssessmentItemDto,
   CompleteAssessmentResponseDto,
 } from '@mockai/sdk';
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 
 // Extend the CompleteAssessmentResponseDto interface to include subjective assessment fields
 interface ExtendedCompleteAssessmentResponseDto
@@ -51,22 +52,24 @@ interface QuestionWithAnswers {
 
 export default function ResultsPage() {
   const router = useRouter();
-  const [completedTests, setCompletedTests] = useState<UserAssessmentItemDto[]>(
-    [],
-  );
   const [selectedTest, setSelectedTest] =
     useState<ExtendedCompleteAssessmentResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewingResults, setViewingResults] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchCompletedTests = async () => {
+  const fetchCompletedTests = useCallback(
+    async (
+      setTests: (tests: any) => void,
+      page: number,
+      limit: number,
+      setHasMore: (hasMore: boolean) => void,
+    ) => {
       try {
-        setLoading(true);
         const response =
           await assessmentApi.assessmentsControllerGetUserAssessments({
-            page: 1,
-            limit: 50,
+            page,
+            limit,
             status: [
               AssessmentsControllerGetUserAssessmentsStatusEnum.Completed,
               AssessmentsControllerGetUserAssessmentsStatusEnum.InProgress,
@@ -74,21 +77,36 @@ export default function ResultsPage() {
           });
 
         if (response?.data?.assessments) {
-          setCompletedTests(response.data.assessments);
+          setTests(response.data.assessments);
+          setHasMore(
+            !!(
+              response.data.pagination?.totalPages &&
+              response.data.pagination.totalPages > page
+            ),
+          );
         } else {
-          setCompletedTests([]);
+          setTests([]);
+          setHasMore(false);
         }
       } catch (error) {
         console.error('Error fetching completed tests:', error);
         toast.error('Failed to load completed tests');
-        setCompletedTests([]);
+        setTests([]);
+        setHasMore(false);
       } finally {
         setLoading(false);
       }
-    };
+    },
+    [],
+  );
 
-    fetchCompletedTests();
-  }, []);
+  const {
+    isLoading,
+    hasMore,
+    items: completedTests,
+    page,
+    limit,
+  } = useInfiniteScroll(fetchCompletedTests, scrollRef, 6);
 
   const handleViewResults = async (testId: string) => {
     try {
@@ -530,7 +548,10 @@ export default function ResultsPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            ref={scrollRef}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto max-h-[600px]"
+          >
             {completedTests.map((test) => (
               <div
                 key={test.id}
@@ -583,10 +604,18 @@ export default function ResultsPage() {
                       </span>
                     </div>
                   </div>
+                  {!test.user_assessment.is_assessed && (
+                    <div className="text-sm text-gray-600 mb-3">
+                      <span className="font-medium text-red-500 text-center flex items-center justify-center">
+                        Evaluation in progress...
+                      </span>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => handleViewResults(test.user_assessment.id)}
-                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={!test.user_assessment.is_assessed}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     View Results
@@ -594,6 +623,11 @@ export default function ResultsPage() {
                 </div>
               </div>
             ))}
+            {isLoading && (
+              <div className="col-span-full flex justify-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            )}
           </div>
         )}
       </div>

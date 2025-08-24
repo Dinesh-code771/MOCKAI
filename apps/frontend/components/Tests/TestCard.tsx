@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
 const getDifficultyColor = (difficulty: string) => {
-  console.log(difficulty, 'difficulty');
+
   switch (difficulty) {
     case 'beginner':
       return 'bg-green-100 text-green-800';

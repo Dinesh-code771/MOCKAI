@@ -186,7 +186,7 @@ export class UsersService {
     const { count: totalUsers, averageScore, totalAssessments, totalQuestions } = await this.usersDBService.adminDashboardAnalytics();
     return {
       totalUsers,
-      averageScore: averageScore._avg.average_score.toFixed(2),
+      averageScore: averageScore._avg.average_score?.toFixed(2),
       totalAssessments,
       totalQuestions,
     };

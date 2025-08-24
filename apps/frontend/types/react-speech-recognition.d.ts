@@ -23,11 +23,15 @@ declare module 'react-speech-recognition' {
     isMicrophoneAvailable: boolean;
   }
 
-  export function useSpeechRecognition(options?: SpeechRecognitionOptions): SpeechRecognitionState;
+  export function useSpeechRecognition(
+    options?: SpeechRecognitionOptions,
+  ): SpeechRecognitionState;
 
-  export default {
+  const speechRecognition: {
     startListening: (options?: SpeechRecognitionOptions) => void;
     stopListening: () => void;
     abortListening: () => void;
   };
-} 
+
+  export default speechRecognition;
+}

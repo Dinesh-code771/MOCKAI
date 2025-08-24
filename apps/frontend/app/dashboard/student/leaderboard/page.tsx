@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import getLeaderboardData from '@/lib/leaderboard/get-leaderboard-data';
 import { UserRankingDto } from '@mockai/sdk';
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 
 interface LeaderboardData {
   rankings: UserRankingDto[];
@@ -375,32 +376,49 @@ const ErrorState = ({ error }: { error: string }) => (
 
 export default function Leaderboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('global');
-  const [leaderboardData, setLeaderboardData] =
-    useState<LeaderboardData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchLeaderboardData = async () => {
+  const fetchLeaderboardData = useCallback(
+    async (
+      setRankings: (rankings: any) => void,
+      page: number,
+      limit: number,
+      setHasMore: (hasMore: boolean) => void,
+    ) => {
       try {
-        setLoading(true);
         const response = await getLeaderboardData();
         console.log('leaderboardData', response);
-        setLeaderboardData(response.data || null);
+
+        if (response?.data?.rankings) {
+          setRankings(response.data.rankings);
+          // For leaderboard, we typically show all data at once, so set hasMore to false
+          setHasMore(false);
+        } else {
+          setRankings([]);
+          setHasMore(false);
+        }
       } catch (err: any) {
         console.error('Error fetching leaderboard data:', err);
         setError(err.message || 'Failed to load leaderboard data');
-      } finally {
-        setLoading(false);
+        setRankings([]);
+        setHasMore(false);
       }
-    };
-    fetchLeaderboardData();
-  }, []);
+    },
+    [],
+  );
 
-  const rankings = leaderboardData?.rankings || [];
+  const {
+    isLoading,
+    hasMore,
+    items: rankings,
+    page,
+    limit,
+  } = useInfiniteScroll(fetchLeaderboardData, scrollRef, 10);
+
   const currentUser = rankings.find((user, index) => index === 0); // Assuming first user is current user
 
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout
         role="student"
@@ -473,7 +491,7 @@ export default function Leaderboard() {
                         <div className="flex h-full w-full items-center justify-center rounded-full bg-white/20 text-white text-lg font-bold">
                           {currentUser.full_name
                             ?.split(' ')
-                            .map((n) => n[0])
+                            .map((n: string) => n[0])
                             .join('') || 'U'}
                         </div>
                       )}
@@ -576,7 +594,10 @@ export default function Leaderboard() {
                 </div>
 
                 {selectedPeriod === 'global' && (
-                  <div className="space-y-4 mt-4">
+                  <div
+                    ref={scrollRef}
+                    className="space-y-4 mt-4 overflow-y-auto max-h-[600px]"
+                  >
                     {rankings.map((user, index) => (
                       <motion.div
                         key={user.id}
@@ -604,7 +625,7 @@ export default function Leaderboard() {
                               <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500 text-white">
                                 {user.full_name
                                   ?.split(' ')
-                                  .map((n) => n[0])
+                                  .map((n: string) => n[0])
                                   .join('') || 'U'}
                               </div>
                             )}
@@ -645,6 +666,11 @@ export default function Leaderboard() {
                         </div>
                       </motion.div>
                     ))}
+                    {isLoading && (
+                      <div className="flex justify-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                      </div>
+                    )}
                   </div>
                 )}
 

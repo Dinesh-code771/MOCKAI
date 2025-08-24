@@ -7,13 +7,16 @@ import {
   Middleware,
   StaticDataApi,
   AssessmentsApi,
-  } from '@mockai/sdk';
+  RequestContext,
+  ResponseContext,
+  ErrorContext,
+} from '@mockai/sdk';
 import cookieUtils from './cookie-utils';
 import { getToken } from '@/app/auth/actions';
 
 // Create middleware for authentication
 const authMiddleware: Middleware = {
-  pre: async (context) => {
+  pre: async (context: RequestContext) => {
     const token = await getToken();
     console.log('token23', token);
 
@@ -29,10 +32,10 @@ const authMiddleware: Middleware = {
 
     return context;
   },
-  post: async (context) => {
+  post: async (context: ResponseContext) => {
     return context.response;
   },
-  onError: async (context) => {
+  onError: async (context: ErrorContext) => {
     if (context.response?.status === 401) {
       // Clear auth cookies on 401 error
       cookieUtils.clearAuthCookies();
@@ -67,8 +70,6 @@ export const mediaApi = new MediaApi(config);
 export const usersApi = new UsersApi(config);
 export const staticDataApi = new StaticDataApi(config);
 export const assessmentApi = new AssessmentsApi(config);
-
-
 
 // Helper function to set auth token in cookies
 export const setAuthToken = (token: string): void => {
@@ -106,4 +107,3 @@ export const getAuthenticatedUsersApi = (): UsersApi => {
 export const getAuthenticatedAssessmentsApi = (): AssessmentsApi => {
   return new AssessmentsApi(createAuthenticatedConfig());
 };
-

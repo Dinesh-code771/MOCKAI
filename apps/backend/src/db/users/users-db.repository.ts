@@ -61,9 +61,7 @@ export class UsersDBRepository {
 
     return {
       validCourses: courses,
-      invalidCourseIds: courseIds.filter(
-        (id) => !courses.some((course) => course.id === id),
-      ),
+      invalidCourseIds: courseIds.filter((id) => !courses.some((course) => course.id === id)),
     };
   }
 
@@ -76,7 +74,7 @@ export class UsersDBRepository {
       phone_number?: string;
       country_code?: string;
     },
-    courseIds?: string[],
+    courseIds?: string[]
   ) {
     return this.prisma.$transaction(async (tx) => {
       // Prepare user update data
@@ -115,17 +113,11 @@ export class UsersDBRepository {
           },
         });
 
-        const currentCourseIds = currentEnrollments.map(
-          (enrollment) => enrollment.course_id,
-        );
+        const currentCourseIds = currentEnrollments.map((enrollment) => enrollment.course_id);
 
         // Determine courses to add and remove
-        const coursesToAdd = courseIds.filter(
-          (courseId) => !currentCourseIds.includes(courseId),
-        );
-        const coursesToRemove = currentCourseIds.filter(
-          (courseId) => !courseIds.includes(courseId),
-        );
+        const coursesToAdd = courseIds.filter((courseId) => !currentCourseIds.includes(courseId));
+        const coursesToRemove = currentCourseIds.filter((courseId) => !courseIds.includes(courseId));
 
         // Remove courses that are no longer needed
         if (coursesToRemove.length) {
@@ -160,8 +152,8 @@ export class UsersDBRepository {
                 update: {
                   is_active: true,
                 },
-              }),
-            ),
+              })
+            )
           );
         }
       }
@@ -249,12 +241,7 @@ export class UsersDBRepository {
     return users;
   }
 
-  async getUsersList(
-    search: string,
-    skip: number,
-    take: number,
-    isActive?: boolean,
-  ) {
+  async getUsersList(search: string, skip: number, take: number, isActive?: boolean) {
     const where: Prisma.usersWhereInput = {
       is_deleted: false,
     };
@@ -288,7 +275,7 @@ export class UsersDBRepository {
       where.is_active = {
         equals: isActive,
       };
-    } 
+    }
 
     const [users, totalCount] = await Promise.all([
       this.prisma.users.findMany({
@@ -350,9 +337,7 @@ export class UsersDBRepository {
       // if user not found, throw error
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new NotFoundException(
-            APP_STRINGS.api_errors.auth.user_not_found,
-          );
+          throw new NotFoundException(APP_STRINGS.api_errors.auth.user_not_found);
         }
       }
       throw error;
@@ -368,9 +353,7 @@ export class UsersDBRepository {
       // if user not found, throw error
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new NotFoundException(
-            APP_STRINGS.api_errors.auth.user_not_found,
-          );
+          throw new NotFoundException(APP_STRINGS.api_errors.auth.user_not_found);
         }
       }
       throw error;
@@ -407,7 +390,7 @@ export class UsersDBRepository {
         avatar: true,
         given_assessments: true,
         upcoming_assessments: true,
-      }
+      },
     });
   }
 
@@ -445,7 +428,17 @@ export class UsersDBRepository {
   }
 
   async adminDashboardAnalytics() {
-    const count = await this.prisma.user_ranking_view.count({});
+    const count = await this.prisma.users.count({
+      where: {
+        user_roles: {
+          some: {
+            roles: {
+              name: RoleType.STUDENT,
+            },
+          },
+        },
+      },
+    });
     const averageScore = await this.prisma.user_ranking_view.aggregate({
       _avg: {
         average_score: true,

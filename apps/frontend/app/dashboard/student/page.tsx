@@ -95,12 +95,10 @@ export default function StudentDashboard() {
       const inProgressTests = await getScheduledTests(
         AssessmentsControllerGetUserAssessmentsTypeEnum.Subjective,
       );
-      console.log('tests', inProgressTests);
       setInterViews(inProgressTests?.assessments as any);
     }
     async function fetchUserAnalytics() {
       const userAnalytics = await getUserAnalytics();
-      console.log('userAnalytics', userAnalytics);
       setUserAnalytics(userAnalytics);
     }
     fetchInterviews();
@@ -256,7 +254,7 @@ export default function StudentDashboard() {
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                       <h3 className="font-semibold text-gray-800 mb-2">
-                        {card.name}
+                        {card.title}
                       </h3>
                       <p className="text-sm text-gray-600 mb-4">
                         {card.description}

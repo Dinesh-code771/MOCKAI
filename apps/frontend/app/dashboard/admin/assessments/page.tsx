@@ -49,15 +49,23 @@ interface Assessment {
 }
 
 export default function AssessmentsList() {
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [subjectiveAssessments, setSubjectiveAssessments] = useState<
+    Assessment[]
+  >([]);
+  const [mcqAssessments, setMcqAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    async function fetchAssessments() {
+      await fetchSubjectiveAssessments();
+      await fetchMcqAssessments();
+    }
     fetchAssessments();
   }, []);
 
-  const fetchAssessments = async () => {
+  //fetch subjective assessments
+  const fetchSubjectiveAssessments = async () => {
     try {
       setLoading(true);
 
@@ -72,14 +80,31 @@ export default function AssessmentsList() {
             AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.True,
         });
 
+      console.log(response.data?.assessments, 'response');
       if (response.data?.assessments) {
-        setAssessments(response.data.assessments as unknown as Assessment[]);
+        setSubjectiveAssessments(
+          response.data.assessments as unknown as Assessment[],
+        );
       }
     } catch (error) {
       console.error('Error fetching interviews:', error);
       toast.error('Failed to load available interviews');
     } finally {
       setLoading(false);
+    }
+  };
+
+  //fetch mcq assessments
+  const fetchMcqAssessments = async () => {
+    const response =
+      await assessmentApi.assessmentsControllerGetAssessmentsList({
+        type: AssessmentsControllerGetAssessmentsListTypeEnum.Mcq,
+        draftAssessment:
+          AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.True,
+      });
+    console.log(response.data?.assessments, 'response');
+    if (response.data?.assessments) {
+      setMcqAssessments(response.data.assessments as unknown as Assessment[]);
     }
   };
 
@@ -92,19 +117,26 @@ export default function AssessmentsList() {
       toast.success('Assessment published successfully!');
 
       // Refresh the assessments list to update the published status
-      await fetchAssessments();
+      await fetchSubjectiveAssessments();
+      await fetchMcqAssessments();
     } catch (error) {
       console.error('Error publishing assessment:', error);
       toast.error('Failed to publish assessment');
     }
   };
 
-  const filteredAssessments = assessments.filter(
-    (assessment) =>
-      assessment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assessment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assessment.course?.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredAssessments = subjectiveAssessments
+    .concat(mcqAssessments)
+    .filter(
+      (assessment) =>
+        assessment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assessment.description
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        assessment.course?.name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()),
+    );
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {

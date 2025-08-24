@@ -10,24 +10,18 @@ import {
   AssessmentsControllerGetAssessmentsListDraftAssessmentEnum,
 } from '@mockai/sdk';
 
-enum AssessmentTypeEnum {
-  MSQ = 'msq',
-  SAQ = 'saq',
-  SAQ_WITH_TEXT = 'saq_with_text  ',
-}
-
 export const getTests = async (
   type: AssessmentsControllerGetAssessmentsListTypeEnum,
+  page: number,
+  limit: number,
 ) => {
   try {
     const authenticatedApi = getAuthenticatedAssessmentsApi();
     const response =
       await authenticatedApi.assessmentsControllerGetAssessmentsList({
         type: type,
-        page: 1,
-        limit: 10,
-        draftAssessment:
-          AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.False,
+        page: page,
+        limit: limit,
       });
     return response.data;
   } catch (error) {
@@ -66,15 +60,17 @@ export const startTest = async (id: string) => {
 
 export const getInProgressTests = async (
   type: AssessmentsControllerGetUserAssessmentsTypeEnum,
+  page: number,
+  limit: number,
 ) => {
   try {
     const authenticatedApi = getAuthenticatedAssessmentsApi();
     const response =
       await authenticatedApi.assessmentsControllerGetUserAssessments({
         type: type,
-        page: 1,
-        limit: 20,
-        status: AssessmentsControllerGetUserAssessmentsStatusEnum.InProgress,
+        page: page,
+        limit: limit,
+        status: [AssessmentsControllerGetUserAssessmentsStatusEnum.InProgress],
       });
     return response.data;
   } catch (error) {

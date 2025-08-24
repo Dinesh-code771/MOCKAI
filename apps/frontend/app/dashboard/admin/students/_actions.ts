@@ -59,7 +59,7 @@ export async function deleteStudentAction(userId: string) {
   try {
     const authenticatedApi = getAuthenticatedUsersApi();
     const response = await authenticatedApi.usersControllerDeleteUser({
-      userId,
+      userIdDto: { user_id: userId },
     });
 
     // Revalidate the students page

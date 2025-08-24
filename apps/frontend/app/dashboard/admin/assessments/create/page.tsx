@@ -451,11 +451,12 @@ export default function CreateAssessment() {
                           <SelectValue placeholder="Select a course" />
                         </SelectTrigger>
                         <SelectContent>
-                          {courses && courses?.map((course) => (
-                            <SelectItem key={course.id} value={course.id}>
-                              {course.name}
-                            </SelectItem>
-                          ))}
+                          {courses &&
+                            courses?.map((course: any) => (
+                              <SelectItem key={course.id} value={course.id}>
+                                {course.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       {errors.course_id && (
@@ -828,8 +829,9 @@ export default function CreateAssessment() {
                           <span className="text-gray-600">Course:</span>
                           <span className="font-medium">
                             {
-                              courses.find((c) => c.id === formData.course_id)
-                                ?.name
+                              courses.find(
+                                (c: any) => c.id === formData.course_id,
+                              )?.name
                             }
                           </span>
                         </div>

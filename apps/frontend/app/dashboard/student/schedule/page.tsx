@@ -21,10 +21,10 @@ import {
   AssessmentsControllerGetAssessmentsListDraftAssessmentEnum,
 } from '@mockai/sdk';
 
-// Generate all time slots from 6 AM to 11 PM with 30-minute intervals
+// Generate all time slots from 12:00 AM to 11:30 PM with 30-minute intervals
 const generateTimeSlots = () => {
   const slots = [];
-  const startHour = 6; // 6 AM
+  const startHour = 0; // 12:00 AM
   const endHour = 23; // 11 PM
 
   for (let hour = startHour; hour <= endHour; hour++) {
@@ -106,57 +106,155 @@ export default function ScheduleInterview() {
 
       if (response.data?.assessments) {
         setInterviews(response.data.assessments);
+        if (response.data.assessments.length === 0) {
+          toast.info('No interviews available at the moment');
+        }
+      } else {
+        toast.warning('No interview data received from server');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching interviews:', error);
-      toast.error('Failed to load available interviews');
+
+      // Handle different types of errors
+      if (error.response?.status === 401) {
+        toast.error('Authentication required. Please login again.');
+      } else if (error.response?.status === 403) {
+        toast.error(
+          'Access denied. You may not have permission to view interviews.',
+        );
+      } else if (error.response?.status === 404) {
+        toast.error('Interview service not found. Please try again later.');
+      } else if (error.response?.status >= 500) {
+        toast.error('Server error. Please try again later.');
+      } else if (error.message?.includes('Network Error')) {
+        toast.error(
+          'Network error. Please check your connection and try again.',
+        );
+      } else {
+        toast.error('Failed to load available interviews. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleSchedule = async () => {
-    if (!selectedInterview) {
-      toast.error('Please select an interview');
-      return;
+    try {
+      // Validation checks
+      if (!selectedInterview) {
+        toast.error('Please select an interview');
+        return;
+      }
+      if (!selectedDate || !selectedTime) {
+        toast.error('Please select both date and time');
+        return;
+      }
+
+      // Validate that selected date is not in the past
+      const now = new Date();
+      const selectedDateTime = new Date(selectedDate);
+      if (
+        selectedDateTime <
+        new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      ) {
+        toast.error('Cannot schedule interview for a past date');
+        return;
+      }
+
+      // Parse the time string and combine with selected date
+      const timeMatch = selectedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!timeMatch) {
+        toast.error('Invalid time format');
+        return;
+      }
+
+      let hours = parseInt(timeMatch[1]);
+      const minutes = parseInt(timeMatch[2]);
+      const period = timeMatch[3].toUpperCase();
+
+      // Validate time format
+      if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+        toast.error('Invalid time values');
+        return;
+      }
+
+      // Convert 12-hour format to 24-hour format
+      if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+
+      // Create a new date with the selected date and time
+      const scheduledDateTime = new Date(selectedDate);
+      scheduledDateTime.setHours(hours, minutes, 0, 0);
+
+      // Validate that scheduled time is not in the past
+      if (scheduledDateTime <= now) {
+        toast.error('Cannot schedule interview for a past time');
+        return;
+      }
+
+      // Show loading toast
+      const loadingToast = toast.loading('Scheduling your interview...');
+
+      const response = await assessmentApi.assessmentsControllerStartAssessment(
+        {
+          startAssessmentBodyDto: {
+            assessmentId: selectedInterview.id,
+            scheduleAt: scheduledDateTime,
+          },
+        },
+      );
+
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
+      if (response.data) {
+        toast.success('Interview scheduled successfully!', {
+          description: `Your interview "${
+            selectedInterview.name
+          }" is scheduled for ${scheduledDateTime.toLocaleString()}`,
+        });
+
+        // Reset form
+        setSelectedInterview(null);
+        setSelectedDate(null);
+        setSelectedTime('');
+        setIsDropdownOpen(false);
+      } else {
+        toast.warning('Interview scheduled but no confirmation received');
+      }
+    } catch (error: any) {
+      console.error('Error scheduling interview:', error);
+
+      // Handle different types of errors
+      if (error.response?.status === 400) {
+        toast.error(
+          'Invalid request. Please check your selection and try again.',
+        );
+      } else if (error.response?.status === 401) {
+        toast.error('Authentication required. Please login again.');
+      } else if (error.response?.status === 403) {
+        toast.error(
+          'Access denied. You may not have permission to schedule interviews.',
+        );
+      } else if (error.response?.status === 409) {
+        toast.error(
+          'Time slot already booked. Please select a different time.',
+        );
+      } else if (error.response?.status === 422) {
+        toast.error('Invalid interview data. Please try again.');
+      } else if (error.response?.status >= 500) {
+        toast.error('Server error. Please try again later.');
+      } else if (error.message?.includes('Network Error')) {
+        toast.error(
+          'Network error. Please check your connection and try again.',
+        );
+      } else {
+        toast.error('Failed to schedule interview. Please try again.');
+      }
     }
-    if (!selectedDate || !selectedTime) {
-      frontend;
-      toast.error('Please select both date and time');
-      return;
-    }
-
-    // Parse the time string and combine with selected date
-    const timeMatch = selectedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
-    if (!timeMatch) {
-      toast.error('Invalid time format');
-      return;
-    }
-
-    let hours = parseInt(timeMatch[1]);
-    const minutes = parseInt(timeMatch[2]);
-    const period = timeMatch[3].toUpperCase();
-
-    // Convert 12-hour format to 24-hour format
-    if (period === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (period === 'AM' && hours === 12) {
-      hours = 0;
-    }
-
-    // Create a new date with the selected date and time
-    const scheduledDateTime = new Date(selectedDate);
-    scheduledDateTime.setHours(hours, minutes, 0, 0);
-
-    const response = await assessmentApi.assessmentsControllerStartAssessment({
-      startAssessmentBodyDto: {
-        assessmentId: selectedInterview.id,
-        scheduleAt: scheduledDateTime,
-      },
-    });
-    console.log(response);
-
-    toast.success('Interview scheduled successfully!');
   };
 
   // Get calendar data for current month
@@ -216,19 +314,34 @@ export default function ScheduleInterview() {
   };
 
   const nextMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
-    );
+    try {
+      const nextMonthDate = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() + 1,
+        1,
+      );
+      setCurrentMonth(nextMonthDate);
+    } catch (error) {
+      console.error('Error navigating to next month:', error);
+      toast.error('Error navigating calendar');
+    }
   };
 
   const prevMonth = () => {
-    const newMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() - 1,
-      1,
-    );
-    if (newMonth >= new Date(today.getFullYear(), today.getMonth(), 1)) {
-      setCurrentMonth(newMonth);
+    try {
+      const newMonth = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() - 1,
+        1,
+      );
+      if (newMonth >= new Date(today.getFullYear(), today.getMonth(), 1)) {
+        setCurrentMonth(newMonth);
+      } else {
+        toast.warning('Cannot navigate to past months');
+      }
+    } catch (error) {
+      console.error('Error navigating to previous month:', error);
+      toast.error('Error navigating calendar');
     }
   };
 
@@ -459,9 +572,27 @@ export default function ScheduleInterview() {
                     <div key={index} className="aspect-square">
                       {day ? (
                         <button
-                          onClick={() =>
-                            !isDateDisabled(day) && setSelectedDate(day)
-                          }
+                          onClick={() => {
+                            try {
+                              if (!isDateDisabled(day)) {
+                                setSelectedDate(day);
+                                toast.success(
+                                  `Selected date: ${day.toLocaleDateString(
+                                    'en-US',
+                                    {
+                                      weekday: 'long',
+                                      year: 'numeric',
+                                      month: 'long',
+                                      day: 'numeric',
+                                    },
+                                  )}`,
+                                );
+                              }
+                            } catch (error) {
+                              console.error('Error selecting date:', error);
+                              toast.error('Error selecting date');
+                            }
+                          }}
                           disabled={isDateDisabled(day)}
                           className={`w-full h-full rounded-lg text-sm font-medium transition-all duration-200 ${
                             isDateSelected(day)
@@ -533,9 +664,17 @@ export default function ScheduleInterview() {
                               ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg border-transparent'
                               : 'hover:bg-gray-50 hover:border-gray-300 border-gray-200 bg-white'
                           }`}
-                          onClick={() =>
-                            slot.available && setSelectedTime(slot.time)
-                          }
+                          onClick={() => {
+                            try {
+                              if (slot.available) {
+                                setSelectedTime(slot.time);
+                                toast.success(`Selected time: ${slot.time}`);
+                              }
+                            } catch (error) {
+                              console.error('Error selecting time:', error);
+                              toast.error('Error selecting time');
+                            }
+                          }}
                           disabled={!slot.available}
                         >
                           <div className="flex items-center justify-center space-x-2">

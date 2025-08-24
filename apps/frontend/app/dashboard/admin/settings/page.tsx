@@ -10,5 +10,5 @@ export default async function AdminSettingsPage() {
     redirect('/auth/login');
   }
 
-  return <SettingsClient />;
+  return <SettingsClient userProfile={null} />;
 }
