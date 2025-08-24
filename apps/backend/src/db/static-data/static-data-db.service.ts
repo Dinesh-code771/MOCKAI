@@ -8,4 +8,8 @@ export class StaticDataDBService {
   async getActiveCourses() {
     return this.staticDataRepository.getActiveCourses();
   }
+
+  async addCourse(course: string) {
+    return this.staticDataRepository.addCourse(course);
+  }
 }

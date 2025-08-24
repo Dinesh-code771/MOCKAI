@@ -37,7 +37,7 @@ export class CronQueueConfig {
       name: QueueName.CRON,
       adapter: BullMQAdapter,
       options: {
-        readOnlyMode: process.env.NODE_ENV === 'production' || false,
+        readOnlyMode: false,
         displayName: 'CRON Queue',
         description: 'Queue for CRON jobs',
       },

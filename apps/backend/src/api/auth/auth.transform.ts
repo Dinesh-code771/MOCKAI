@@ -11,6 +11,7 @@ export class AuthTransform {
       full_name: user.full_name,
       phone_number: user.phone_number,
       is_disabled: !user.is_active,
+      enrolled_courses: user?.user_courses?.map((course) => course.courses) || [],
     };
   }
 }

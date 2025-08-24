@@ -11,6 +11,7 @@ src/apis/StaticDataApi.ts
 src/apis/UsersApi.ts
 src/apis/index.ts
 src/index.ts
+src/models/AddCourseRequestDto.ts
 src/models/AddUsersDto.ts
 src/models/AdminDashboardAnalyticResponse.ts
 src/models/AdminDashboardAnalyticsApiResponse.ts

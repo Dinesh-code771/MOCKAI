@@ -32,7 +32,7 @@ import { BackgroundModule } from '@bg/background.module';
       name: QueueName.DEAD_LETTER,
       adapter: BullMQAdapter,
       options: {
-        readOnlyMode: process.env.NODE_ENV === 'production' || false,
+        readOnlyMode: false,
         displayName: 'Dead Letter Queue',
         description: 'Queue for failed jobs from other queues',
       },

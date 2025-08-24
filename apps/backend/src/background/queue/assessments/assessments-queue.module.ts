@@ -33,7 +33,7 @@ export class AssessmentQueueConfig {
       name: QueueName.ASSESSMENTS,
       adapter: BullMQAdapter,
       options: {
-        readOnlyMode: process.env.NODE_ENV === 'production' || false,
+        readOnlyMode: false,
         displayName: 'Assessments Queue',
         description: 'Queue for handling Assessment events',
       },

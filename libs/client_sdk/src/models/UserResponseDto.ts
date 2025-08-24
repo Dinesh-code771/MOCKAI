@@ -19,6 +19,12 @@ import {
     RoleDtoFromJSONTyped,
     RoleDtoToJSON,
 } from './RoleDto';
+import type { CourseDto } from './CourseDto';
+import {
+    CourseDtoFromJSON,
+    CourseDtoFromJSONTyped,
+    CourseDtoToJSON,
+} from './CourseDto';
 
 /**
  * 
@@ -62,6 +68,12 @@ export interface UserResponseDto {
      * @memberof UserResponseDto
      */
     is_disabled?: boolean;
+    /**
+     * 
+     * @type {Array<CourseDto>}
+     * @memberof UserResponseDto
+     */
+    enrolled_courses?: Array<CourseDto>;
 }
 
 /**
@@ -90,6 +102,7 @@ export function UserResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: boo
         'phone_number': json['phone_number'] == null ? undefined : json['phone_number'],
         'roles': ((json['roles'] as Array<any>).map(RoleDtoFromJSON)),
         'is_disabled': json['is_disabled'] == null ? undefined : json['is_disabled'],
+        'enrolled_courses': json['enrolled_courses'] == null ? undefined : ((json['enrolled_courses'] as Array<any>).map(CourseDtoFromJSON)),
     };
 }
 
@@ -105,6 +118,7 @@ export function UserResponseDtoToJSON(value?: UserResponseDto | null): any {
         'phone_number': value['phone_number'],
         'roles': ((value['roles'] as Array<any>).map(RoleDtoToJSON)),
         'is_disabled': value['is_disabled'],
+        'enrolled_courses': value['enrolled_courses'] == null ? undefined : ((value['enrolled_courses'] as Array<any>).map(CourseDtoToJSON)),
     };
 }
 

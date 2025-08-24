@@ -29,6 +29,8 @@ import { UsersModule } from '@users/users.module';
 import { AssessmentsModule } from '@assessments/assessments.module';
 import { CustomJwtService } from '@common/services/jwt.service';
 import { AiModule } from '@ai/ai.module';
+import { DevToolsMiddleware } from '@middlewares/dev-tools.middleware';
+import { RouteNames } from '@common/route-names';
 
 const configService = new ConfigService<EnvConfig>();
 
@@ -46,27 +48,27 @@ const queueModule = BullModule.forRootAsync({
   inject: [REDIS_CLIENT],
 });
 
-// Rate Limiting
+// Rate Limiting - Medium as default for all routes
 const rateLimit = ThrottlerModule.forRoot([
   {
-    name: 'short',
-    ttl: 1 * 60, // Time to live in seconds (1 minute)
-    limit: 30, // Maximum number of requests within the ttl
+    name: 'medium',
+    ttl: 1 * 60,
+    limit: 150, // Default: 150 requests per minute
   },
   {
-    name: 'medium',
-    ttl: 5 * 60, // 5 minutes
-    limit: 100,
+    name: 'short',
+    ttl: 1 * 60,
+    limit: 30,
   },
   {
     name: 'long',
-    ttl: 30 * 60, // 30 minutes
-    limit: 500,
+    ttl: 1 * 60,
+    limit: 250,
   },
   {
     name: 'very-long',
-    ttl: 60 * 60, // 1 hour
-    limit: 1000,
+    ttl: 1 * 60,
+    limit: 500,
   },
 ]);
 
@@ -134,5 +136,9 @@ const cacheModule = CacheModule.registerAsync({
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(CookieAuthMiddleware).forRoutes('*');
+    consumer.apply(DevToolsMiddleware).forRoutes(
+      `*/${RouteNames.API_DOCS}`,
+      `*/${RouteNames.QUEUES_UI}`,
+    );
   }
 }
