@@ -15,6 +15,7 @@ export class HealthController {
 
   @Get()
   @HealthCheck()
+  @Auth(AuthType.NONE)
   @ApiOperation({
     summary: 'Check the health of the service',
     description: 'Health check endpoint',
@@ -24,7 +25,6 @@ export class HealthController {
   }
 
   @Get(RouteNames.HEALTH_UI)
-  @Auth(AuthType.NONE)
   @Render('health') // Renders views/health.pug
   async showHealth(@User() user: UserInfo) {
     const raw = await this.healthService.checkHealth();
