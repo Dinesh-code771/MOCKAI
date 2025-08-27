@@ -155,4 +155,8 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsString()
   GEMINI_API_KEY: string;
+
+  @IsNotEmpty()
+  @IsString()
+  DOMAIN: string;
 }
