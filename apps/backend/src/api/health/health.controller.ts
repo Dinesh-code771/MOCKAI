@@ -1,3 +1,4 @@
+import { Auth } from '@auth/decorator/auth.decorator';
 import { User } from '@common/decorators/user.decorator';
 import { AuthType } from '@common/enums/auth-type.enum';
 import { RouteNames } from '@common/route-names';
@@ -23,6 +24,7 @@ export class HealthController {
   }
 
   @Get(RouteNames.HEALTH_UI)
+  @Auth(AuthType.NONE)
   @Render('health') // Renders views/health.pug
   async showHealth(@User() user: UserInfo) {
     const raw = await this.healthService.checkHealth();

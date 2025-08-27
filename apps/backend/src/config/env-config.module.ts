@@ -45,6 +45,7 @@ const envConfig = registerAs(
       PRIVATE_IMAGE_EXPIRATION: parseInt(process.env.PRIVATE_IMAGE_EXPIRATION),
       FILE_URL_EXPIRY_IN_MILLISECONDS: parseInt(process.env.FILE_URL_EXPIRY_IN_MILLISECONDS),
       GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      DOMAIN: process.env.DOMAIN,
     }) as EnvConfig,
   );
 
@@ -94,6 +95,7 @@ const validationSchema = Joi.object({
   PRIVATE_IMAGE_EXPIRATION: Joi.number().required(),
   FILE_URL_EXPIRY_IN_MILLISECONDS: Joi.number().required(),
   GEMINI_API_KEY: Joi.string().required(),
+  DOMAIN: Joi.string().required(),
 });
 
 

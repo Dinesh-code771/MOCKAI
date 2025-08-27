@@ -23,7 +23,7 @@ export class CookieService {
       secure: this.env !== 'development',
       sameSite: this.env === 'development' ? 'strict' : 'none',
       path: '/',
-      domain: this.env === 'development' ? undefined : '.mockai.com',
+      domain: this.env === 'development' ? undefined : this.configService.get<string>('DOMAIN'),
     };
   }
 
