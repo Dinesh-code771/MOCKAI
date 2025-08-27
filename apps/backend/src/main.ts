@@ -4,6 +4,7 @@ import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
 import { RouteNames } from '@common/route-names';
 import { LoggerService } from '@logger/logger.service';
 import {
+  ExecutionContext,
   Logger,
   ValidationPipe,
   VersioningType,
@@ -19,6 +20,9 @@ import { ErrorHandlerService } from '@common/services/error-handler.service';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '@config/env.config';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { SwaggerCookieJwtGuard } from '@common/guard/swagger.guard';
+import { CustomJwtService } from '@common/services/jwt.service';
+import { ThrottlerException } from '@nestjs/throttler';
 
 async function bootstrap() {
   const environment = process.env.NODE_ENV || 'development';
@@ -63,11 +67,38 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
+  const jwtService = app.get(CustomJwtService);
+  // If environment is production, use the swagger guard for the swagger docs
+  if (isProd) {
+    app.use(`/${RouteNames.API_DOCS}*`, (req, res, next) => {
+      return new SwaggerCookieJwtGuard(jwtService)
+        .canActivate({
+          switchToHttp: () => ({
+            getRequest: () => req,
+            getResponse: () => res,
+          }),
+        } as ExecutionContext)
+        .then((canActivate) =>
+          canActivate ? next() : res.status(403).send('Forbidden'),
+        )
+        .catch((err) => {
+          if (err instanceof ThrottlerException) {
+            return res.status(429).json({
+              status: 'Too Many Requests',
+              message: err.message,
+            });
+          }
+          return res.status(401).json({
+            status: 'Unauthorized',
+            message: err.message || 'Access denied',
+          });
+        });
+    });
+  }
+
   const config = new DocumentBuilder()
     .setTitle('mockAI')
-    .setDescription(
-      'The Node based REST API documentation for mockAI',
-    )
+    .setDescription('The Node based REST API documentation for mockAI')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -104,7 +135,7 @@ async function bootstrap() {
           ? 'You are hitting a wrong URL. Please check the official API documentation.'
           : 'Welcome to the backend service. Use the options below to explore further.',
       });
-    } catch (error) { 
+    } catch (error) {
       res.status(500).send('Internal server error');
     }
   });
