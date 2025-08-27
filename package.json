@@ -44,7 +44,7 @@
     "backend:local:dev:up": "npm run local:dev:up --workspace=backend",
     "backend:allow:permission": "npm run allow:permission --workspace=backend",
     "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
-    "build": "npm run backend:build && npm run frontend:build",
+    "build": "npm run frontend:build",
     "start": "concurrently \"npm run backend:start\" \"npm run frontend:start\"",
     "lint": "npm run backend:lint && npm run frontend:lint",
     "test": "npm run backend:test"
