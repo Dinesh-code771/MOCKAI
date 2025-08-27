@@ -1,7 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
 import React from 'react';
-import { Card, CardContent } from '../ui/card';
 import { BookOpen, Trophy, Target, Zap } from 'lucide-react';
 
 export default function TestStats() {
@@ -12,8 +11,8 @@ export default function TestStats() {
       transition={{ duration: 0.5, delay: 0.1 }}
       className="grid grid-cols-1 md:grid-cols-4 gap-4"
     >
-      <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-        <CardContent className="p-6">
+      <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-lg shadow-sm">
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">
@@ -25,11 +24,11 @@ export default function TestStats() {
               <BookOpen className="h-6 w-6 text-blue-600" />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-        <CardContent className="p-6">
+      <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-lg shadow-sm">
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Best Score</p>
@@ -39,11 +38,11 @@ export default function TestStats() {
               <Trophy className="h-6 w-6 text-green-600" />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-        <CardContent className="p-6">
+      <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-lg shadow-sm">
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Average Score</p>
@@ -53,11 +52,11 @@ export default function TestStats() {
               <Target className="h-6 w-6 text-purple-600" />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-        <CardContent className="p-6">
+      <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-lg shadow-sm">
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Time Saved</p>
@@ -67,8 +66,8 @@ export default function TestStats() {
               <Zap className="h-6 w-6 text-yellow-600" />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import {
@@ -40,11 +40,12 @@ import {
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { createAssessmentAction } from '../_actions';
+import { getCourses } from '@/app/auth/actions';
 
 interface Question {
   id: string;
   question_text: string;
-  question_type: 'mcq';
+  question_type: 'mcq' | 'subjective';
   options: string[];
   correct_answer: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
@@ -55,7 +56,7 @@ interface AssessmentForm {
   id: string;
   course_id: string;
   name: string;
-  type: 'mcq';
+  type: 'mcq' | 'subjective';
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   duration_minutes: number;
   description: string;
@@ -64,17 +65,16 @@ interface AssessmentForm {
   questions: Question[];
 }
 
-const courses = [
+const assessmentTypes = [
   {
-    id: '123e4567-e89b-12d3-a456-426614174000',
-    name: 'JavaScript Fundamentals',
+    value: 'mcq',
+    label: 'Multiple Choice Questions (MCQ)',
+    description: 'Questions with predefined answer options',
   },
-  { id: '123e4567-e89b-12d3-a456-426614174001', name: 'React Development' },
-  { id: '123e4567-e89b-12d3-a456-426614174002', name: 'Node.js Backend' },
-  { id: '123e4567-e89b-12d3-a456-426614174003', name: 'Python Programming' },
   {
-    id: '123e4567-e89b-12d3-a456-426614174004',
-    name: 'Data Structures & Algorithms',
+    value: 'subjective',
+    label: 'Subjective Questions',
+    description: 'Open-ended questions requiring detailed answers',
   },
 ];
 
@@ -95,6 +95,7 @@ const difficulties = [
 export default function CreateAssessment() {
   const [currentStep, setCurrentStep] = useState(1);
   const [currentQuestion, setCurrentQuestion] = useState(1);
+  const [courses, setCourses] = useState<any>([]);
   const [formData, setFormData] = useState<AssessmentForm>({
     id: uuidv4(),
     course_id: '',
@@ -169,8 +170,8 @@ export default function CreateAssessment() {
           (_, index) => ({
             id: uuidv4(),
             question_text: '',
-            question_type: 'mcq' as const,
-            options: ['', '', '', ''],
+            question_type: prev.type as 'mcq' | 'subjective',
+            options: prev.type === 'mcq' ? ['', '', '', ''] : [],
             correct_answer: '',
             difficulty: 'intermediate' as const,
             order_sequence: currentCount + index + 1,
@@ -203,6 +204,20 @@ export default function CreateAssessment() {
     }
   };
 
+  // Update all questions when assessment type changes
+  const updateAssessmentType = (newType: 'mcq' | 'subjective') => {
+    setFormData((prev) => ({
+      ...prev,
+      type: newType,
+      questions: prev.questions.map((q) => ({
+        ...q,
+        question_type: newType,
+        options: newType === 'mcq' ? ['', '', '', ''] : [],
+        correct_answer: '',
+      })),
+    }));
+  };
+
   const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {};
 
@@ -219,10 +234,14 @@ export default function CreateAssessment() {
       const question = formData.questions[currentQuestion - 1];
       if (!question.question_text.trim())
         newErrors.question_text = 'Question text is required';
-      if (question.options.some((opt) => !opt.trim()))
-        newErrors.options = 'All options must be filled';
-      if (!question.correct_answer)
-        newErrors.correct_answer = 'Please select the correct answer';
+
+      // Only validate options and correct answer for MCQ type
+      if (formData.type === 'mcq') {
+        if (question.options.some((opt) => !opt.trim()))
+          newErrors.options = 'All options must be filled';
+        if (!question.correct_answer)
+          newErrors.correct_answer = 'Please select the correct answer';
+      }
     }
 
     setErrors(newErrors);
@@ -272,10 +291,15 @@ export default function CreateAssessment() {
             // Don't send question IDs for new questions - let the backend generate them
             question_text: q.question_text,
             question_type: q.question_type,
-            options: q.options,
-            correct_answer: q.correct_answer,
+
             difficulty: q.difficulty,
             order_sequence: q.order_sequence,
+            ...(formData.type === 'mcq'
+              ? {
+                  options: q.options,
+                  correct_answer: q.correct_answer,
+                }
+              : {}),
           })),
         };
 
@@ -307,6 +331,15 @@ export default function CreateAssessment() {
       return 33 + ((currentQuestion - 1) / formData.max_questions) * 33;
     return 100;
   };
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const courses = await getCourses();
+      console.log('courses', courses);
+      setCourses(courses?.courses);
+    };
+    fetchCourses();
+  }, []);
 
   return (
     <DashboardLayout
@@ -377,6 +410,32 @@ export default function CreateAssessment() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="assessment_type">Assessment Type *</Label>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value: 'mcq' | 'subjective') =>
+                        updateAssessmentType(value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select assessment type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {assessmentTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{type.label}</span>
+                              <span className="text-sm text-gray-500">
+                                {type.description}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="course">Course *</Label>
@@ -392,11 +451,12 @@ export default function CreateAssessment() {
                           <SelectValue placeholder="Select a course" />
                         </SelectTrigger>
                         <SelectContent>
-                          {courses.map((course) => (
-                            <SelectItem key={course.id} value={course.id}>
-                              {course.name}
-                            </SelectItem>
-                          ))}
+                          {courses &&
+                            courses?.map((course: any) => (
+                              <SelectItem key={course.id} value={course.id}>
+                                {course.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       {errors.course_id && (
@@ -520,17 +580,27 @@ export default function CreateAssessment() {
                         <SelectValue placeholder="Select number of questions" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from({ length: 21 }, (_, i) => i + 5).map(
-                          (num) => (
-                            <SelectItem key={num} value={num.toString()}>
-                              {num} questions
-                            </SelectItem>
-                          ),
-                        )}
+                        {formData.type === 'mcq'
+                          ? Array.from({ length: 21 }, (_, i) => i + 5).map(
+                              (num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num} questions
+                                </SelectItem>
+                              ),
+                            )
+                          : Array.from({ length: 8 }, (_, i) => i + 3).map(
+                              (num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num} questions
+                                </SelectItem>
+                              ),
+                            )}
                       </SelectContent>
                     </Select>
                     <p className="text-sm text-gray-500">
-                      Choose between 5 and 25 questions for your assessment
+                      {formData.type === 'mcq'
+                        ? 'Choose between 5 and 25 questions for your assessment'
+                        : 'Choose between 3 and 10 questions for subjective assessment'}
                     </p>
                   </div>
                 </CardContent>
@@ -557,7 +627,9 @@ export default function CreateAssessment() {
                         </span>
                       </CardTitle>
                       <CardDescription>
-                        Create your multiple choice question
+                        {formData.type === 'mcq'
+                          ? 'Create your multiple choice question'
+                          : 'Create your subjective question'}
                       </CardDescription>
                     </div>
                     <Badge variant="outline" className="text-sm">
@@ -594,101 +666,110 @@ export default function CreateAssessment() {
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Options *</Label>
-                    <div className="space-y-3">
-                      {formData.questions[currentQuestion - 1].options.map(
-                        (option, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center space-x-3"
-                          >
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium">
-                              {String.fromCharCode(65 + index)}
+                  {formData.type === 'mcq' && (
+                    <div className="space-y-2">
+                      <Label>Options *</Label>
+                      <div className="space-y-3">
+                        {formData.questions[currentQuestion - 1].options.map(
+                          (option, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center space-x-3"
+                            >
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium">
+                                {String.fromCharCode(65 + index)}
+                              </div>
+                              <Input
+                                value={option}
+                                onChange={(e) =>
+                                  updateQuestionOption(
+                                    currentQuestion - 1,
+                                    index,
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder={`Option ${String.fromCharCode(
+                                  65 + index,
+                                )}`}
+                                className={
+                                  errors.options ? 'border-red-500' : ''
+                                }
+                              />
                             </div>
-                            <Input
-                              value={option}
-                              onChange={(e) =>
-                                updateQuestionOption(
-                                  currentQuestion - 1,
-                                  index,
-                                  e.target.value,
-                                )
-                              }
-                              placeholder={`Option ${String.fromCharCode(
-                                65 + index,
-                              )}`}
-                              className={errors.options ? 'border-red-500' : ''}
-                            />
-                          </div>
-                        ),
+                          ),
+                        )}
+                      </div>
+                      {errors.options && (
+                        <p className="text-sm text-red-500">{errors.options}</p>
                       )}
                     </div>
-                    {errors.options && (
-                      <p className="text-sm text-red-500">{errors.options}</p>
-                    )}
-                  </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <Label>Correct Answer *</Label>
-                    {(() => {
-                      const currentOptions =
-                        formData.questions[currentQuestion - 1].options;
-                      const filledOptions = currentOptions.filter(
-                        (option) => option && option.trim() !== '',
-                      );
-
-                      if (filledOptions.length < 2) {
-                        return (
-                          <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded border">
-                            Please fill in at least 2 options before selecting
-                            the correct answer.
-                          </div>
+                  {formData.type === 'mcq' && (
+                    <div className="space-y-2">
+                      <Label>Correct Answer *</Label>
+                      {(() => {
+                        const currentOptions =
+                          formData.questions[currentQuestion - 1].options;
+                        const filledOptions = currentOptions.filter(
+                          (option) => option && option.trim() !== '',
                         );
-                      }
 
-                      return (
-                        <Select
-                          value={
-                            formData.questions[currentQuestion - 1]
-                              .correct_answer
-                          }
-                          onValueChange={(value) =>
-                            updateQuestion(
-                              currentQuestion - 1,
-                              'correct_answer',
-                              value,
-                            )
-                          }
-                        >
-                          <SelectTrigger
-                            className={
-                              errors.correct_answer ? 'border-red-500' : ''
+                        if (filledOptions.length < 2) {
+                          return (
+                            <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded border">
+                              Please fill in at least 2 options before selecting
+                              the correct answer.
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <Select
+                            value={
+                              formData.questions[currentQuestion - 1]
+                                .correct_answer
+                            }
+                            onValueChange={(value) =>
+                              updateQuestion(
+                                currentQuestion - 1,
+                                'correct_answer',
+                                value,
+                              )
                             }
                           >
-                            <SelectValue placeholder="Select the correct answer" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {filledOptions.map((option, index) => {
-                              const originalIndex =
-                                currentOptions.indexOf(option);
-                              return (
-                                <SelectItem key={originalIndex} value={option}>
-                                  {String.fromCharCode(65 + originalIndex)}:{' '}
-                                  {option}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      );
-                    })()}
-                    {errors.correct_answer && (
-                      <p className="text-sm text-red-500">
-                        {errors.correct_answer}
-                      </p>
-                    )}
-                  </div>
+                            <SelectTrigger
+                              className={
+                                errors.correct_answer ? 'border-red-500' : ''
+                              }
+                            >
+                              <SelectValue placeholder="Select the correct answer" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {filledOptions.map((option, index) => {
+                                const originalIndex =
+                                  currentOptions.indexOf(option);
+                                return (
+                                  <SelectItem
+                                    key={originalIndex}
+                                    value={option}
+                                  >
+                                    {String.fromCharCode(65 + originalIndex)}:{' '}
+                                    {option}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        );
+                      })()}
+                      {errors.correct_answer && (
+                        <p className="text-sm text-red-500">
+                          {errors.correct_answer}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label>Question Difficulty</Label>
@@ -748,8 +829,9 @@ export default function CreateAssessment() {
                           <span className="text-gray-600">Course:</span>
                           <span className="font-medium">
                             {
-                              courses.find((c) => c.id === formData.course_id)
-                                ?.name
+                              courses.find(
+                                (c: any) => c.id === formData.course_id,
+                              )?.name
                             }
                           </span>
                         </div>

@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
+import { authApi } from '@/lib/api-client';
+import { initiateGoogleLogin } from '@/lib/api-utils';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -69,10 +71,8 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    // For Google login, we'll redirect to the backend OAuth endpoint
-    window.location.href = `${
-      process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
-    }/v1/auth/google`;
+    const result = await initiateGoogleLogin('/dashboard/student');
+    console.log(result, 'result');
   };
 
   return (

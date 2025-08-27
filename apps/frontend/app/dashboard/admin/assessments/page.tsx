@@ -25,7 +25,12 @@ import {
   Users,
   Calendar,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
+import { AssessmentsControllerGetAssessmentsListTypeEnum } from '@mockai/sdk';
+import { AssessmentsControllerGetAssessmentsListDifficultyEnum } from '@mockai/sdk';
+import { AssessmentsControllerGetAssessmentsListDraftAssessmentEnum } from '@mockai/sdk';
+import { assessmentApi } from '@/lib/api-client';
 interface Assessment {
   id: string;
   name: string;
@@ -44,34 +49,94 @@ interface Assessment {
 }
 
 export default function AssessmentsList() {
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [subjectiveAssessments, setSubjectiveAssessments] = useState<
+    Assessment[]
+  >([]);
+  const [mcqAssessments, setMcqAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    async function fetchAssessments() {
+      await fetchSubjectiveAssessments();
+      await fetchMcqAssessments();
+    }
     fetchAssessments();
   }, []);
 
-  const fetchAssessments = async () => {
+  //fetch subjective assessments
+  const fetchSubjectiveAssessments = async () => {
     try {
-      const response = await fetch('/api/assessments');
-      if (response.ok) {
-        const data = await response.json();
-        setAssessments(data.data || []);
+      setLoading(true);
+
+      const response =
+        await assessmentApi.assessmentsControllerGetAssessmentsList({
+          type: AssessmentsControllerGetAssessmentsListTypeEnum.Subjective,
+          difficulty:
+            AssessmentsControllerGetAssessmentsListDifficultyEnum.Intermediate,
+          page: 1,
+          limit: 20,
+          draftAssessment:
+            AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.True,
+        });
+
+      console.log(response.data?.assessments, 'response');
+      if (response.data?.assessments) {
+        setSubjectiveAssessments(
+          response.data.assessments as unknown as Assessment[],
+        );
       }
     } catch (error) {
-      console.error('Error fetching assessments:', error);
+      console.error('Error fetching interviews:', error);
+      toast.error('Failed to load available interviews');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredAssessments = assessments.filter(
-    (assessment) =>
-      assessment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assessment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assessment.course?.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  //fetch mcq assessments
+  const fetchMcqAssessments = async () => {
+    const response =
+      await assessmentApi.assessmentsControllerGetAssessmentsList({
+        type: AssessmentsControllerGetAssessmentsListTypeEnum.Mcq,
+        draftAssessment:
+          AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.True,
+      });
+    console.log(response.data?.assessments, 'response');
+    if (response.data?.assessments) {
+      setMcqAssessments(response.data.assessments as unknown as Assessment[]);
+    }
+  };
+
+  const handlePublishAssessment = async (assessmentId: string) => {
+    try {
+      await assessmentApi.assessmentsControllerPublishAssessment({
+        assessmentId: assessmentId,
+      });
+
+      toast.success('Assessment published successfully!');
+
+      // Refresh the assessments list to update the published status
+      await fetchSubjectiveAssessments();
+      await fetchMcqAssessments();
+    } catch (error) {
+      console.error('Error publishing assessment:', error);
+      toast.error('Failed to publish assessment');
+    }
+  };
+
+  const filteredAssessments = subjectiveAssessments
+    .concat(mcqAssessments)
+    .filter(
+      (assessment) =>
+        assessment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assessment.description
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        assessment.course?.name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()),
+    );
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -277,6 +342,17 @@ export default function AssessmentsList() {
                         <Button variant="outline" size="sm">
                           <Edit className="h-3 w-3" />
                         </Button>
+                        <button
+                          onClick={() => handlePublishAssessment(assessment.id)}
+                          disabled={assessment.is_published}
+                          className={`inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3 ${
+                            assessment.is_published
+                              ? 'bg-green-100 text-green-800 border-green-200 cursor-not-allowed'
+                              : 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200'
+                          }`}
+                        >
+                          {assessment.is_published ? 'Published' : 'Publish'}
+                        </button>
                         <Button
                           variant="outline"
                           size="sm"

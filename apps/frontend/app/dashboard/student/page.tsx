@@ -27,25 +27,14 @@ import {
   Mic,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-const upcomingInterviews = [
-  {
-    id: 1,
-    title: 'Frontend Developer Interview',
-    company: 'TechCorp',
-    date: '2024-01-15',
-    time: '10:00 AM',
-    type: 'Technical',
-  },
-  {
-    id: 2,
-    title: 'Product Manager Interview',
-    company: 'StartupXYZ',
-    date: '2024-01-18',
-    time: '2:00 PM',
-    type: 'Behavioral',
-  },
-];
+import { useEffect, useState } from 'react';
+import { getScheduledTests } from './test/_actions';
+import {
+  AssessmentsControllerGetUserAssessmentsTypeEnum,
+  UserAnalyticsApiResponse,
+  AssessmentsControllerGetUserAssessmentsStatusEnum,
+} from '@mockai/sdk';
+import getUserAnalytics from '@/lib/student/student-get-analatics';
 
 const recentTests = [
   {
@@ -74,7 +63,9 @@ const achievements = [
 
 export default function StudentDashboard() {
   const router = useRouter();
-
+  const [upcomingInterviews, setInterViews] = useState([]);
+  const [userAnalytics, setUserAnalytics] =
+    useState<UserAnalyticsApiResponse | null>(null);
   const cards = [
     {
       title: 'Schedule Interview',
@@ -98,6 +89,21 @@ export default function StudentDashboard() {
       href: '/dashboard/student/results',
     },
   ];
+  useEffect(() => {
+    async function fetchInterviews() {
+      //tests which are not taken by the user
+      const inProgressTests = await getScheduledTests(
+        AssessmentsControllerGetUserAssessmentsTypeEnum.Subjective,
+      );
+      setInterViews(inProgressTests?.assessments as any);
+    }
+    async function fetchUserAnalytics() {
+      const userAnalytics = await getUserAnalytics();
+      setUserAnalytics(userAnalytics);
+    }
+    fetchInterviews();
+    fetchUserAnalytics();
+  }, []);
 
   return (
     <DashboardLayout role="student" currentPath="/dashboard/student">
@@ -145,15 +151,13 @@ export default function StudentDashboard() {
                   <p className="text-sm font-medium text-gray-600">
                     Tests Taken
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">24</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {userAnalytics?.data?.analytics?.given_assessments || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
                   <BookOpen className="h-6 w-6 text-blue-600" />
                 </div>
-              </div>
-              <div className="mt-4 flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+12% this week</span>
               </div>
             </CardContent>
           </Card>
@@ -165,14 +169,19 @@ export default function StudentDashboard() {
                   <p className="text-sm font-medium text-gray-600">
                     Average Score
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">82%</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {userAnalytics?.data?.analytics?.average_score || 0}%
+                  </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
                   <Target className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <Progress value={82} className="h-2" />
+                <Progress
+                  value={userAnalytics?.data?.analytics?.average_score || 0}
+                  className="h-2"
+                />
               </div>
             </CardContent>
           </Card>
@@ -182,17 +191,15 @@ export default function StudentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">
-                    Interviews
+                    Upcoming Interviews
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">8</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {userAnalytics?.data?.analytics?.upcoming_assessments || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
                   <Calendar className="h-6 w-6 text-green-600" />
                 </div>
-              </div>
-              <div className="mt-4 flex items-center">
-                <Clock className="h-4 w-4 text-blue-500 mr-1" />
-                <span className="text-sm text-blue-600">2 scheduled</span>
               </div>
             </CardContent>
           </Card>
@@ -202,16 +209,13 @@ export default function StudentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Rank</p>
-                  <p className="text-2xl font-bold text-gray-900">#15</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {userAnalytics?.data?.analytics?.rank || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-full">
                   <Trophy className="h-6 w-6 text-yellow-600" />
                 </div>
-              </div>
-              <div className="mt-4 flex items-center">
-                <Badge variant="secondary" className="text-xs">
-                  Top 25%
-                </Badge>
               </div>
             </CardContent>
           </Card>
@@ -286,35 +290,40 @@ export default function StudentDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {upcomingInterviews.map((interview) => (
+                {upcomingInterviews.map((interview: any) => (
                   <div
                     key={interview.id}
                     className="flex items-center justify-between p-4 bg-gray-50/50 rounded-lg"
                   >
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-800">
-                        {interview.title}
+                        {interview?.name?.charAt(0).toUpperCase() +
+                          interview?.name?.slice(1)}
                       </h4>
-                      <p className="text-sm text-gray-600">
-                        {interview.company}
-                      </p>
+                      <p className="text-sm text-gray-600">{'inspanner'}</p>
                       <div className="flex items-center mt-2 space-x-4">
                         <span className="text-xs text-gray-500">
-                          {interview.date}
+                          {interview.created_at.toLocaleDateString()}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {interview.time}
+                          {interview.duration_minutes} minutes
                         </span>
                         <Badge variant="outline" className="text-xs">
-                          {interview.type}
+                          {interview.difficulty}
                         </Badge>
                       </div>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={
+                        interview.user_assessment.status !==
+                        AssessmentsControllerGetUserAssessmentsStatusEnum.InProgress
+                      }
                       onClick={() =>
-                        router.push('/dashboard/student/interview')
+                        router.push(
+                          `/dashboard/student/interview/${interview.id}`,
+                        )
                       }
                     >
                       Join

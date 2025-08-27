@@ -88,7 +88,7 @@ export default function OtpClient() {
 
     try {
       // Simulate API call
-      const result = await verifyOtp({ otp: otpString });
+      const result = await verifyOtp({ otp: parseInt(otpString) });
       if (result.success) {
         router.push('/auth/gender-course');
       } else {
@@ -174,7 +174,9 @@ export default function OtpClient() {
                   {otp.map((digit, index) => (
                     <div key={index}>
                       <Input
-                        ref={(el) => (inputRefs.current[index] = el)}
+                        ref={(el) => {
+                          inputRefs.current[index] = el;
+                        }}
                         type="text"
                         inputMode="numeric"
                         pattern="[0-9]*"

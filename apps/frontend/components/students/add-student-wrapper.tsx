@@ -510,15 +510,14 @@ export default function AddStudentWrapper({
                           </div>
                           <div className="flex items-center space-x-4 text-xs text-gray-500">
                             <span>
-                              Joined: {formatDate(student.created_at)}
+                              Joined:{' '}
+                              {formatDate(student.created_at.toString())}
                             </span>
                             <span>
                               {student.enrolled_courses_count} courses
                             </span>
-                            <span>{student.tests_completed} tests</span>
-                            {student.avg_score > 0 && (
-                              <span>Avg: {student.avg_score}%</span>
-                            )}
+                            <span>0 tests</span>
+                            {/* <span>Avg: {student.avg_score}%</span> */}
                           </div>
                         </div>
                       </div>

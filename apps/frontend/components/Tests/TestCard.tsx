@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
 const getDifficultyColor = (difficulty: string) => {
-  console.log(difficulty, 'difficulty');
+
   switch (difficulty) {
     case 'beginner':
       return 'bg-green-100 text-green-800';
@@ -32,7 +32,9 @@ export default function TestCard({
   const router = useRouter();
 
   const startTest = (categoryId: string) => {
-    router.push(`/dashboard/student/test/${categoryId}`);
+    router.push(
+      `/dashboard/student/test/${categoryId}?noQuestion=${test.total_questions}&time=${test.duration_minutes}&score=${test.max_score}`,
+    );
   };
 
   const viewResults = (userAssessmentId: string) => {

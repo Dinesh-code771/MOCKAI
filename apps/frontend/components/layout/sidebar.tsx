@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { logoutAction } from '@/app/auth/actions';
+import Link from 'next/link';
 
 interface SidebarProps {
   role: 'student' | 'admin' | 'superadmin';
@@ -119,11 +120,9 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
       {/* User Info */}
       <div className="p-6 border-b border-gray-200/50">
         <div className="flex items-center space-x-3">
-          <Avatar className="h-10 w-10">
-            <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-              JD
-            </AvatarFallback>
-          </Avatar>
+          <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+            JD
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-800 truncate">
               John Doe
@@ -139,35 +138,51 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
           const Icon = item.icon;
           const isActive = currentPath === item.href;
 
-          return (
-            <Button
+          return item.href === '/dashboard/student/test' ? (
+            <button
               key={item.href}
-              variant={isActive ? 'default' : 'ghost'}
+              onClick={() => {
+                router.push(item.href);
+                router.refresh();
+              }}
               className={cn(
-                'w-full justify-start transition-all duration-200',
+                'flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-all duration-200',
                 isActive
                   ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                  : 'hover:bg-gray-100/50',
+                  : 'text-gray-700 hover:bg-gray-100/50 hover:text-gray-900',
               )}
-              onClick={() => router.push(item.href)}
             >
               <Icon className="w-4 h-4 mr-3" />
               {item.label}
-            </Button>
+            </button>
+          ) : (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={true}
+              className={cn(
+                'flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-all duration-200',
+                isActive
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                  : 'text-gray-700 hover:bg-gray-100/50 hover:text-gray-900',
+              )}
+            >
+              <Icon className="w-4 h-4 mr-3" />
+              {item.label}
+            </Link>
           );
         })}
       </nav>
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-200/50">
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+        <button
+          className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4 mr-3" />
           Logout
-        </Button>
+        </button>
       </div>
     </motion.div>
   );

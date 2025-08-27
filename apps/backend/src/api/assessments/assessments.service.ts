@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { AssessmentsDBService } from '@db/assessments/assessments-db.service';
 import { AssessmentsTransform } from '@assessments/assessments.transform';
 import {
@@ -12,14 +7,8 @@ import {
   DraftAssessmentFilter,
   UserAssessmentListQueryDto,
 } from '@assessments/dto/assessment-list.dto';
-import {
-  calculateSkipAndTake,
-  getPaginatedData,
-} from '@common/helpers/pagination.utils';
-import {
-  UserAnswerDto,
-  UserAssessmentResponseDto,
-} from '@assessments/dto/start-assessment.dto';
+import { calculateSkipAndTake, getPaginatedData } from '@common/helpers/pagination.utils';
+import { UserAnswerDto, UserAssessmentResponseDto } from '@assessments/dto/start-assessment.dto';
 import {
   UpsertAssessmentDto,
   UpsertAssessmentResponseDto,
@@ -41,13 +30,10 @@ export class AssessmentsService {
     private readonly assessmentsDBService: AssessmentsDBService,
     private readonly assessmentsTransform: AssessmentsTransform,
     private readonly backgroundServiceManager: BackgroundServiceManager,
-    private readonly aiService: AiService,
+    private readonly aiService: AiService
   ) {}
 
-  async getAssessmentsList(
-    query: AssessmentListQuery,
-    user: UserInfo,
-  ): Promise<AssessmentListResponseDto> {
+  async getAssessmentsList(query: AssessmentListQuery, user: UserInfo): Promise<AssessmentListResponseDto> {
     const { skip, take } = calculateSkipAndTake(query.page, query.limit);
     let userId;
 
@@ -56,16 +42,15 @@ export class AssessmentsService {
       query.draft_assessment = undefined;
     }
 
-    const { assessments, totalCount } =
-      await this.assessmentsDBService.getAssessmentsList({
-        type: query.type,
-        course_id: query.course_id,
-        difficulty: query.difficulty,
-        userId,
-        skip,
-        take,
-        draft_assessment: query.draft_assessment ? query.draft_assessment === DraftAssessmentFilter.TRUE : undefined,
-      });
+    const { assessments, totalCount } = await this.assessmentsDBService.getAssessmentsList({
+      type: query.type,
+      course_id: query.course_id,
+      difficulty: query.difficulty,
+      userId,
+      skip,
+      take,
+      draft_assessment: query.draft_assessment ? query.draft_assessment === DraftAssessmentFilter.TRUE : undefined,
+    });
 
     const pagination = {
       pageNo: query.page || 1,
@@ -74,31 +59,17 @@ export class AssessmentsService {
       ...getPaginatedData(totalCount, query.page, query.limit),
     };
 
-    return this.assessmentsTransform.transformToAssessmentListResponse(
-      assessments,
-      pagination,
-    );
+    return this.assessmentsTransform.transformToAssessmentListResponse(assessments, pagination);
   }
 
-  async startAssessment(
-    userId: string,
-    assessmentId: string,
-    scheduleAt?: Date,
-  ): Promise<UserAssessmentResponseDto> {
-    const assessment =
-      await this.assessmentsDBService.findAssessmentById(assessmentId);
+  async startAssessment(userId: string, assessmentId: string, scheduleAt?: Date): Promise<UserAssessmentResponseDto> {
+    const assessment = await this.assessmentsDBService.findAssessmentById(assessmentId);
 
     if (!assessment) {
-      throw new NotFoundException(
-        APP_STRINGS.api_errors.assessments.assessment_not_found,
-      );
+      throw new NotFoundException(APP_STRINGS.api_errors.assessments.assessment_not_found);
     }
 
-    let userAssessment =
-      await this.assessmentsDBService.findUserAssessmentByUserAndAssessment(
-        userId,
-        assessmentId,
-      );
+    let userAssessment = await this.assessmentsDBService.findUserAssessmentByUserAndAssessment(userId, assessmentId);
 
     if (!userAssessment) {
       let status: AssessmentStatus;
@@ -108,17 +79,10 @@ export class AssessmentsService {
         status = AssessmentStatus.IN_PROGRESS;
       }
       console.log('status', status);
-      userAssessment = await this.assessmentsDBService.createUserAssessment(
-        userId,
-        assessmentId,
-        status,
-        scheduleAt,
-      );
+      userAssessment = await this.assessmentsDBService.createUserAssessment(userId, assessmentId, status, scheduleAt);
 
       if (assessment.type === AssessmentType.SUBJECTIVE && !scheduleAt) {
-        throw new BadRequestException(
-          APP_STRINGS.api_errors.assessments.subjective_assessment_requires_schedule,
-        );
+        throw new BadRequestException(APP_STRINGS.api_errors.assessments.subjective_assessment_requires_schedule);
       } else {
         scheduleAt = new Date();
       }
@@ -128,10 +92,7 @@ export class AssessmentsService {
       const delay = userAssessment.started_at.getTime() - new Date().getTime() - 1000 * 30;
       console.log('delay', delay);
       if (assessment.type === AssessmentType.SUBJECTIVE) {
-        this.backgroundServiceManager.assessmentStartJob(
-          `assessment-start:${userAssessment.id}`,
-          delay,
-        );
+        this.backgroundServiceManager.assessmentStartJob(`assessment-start:${userAssessment.id}`, delay);
       }
 
       this.backgroundServiceManager.assessmentEndJob(
@@ -139,7 +100,7 @@ export class AssessmentsService {
         scheduleAt.getTime() -
           new Date().getTime() +
           userAssessment.assessments.duration_minutes * 60 * 1000 +
-          1000 * 30,
+          1000 * 30
       );
 
       if (assessment.type === AssessmentType.SUBJECTIVE) {
@@ -154,17 +115,15 @@ export class AssessmentsService {
 
     if (userAssessment.status !== AssessmentStatus.IN_PROGRESS) {
       throw new BadRequestException(
-        APP_STRINGS.api_errors.assessments.cannot_start_assessment(
-          userAssessment.status as AssessmentStatus,
-        ),
+        APP_STRINGS.api_errors.assessments.cannot_start_assessment(userAssessment.status as AssessmentStatus)
       );
     }
-    
+
     const now = new Date();
     const startedAt = new Date(userAssessment.started_at);
     const durationMinutes = userAssessment.assessments.duration_minutes || 60;
     const elapsedMinutes = (now.getTime() - startedAt.getTime()) / (1000 * 60);
-    
+
     if (elapsedMinutes >= durationMinutes) {
       // update status to completed
       await this.assessmentsDBService.updateUserAssessmentStatus(
@@ -172,28 +131,22 @@ export class AssessmentsService {
         AssessmentStatus.COMPLETED,
         undefined,
         undefined,
-        now,
+        now
       );
-      throw new BadRequestException(
-        APP_STRINGS.api_errors.assessments.assessment_time_expired,
-      );
+      throw new BadRequestException(APP_STRINGS.api_errors.assessments.assessment_time_expired);
     }
     const remainingTime = durationMinutes * 60 * 1000 - (now.getTime() - startedAt.getTime());
 
     // Only schedule if there's remaining time
     if (remainingTime > 0) {
-      await this.backgroundServiceManager.assessmentEndJob(
-        `assessment-end:${userAssessment.id}`,
-        remainingTime,
-      );
+      await this.backgroundServiceManager.assessmentEndJob(`assessment-end:${userAssessment.id}`, remainingTime);
     }
-    
+
     // Get the questions for this assessment (with user submitted answers)
-    const questions =
-      await this.assessmentsDBService.findQuestionsByAssessmentId(
-        userAssessment.assessment_id,
-        userAssessment.id,
-      );
+    const questions = await this.assessmentsDBService.findQuestionsByAssessmentId(
+      userAssessment.assessment_id,
+      userAssessment.id
+    );
 
     // Calculate remaining time
     let remainingTimeSeconds = null;
@@ -203,10 +156,7 @@ export class AssessmentsService {
       const durationMinutes = userAssessment.assessments.duration_minutes || 60;
       const elapsedSeconds = (now.getTime() - startedAt.getTime()) / 1000;
       const totalSeconds = durationMinutes * 60;
-      remainingTimeSeconds = Math.max(
-        0,
-        Math.floor(totalSeconds - elapsedSeconds),
-      );
+      remainingTimeSeconds = Math.max(0, Math.floor(totalSeconds - elapsedSeconds));
     }
 
     const responseData = {
@@ -216,51 +166,33 @@ export class AssessmentsService {
       newSchedule: false,
     };
 
-    return this.assessmentsTransform.transformToStartAssessmentResponse(
-      responseData,
-    );
+    return this.assessmentsTransform.transformToStartAssessmentResponse(responseData);
   }
 
-  async storeUserAnswers(
-    userAssessmentId: string,
-    questionId: string,
-    answer: string,
-  ): Promise<UserAnswerDto> {
+  async storeUserAnswers(userAssessmentId: string, questionId: string, answer: string): Promise<UserAnswerDto> {
     let isCorrect: boolean;
     let pointsEarned: number;
     let totalScore: number;
     let percentageScore: number;
 
-    const userAssessment =
-      await this.assessmentsDBService.getQuestionWithUserAssignment(
-        userAssessmentId,
-        questionId,
-      );
+    const userAssessment = await this.assessmentsDBService.getQuestionWithUserAssignment(userAssessmentId, questionId);
 
     if (!userAssessment) {
-      throw new NotFoundException(
-        APP_STRINGS.api_errors.assessments.user_assessment_not_found,
-      );
+      throw new NotFoundException(APP_STRINGS.api_errors.assessments.user_assessment_not_found);
     }
 
     if (userAssessment.status !== AssessmentStatus.IN_PROGRESS) {
       throw new BadRequestException(
-        APP_STRINGS.api_errors.assessments.cannot_start_assessment(
-          userAssessment.status as AssessmentStatus,
-        ),
+        APP_STRINGS.api_errors.assessments.cannot_start_assessment(userAssessment.status as AssessmentStatus)
       );
     }
 
     if (!userAssessment.assessments.questions.length) {
-      throw new NotFoundException(
-        APP_STRINGS.api_errors.assessments.question_not_found,
-      );
+      throw new NotFoundException(APP_STRINGS.api_errors.assessments.question_not_found);
     }
 
     if (userAssessment.user_answers.length) {
-      throw new BadRequestException(
-        APP_STRINGS.api_errors.assessments.question_already_answered,
-      );
+      throw new BadRequestException(APP_STRINGS.api_errors.assessments.question_already_answered);
     }
 
     // Handle MCQ type assessments
@@ -268,17 +200,13 @@ export class AssessmentsService {
       const question = userAssessment.assessments.questions[0];
       isCorrect = question.correct_answer === answer;
       pointsEarned = isCorrect
-        ? Number(userAssessment.assessments.max_score) /
-          Number(userAssessment.assessments.total_questions)
+        ? Number(userAssessment.assessments.max_score) / Number(userAssessment.assessments.total_questions)
         : 0;
       totalScore = 0;
       percentageScore = 0;
 
       totalScore = (userAssessment.total_score?.toNumber() || 0) + pointsEarned;
-      percentageScore =
-        (totalScore /
-          Number(userAssessment.assessments?.max_score?.toNumber() || 0)) *
-        100;
+      percentageScore = (totalScore / Number(userAssessment.assessments?.max_score?.toNumber() || 0)) * 100;
     }
 
     const userAnswer = await this.assessmentsDBService.storeUserAnswers(
@@ -288,38 +216,30 @@ export class AssessmentsService {
       isCorrect,
       pointsEarned,
       totalScore,
-      percentageScore,
+      percentageScore
     );
 
-    return this.assessmentsTransform.transformToUserAnswerResponse(
-      userAnswer.user_answers[0],
-    );
+    return this.assessmentsTransform.transformToUserAnswerResponse(userAnswer.user_answers[0]);
   }
 
   async completeAssessment(userAssessmentId: string) {
-    const userAssessmentData =
-      await this.assessmentsDBService.getUserAssessmentCompleteData(
-        userAssessmentId,
-      );
+    const userAssessmentData = await this.assessmentsDBService.getUserAssessmentCompleteData(userAssessmentId);
 
     if (!userAssessmentData) {
-      throw new NotFoundException(
-        APP_STRINGS.api_errors.assessments.user_assessment_not_found,
-      );
+      throw new NotFoundException(APP_STRINGS.api_errors.assessments.user_assessment_not_found);
     }
 
-    let userAssessment =
-      await this.assessmentsDBService.updateUserAssessmentStatus(
-        userAssessmentId,
-        AssessmentStatus.COMPLETED,
-        userAssessmentData.assessments.type === AssessmentType.MCQ ? true : undefined,
-        null,
-        new Date(),
-      );
+    let userAssessment = await this.assessmentsDBService.updateUserAssessmentStatus(
+      userAssessmentId,
+      AssessmentStatus.COMPLETED,
+      userAssessmentData.assessments.type === AssessmentType.MCQ ? true : undefined,
+      null,
+      new Date()
+    );
     let questions = await this.assessmentsDBService.findQuestionsByAssessmentId(
       userAssessment.assessment_id,
       userAssessmentId,
-      true,
+      true
     );
 
     const responseData = {
@@ -327,36 +247,28 @@ export class AssessmentsService {
       questions,
     };
 
-    return this.assessmentsTransform.transformToCompleteAssessmentResponse(
-      responseData,
-    );
+    return this.assessmentsTransform.transformToCompleteAssessmentResponse(responseData);
   }
 
   async getUserAssessmentCompleteData(userAssessmentId: string) {
-    const userAssessment =
-      await this.assessmentsDBService.getUserAssessmentCompleteData(
-        userAssessmentId,
-      );
+    const userAssessment = await this.assessmentsDBService.getUserAssessmentCompleteData(userAssessmentId);
     const responseData = {
       userAssessment,
       questions: userAssessment.assessments.questions,
     };
 
-    return this.assessmentsTransform.transformToCompleteAssessmentResponse(
-      responseData,
-    );
+    return this.assessmentsTransform.transformToCompleteAssessmentResponse(responseData);
   }
 
   async getUserAssessments(userId: string, query: UserAssessmentQueryDto) {
     const { skip, take } = calculateSkipAndTake(query.page, query.limit);
 
-    const { assessments, totalCount } =
-      await this.assessmentsDBService.getUserAssessmentsList(
-        query,
-        userId,
-        skip,
-        take,
-      );
+    const { assessments, totalCount } = await this.assessmentsDBService.getUserAssessmentsList(
+      query,
+      userId,
+      skip,
+      take
+    );
 
     const pagination = {
       pageNo: query.page || 1,
@@ -365,25 +277,16 @@ export class AssessmentsService {
       ...getPaginatedData(totalCount, query.page, query.limit),
     };
 
-    return this.assessmentsTransform.transformToUserAssessmentResponse(
-      assessments,
-      pagination,
-    );
+    return this.assessmentsTransform.transformToUserAssessmentResponse(assessments, pagination);
   }
 
-  async upsertAssessment(
-    upsertAssessmentDto: UpsertAssessmentDto,
-  ): Promise<UpsertAssessmentResponseDto> {
+  async upsertAssessment(upsertAssessmentDto: UpsertAssessmentDto): Promise<UpsertAssessmentResponseDto> {
     // Validate questions
     this.validateQuestions(upsertAssessmentDto.questions);
 
     // Validate question count limits
-    if (
-      upsertAssessmentDto.questions.length > upsertAssessmentDto.max_questions
-    ) {
-      throw new BadRequestException(
-        'Assessment cannot have more than 100 questions',
-      );
+    if (upsertAssessmentDto.questions.length > upsertAssessmentDto.max_questions) {
+      throw new BadRequestException('Assessment cannot have more than 100 questions');
     }
 
     // Transform DTO to database format
@@ -408,15 +311,9 @@ export class AssessmentsService {
       })),
     };
 
-    const { assessment, questions } =
-      await this.assessmentsDBService.upsertAssessmentWithQuestions(
-        assessmentData,
-      );
+    const { assessment, questions } = await this.assessmentsDBService.upsertAssessmentWithQuestions(assessmentData);
 
-    return this.assessmentsTransform.transformToUpsertAssessmentResponse(
-      assessment,
-      questions,
-    );
+    return this.assessmentsTransform.transformToUpsertAssessmentResponse(assessment, questions);
   }
 
   private validateQuestions(questions: UpsertQuestionDto[]) {
@@ -424,40 +321,34 @@ export class AssessmentsService {
       // Validate MCQ questions
       if (question.question_type === QuestionType.MCQ) {
         if (!question.options || !Array.isArray(question.options)) {
-          throw new BadRequestException(
-            `MCQ question "${question.question_text}" must have options`,
-          );
+          throw new BadRequestException(`MCQ question "${question.question_text}" must have options`);
         }
 
         if (question.options.length < 2) {
           throw new BadRequestException(
-            APP_STRINGS.api_errors.assessments.mcq_question_must_have_at_least_2_options(
-              question.question_text,
-            ),
+            APP_STRINGS.api_errors.assessments.mcq_question_must_have_at_least_2_options(question.question_text)
           );
         }
 
         if (question.options.length > 6) {
           throw new BadRequestException(
-            APP_STRINGS.api_errors.assessments.mcq_question_can_have_at_most_6_options(
-              question.question_text,
-            ),
+            APP_STRINGS.api_errors.assessments.mcq_question_can_have_at_most_6_options(question.question_text)
           );
         }
 
         if (!question.correct_answer) {
           throw new BadRequestException(
             APP_STRINGS.api_errors.assessments.correct_answer_must_be_one_of_the_provided_options(
-              question.question_text,
-            ),
+              question.question_text
+            )
           );
         }
 
         if (!question.options.includes(question.correct_answer)) {
           throw new BadRequestException(
             APP_STRINGS.api_errors.assessments.correct_answer_must_be_one_of_the_provided_options(
-              question.question_text,
-            ),
+              question.question_text
+            )
           );
         }
       }
@@ -466,9 +357,7 @@ export class AssessmentsService {
       if (question.question_type === QuestionType.SUBJECTIVE) {
         if (question.options && question.options.length > 0) {
           throw new BadRequestException(
-            APP_STRINGS.api_errors.assessments.subjective_question_should_not_have_options(
-              question.question_text,
-            ),
+            APP_STRINGS.api_errors.assessments.subjective_question_should_not_have_options(question.question_text)
           );
         }
       }
@@ -479,76 +368,54 @@ export class AssessmentsService {
     const uniqueOrderSequences = new Set(orderSequences);
 
     if (orderSequences.length !== uniqueOrderSequences.size) {
-      throw new BadRequestException(
-        APP_STRINGS.api_errors.assessments.question_order_sequences_must_be_unique,
-      );
+      throw new BadRequestException(APP_STRINGS.api_errors.assessments.question_order_sequences_must_be_unique);
     }
 
     // Validate order sequences are sequential starting from 1
     const sortedSequences = [...orderSequences].sort((a, b) => a - b);
     for (let i = 0; i < sortedSequences.length; i++) {
       if (sortedSequences[i] !== i + 1) {
-        throw new BadRequestException(
-          APP_STRINGS.api_errors.assessments.question_order_sequences_must_be_sequential,
-        );
+        throw new BadRequestException(APP_STRINGS.api_errors.assessments.question_order_sequences_must_be_sequential);
       }
     }
   }
 
   async publishAssessment(assessmentId: string) {
-    const assessment =
-      await this.assessmentsDBService.getAssessmentWithQuestionsCount(
-        assessmentId,
-      );
+    const assessment = await this.assessmentsDBService.getAssessmentWithQuestionsCount(assessmentId);
 
     if (!assessment) {
-      throw new NotFoundException(
-        APP_STRINGS.api_errors.assessments.assessment_not_found,
-      );
+      throw new NotFoundException(APP_STRINGS.api_errors.assessments.assessment_not_found);
     }
 
     if (assessment.is_published) {
-      throw new BadRequestException(
-        APP_STRINGS.api_errors.assessments.assessment_already_published,
-      );
+      throw new BadRequestException(APP_STRINGS.api_errors.assessments.assessment_already_published);
     }
 
     if (assessment.total_questions !== assessment.questions.length) {
-      throw new BadRequestException(
-        APP_STRINGS.api_errors.assessments.assessment_total_questions_mismatch,
-      );
+      throw new BadRequestException(APP_STRINGS.api_errors.assessments.assessment_total_questions_mismatch);
     }
 
     await this.assessmentsDBService.publishAssessment(assessmentId);
   }
 
   async getAssessmentDetails(assessmentId: string) {
-    const assessment =
-      await this.assessmentsDBService.getAssessmentDetails(assessmentId);
+    const assessment = await this.assessmentsDBService.getAssessmentDetails(assessmentId);
 
     if (!assessment) {
-      throw new NotFoundException(
-        APP_STRINGS.api_errors.assessments.assessment_not_found,
-      );
+      throw new NotFoundException(APP_STRINGS.api_errors.assessments.assessment_not_found);
     }
 
-    return this.assessmentsTransform.transformToUpsertAssessmentResponse(
-      assessment,
-      assessment.questions,
-    );
+    return this.assessmentsTransform.transformToUpsertAssessmentResponse(assessment, assessment.questions);
   }
 
   async startInterview(userAssessmentId: string) {
     console.log('here startInterview job');
-    const userAssessment =
-      await this.assessmentsDBService.getUserAssessmentCompleteData(
-        userAssessmentId,
-      );
+    const userAssessment = await this.assessmentsDBService.getUserAssessmentCompleteData(userAssessmentId);
 
     if (!userAssessment) {
       Logger.warn(
         `User assessment with ID ${userAssessmentId} not found. Cannot start the interview status.`,
-        'AssessmentsService',
+        'AssessmentsService'
       );
       return;
     }
@@ -556,7 +423,7 @@ export class AssessmentsService {
     if (userAssessment.status === AssessmentStatus.IN_PROGRESS) {
       Logger.warn(
         `User assessment with ID ${userAssessmentId} is already in progress. Cannot start the interview.`,
-        'AssessmentsService',
+        'AssessmentsService'
       );
       return;
     }
@@ -564,35 +431,29 @@ export class AssessmentsService {
     if (userAssessment.status === AssessmentStatus.CANCELLED) {
       Logger.warn(
         `User assessment with ID ${userAssessmentId} is cancelled. Cannot start the interview.`,
-        'AssessmentsService',
+        'AssessmentsService'
       );
       return;
     }
 
-    await this.assessmentsDBService.updateUserAssessmentStatus(
-      userAssessmentId,
-      AssessmentStatus.IN_PROGRESS,
-    );
+    await this.assessmentsDBService.updateUserAssessmentStatus(userAssessmentId, AssessmentStatus.IN_PROGRESS);
   }
 
   async endInterview(userAssessmentId: string) {
-    const userAssessment =
-      await this.assessmentsDBService.getUserAssessmentCompleteData(
-        userAssessmentId,
-      );
+    const userAssessment = await this.assessmentsDBService.getUserAssessmentCompleteData(userAssessmentId);
 
     if (!userAssessment) {
       Logger.warn(
         `User assessment with ID ${userAssessmentId} not found. Cannot end the interview status.`,
-        'AssessmentsService',
+        'AssessmentsService'
       );
       return;
     }
 
-    if (userAssessment.status !== AssessmentStatus.IN_PROGRESS) {
+    if (userAssessment.status == AssessmentStatus.COMPLETED && userAssessment.is_assessed) {
       Logger.warn(
-        `User assessment with ID ${userAssessmentId} is not in progress. Cannot end the interview.`,
-        'AssessmentsService',
+        `User assessment with ID ${userAssessmentId} is already completed. Cannot end the interview.`,
+        'AssessmentsService'
       );
       return;
     }
@@ -602,7 +463,7 @@ export class AssessmentsService {
       AssessmentStatus.COMPLETED,
       userAssessment.assessments.type === AssessmentType.MCQ ? true : undefined,
       null,
-      new Date(),
+      new Date()
     );
 
     // AI will assess the interview and then update the status
@@ -616,9 +477,9 @@ export class AssessmentsService {
         AssessmentStatus.COMPLETED,
         type === AssessmentType.MCQ ? true : undefined,
         null,
-        new Date(),
+        new Date()
       );
-  
+
       if (type !== AssessmentType.SUBJECTIVE) {
         return;
       }
@@ -628,10 +489,7 @@ export class AssessmentsService {
 
     const response = await this.aiService.assessInterview(userAnswers, maxScore.toNumber());
 
-    await this.assessmentsDBService.updateInterviewScore(
-      response,
-      userAssessmentId,
-    );
+    await this.assessmentsDBService.updateInterviewScore(response, userAssessmentId);
   }
 
   async getCompletedAssessmentsNotAssessed() {

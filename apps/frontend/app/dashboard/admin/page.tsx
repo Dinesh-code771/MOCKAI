@@ -2,115 +2,119 @@
 
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import { 
+
+import {
   Users,
   FileText,
   Calendar,
-  TrendingUp,
   Award,
-  Clock,
-  CheckCircle,
-  AlertCircle,
   BookOpen,
-  Target,
-  Star,
   Plus,
-  Trophy
+  Trophy,
+  Medal,
+  Crown,
+  X,
+  GraduationCap,
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
-const performanceData = [
-  { month: 'Jan', students: 120, avgScore: 75 },
-  { month: 'Feb', students: 145, avgScore: 78 },
-  { month: 'Mar', students: 168, avgScore: 82 },
-  { month: 'Apr', students: 192, avgScore: 79 },
-  { month: 'May', students: 234, avgScore: 85 },
-  { month: 'Jun', students: 267, avgScore: 88 },
-];
+import { useEffect, useState, useCallback } from 'react';
+import studentsAnalaticForAdmin from '@/lib/admin/students-analatic-for-admin';
+import getLeaderboardData from '@/lib/leaderboard/get-leaderboard-data';
+import { UserRankingDto } from '@mockai/sdk';
+import { staticDataApi } from '@/lib/api-client';
+import { toast } from 'sonner';
 
-const subjectData = [
-  { subject: 'JavaScript', avgScore: 85, students: 234 },
-  { subject: 'React', avgScore: 78, students: 189 },
-  { subject: 'Node.js', avgScore: 72, students: 156 },
-  { subject: 'Python', avgScore: 80, students: 198 },
-  { subject: 'Algorithms', avgScore: 68, students: 145 },
-];
-
-const recentStudents = [
-  {
-    id: 1,
-    name: 'Alice Johnson',
-    email: 'alice@example.com',
-    avatar: '/placeholder-avatar.jpg',
-    testsCompleted: 12,
-    avgScore: 88,
-    lastActive: '2 hours ago',
-    status: 'active',
-    strengths: ['JavaScript', 'React'],
-    weaknesses: ['Algorithms'],
-  },
-  {
-    id: 2,
-    name: 'Bob Smith',
-    email: 'bob@example.com',
-    avatar: '/placeholder-avatar.jpg',
-    testsCompleted: 8,
-    avgScore: 75,
-    lastActive: '1 day ago',
-    status: 'inactive',
-    strengths: ['Python', 'Database'],
-    weaknesses: ['System Design'],
-  },
-  {
-    id: 3,
-    name: 'Carol Davis',
-    email: 'carol@example.com',
-    avatar: '/placeholder-avatar.jpg',
-    testsCompleted: 15,
-    avgScore: 92,
-    lastActive: '30 minutes ago',
-    status: 'active',
-    strengths: ['Algorithms', 'Data Structures'],
-    weaknesses: ['Frontend'],
-  },
-];
-
-const upcomingInterviews = [
-  {
-    id: 1,
-    student: 'John Doe',
-    type: 'Technical',
-    date: '2024-01-16',
-    time: '10:00 AM',
-    interviewer: 'Sarah Johnson',
-    status: 'scheduled',
-  },
-  {
-    id: 2,
-    student: 'Jane Smith',
-    type: 'Behavioral',
-    date: '2024-01-16',
-    time: '2:00 PM',
-    interviewer: 'Michael Chen',
-    status: 'confirmed',
-  },
-  {
-    id: 3,
-    student: 'Mike Wilson',
-    type: 'System Design',
-    date: '2024-01-17',
-    time: '11:00 AM',
-    interviewer: 'Alex Rivera',
-    status: 'pending',
-  },
-];
+interface LeaderboardData {
+  rankings: UserRankingDto[];
+}
 
 export default function AdminDashboard() {
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [leaderboardData, setLeaderboardData] =
+    useState<LeaderboardData | null>(null);
+  const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+  const [courseName, setCourseName] = useState('');
+  const [addingCourse, setAddingCourse] = useState(false);
+  const [courses, setCourses] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const studentsAnalytics = await studentsAnalaticForAdmin();
+        console.log(studentsAnalytics, 'studentsAnalytics');
+        setAnalytics(studentsAnalytics.data);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    const fetchLeaderboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await getLeaderboardData();
+        console.log('leaderboardData', response);
+        setLeaderboardData(response.data || null);
+      } catch (err: any) {
+        console.error('Error fetching leaderboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+    fetchLeaderboardData();
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = useCallback(async () => {
+    try {
+      const response =
+        await staticDataApi.staticDataControllerGetActiveCourses();
+      if (response?.data?.courses) {
+        setCourses(response.data.courses);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+    }
+  }, []);
+
+  const handleAddCourse = async () => {
+    if (!courseName.trim()) {
+      toast.error('Please enter a course name');
+      return;
+    }
+
+    try {
+      setAddingCourse(true);
+      // TODO: Fix API call - method name might be different
+      await staticDataApi.staticDataControllerAddCourse({
+        addCourseRequestDto: {
+          course: courseName.trim(),
+        },
+      });
+
+      // Temporary placeholder - replace with actual API call
+      toast.success('Course added successfully!');
+      setCourseName('');
+      setShowAddCourseModal(false);
+      fetchCourses(); // Refresh the courses list
+    } catch (error: any) {
+      console.error('Error adding course:', error);
+      toast.error(error?.message || 'Failed to add course');
+    } finally {
+      setAddingCourse(false);
+    }
+  };
+
   return (
     <DashboardLayout role="admin" currentPath="/dashboard/admin">
       <div className="space-y-6">
@@ -124,19 +128,26 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-purple-100">Manage students, questions, and assessments</p>
+              <p className="text-purple-100">
+                Manage students, questions, and assessments
+              </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <Button 
-                  onClick={() => window.location.href = '/dashboard/admin/assessments'}
+                <Button
+                  onClick={() =>
+                    (window.location.href = '/dashboard/admin/assessments')
+                  }
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   View Assessments
                 </Button>
-                <Button 
-                  onClick={() => window.location.href = '/dashboard/admin/assessments/create'}
+                <Button
+                  onClick={() =>
+                    (window.location.href =
+                      '/dashboard/admin/assessments/create')
+                  }
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -144,8 +155,10 @@ export default function AdminDashboard() {
                 </Button>
               </div>
               <div className="text-right">
-                <p className="text-sm text-purple-100">Total Students</p>
-                <p className="text-3xl font-bold">267</p>
+                <p className="text-sm text-purple-100">Total Users</p>
+                <p className="text-3xl font-bold">
+                  {loading ? '...' : analytics?.totalUsers || 0}
+                </p>
               </div>
             </div>
           </div>
@@ -156,22 +169,25 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
           <Card className="bg-white/70 backdrop-blur-lg border-white/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active Students</p>
-                  <p className="text-2xl font-bold text-gray-900">234</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Users
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {loading ? '...' : analytics?.totalUsers || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
                   <Users className="h-6 w-6 text-green-600" />
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+12% this week</span>
+                <span className="text-sm text-gray-500">Registered users</span>
               </div>
             </CardContent>
           </Card>
@@ -180,16 +196,21 @@ export default function AdminDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Questions</p>
-                  <p className="text-2xl font-bold text-gray-900">1,247</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Assessments
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {loading ? '...' : analytics?.totalAssessments || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
                   <FileText className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                <Plus className="h-4 w-4 text-blue-500 mr-1" />
-                <span className="text-sm text-blue-600">45 added this week</span>
+                <span className="text-sm text-gray-500">
+                  Available assessments
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -198,221 +219,354 @@ export default function AdminDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Interviews</p>
-                  <p className="text-2xl font-bold text-gray-900">89</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Questions
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {loading ? '...' : analytics?.totalQuestions || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
-                  <Calendar className="h-6 w-6 text-purple-600" />
+                  <BookOpen className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                <Clock className="h-4 w-4 text-purple-500 mr-1" />
-                <span className="text-sm text-purple-600">12 scheduled today</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Avg Score</p>
-                  <p className="text-2xl font-bold text-gray-900">84%</p>
-                </div>
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <Trophy className="h-6 w-6 text-yellow-600" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+3% improvement</span>
+                <span className="text-sm text-gray-500">
+                  Questions in database
+                </span>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Performance Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-              <CardHeader>
-                <CardTitle>Student Performance Trends</CardTitle>
-                <CardDescription>Monthly student activity and average scores</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="students" 
-                      stroke="#8B5CF6" 
-                      strokeWidth={3}
-                      name="Students"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="avgScore" 
-                      stroke="#10B981" 
-                      strokeWidth={3}
-                      name="Avg Score"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </motion.div>
+        {/* Students Leaderboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card className="bg-white/70 backdrop-blur-lg border-white/20">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Trophy className="h-5 w-5 mr-2" />
+                Students Leaderboard
+              </CardTitle>
+              <CardDescription>
+                Top performing students based on average scores
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : leaderboardData?.rankings &&
+                leaderboardData.rankings.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Top 3 Students */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    {/* 2nd Place */}
+                    <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="relative mb-3">
+                        <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
+                          {leaderboardData.rankings[1]?.avatar ? (
+                            <img
+                              src={leaderboardData.rankings[1].avatar}
+                              alt="Avatar"
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <Users className="h-8 w-8 text-gray-600" />
+                          )}
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">
+                            2
+                          </span>
+                        </div>
+                      </div>
+                      <h4 className="font-semibold text-gray-800 text-center">
+                        {leaderboardData.rankings[1]?.full_name ||
+                          'Second Place'}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {leaderboardData.rankings[1]?.average_score || 0}% avg
+                        score
+                      </p>
+                    </div>
 
-          {/* Subject Performance */}
+                    {/* 1st Place */}
+                    <div className="flex flex-col items-center p-4 bg-gradient-to-b from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-200">
+                      <div className="relative mb-3">
+                        <div className="w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center">
+                          {leaderboardData.rankings[0]?.avatar ? (
+                            <img
+                              src={leaderboardData.rankings[0].avatar}
+                              alt="Avatar"
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <Crown className="h-10 w-10 text-white" />
+                          )}
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">
+                            1
+                          </span>
+                        </div>
+                      </div>
+                      <h4 className="font-semibold text-gray-800 text-center">
+                        {leaderboardData.rankings[0]?.full_name ||
+                          'Top Performer'}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {leaderboardData.rankings[0]?.average_score || 0}% avg
+                        score
+                      </p>
+                    </div>
+
+                    {/* 3rd Place */}
+                    <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="relative mb-3">
+                        <div className="w-16 h-16 bg-amber-300 rounded-full flex items-center justify-center">
+                          {leaderboardData.rankings[2]?.avatar ? (
+                            <img
+                              src={leaderboardData.rankings[2].avatar}
+                              alt="Avatar"
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <Medal className="h-8 w-8 text-white" />
+                          )}
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">
+                            3
+                          </span>
+                        </div>
+                      </div>
+                      <h4 className="font-semibold text-gray-800 text-center">
+                        {leaderboardData.rankings[2]?.full_name ||
+                          'Third Place'}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {leaderboardData.rankings[2]?.average_score || 0}% avg
+                        score
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Leaderboard Table */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-semibold text-gray-800">
+                        Recent Rankings
+                      </h4>
+                      <Button
+                        onClick={() =>
+                          (window.location.href = '/dashboard/admin/students')
+                        }
+                        variant="outline"
+                        size="sm"
+                      >
+                        View All Students
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {leaderboardData.rankings
+                        .slice(0, 5)
+                        .map((user, index) => (
+                          <div
+                            key={user.id}
+                            className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="flex items-center justify-center w-8 h-8">
+                                {index === 0 ? (
+                                  <Crown className="h-5 w-5 text-yellow-500" />
+                                ) : index === 1 ? (
+                                  <Medal className="h-5 w-5 text-gray-400" />
+                                ) : index === 2 ? (
+                                  <Medal className="h-5 w-5 text-amber-600" />
+                                ) : (
+                                  <span className="text-sm font-bold text-gray-600">
+                                    #{index + 1}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                {user.avatar ? (
+                                  <img
+                                    src={user.avatar}
+                                    alt="Avatar"
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <Users className="h-5 w-5 text-gray-400" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-800">
+                                  {user.full_name ||
+                                    user.email ||
+                                    `Student ${index + 1}`}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Rank #{user.rank || index + 1} •{' '}
+                                  {user.given_assessments || 0} tests
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-gray-900">
+                                {user.average_score || 0}%
+                              </p>
+                              <p className="text-xs text-gray-500">Avg Score</p>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Trophy className="h-16 w-16 text-gray-400" />
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                        No Leaderboard Data
+                      </h3>
+                      <p className="text-gray-500 mb-6">
+                        Students need to take assessments to appear on the
+                        leaderboard.
+                      </p>
+                      <Button
+                        onClick={() =>
+                          (window.location.href = '/dashboard/admin/students')
+                        }
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        View Students
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* No Data Message */}
+        {!loading && analytics?.totalUsers === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-              <CardHeader>
-                <CardTitle>Subject Performance</CardTitle>
-                <CardDescription>Average scores by subject area</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={subjectData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="subject" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="avgScore" fill="#3B82F6" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <CardContent className="p-12 text-center">
+                <div className="flex flex-col items-center space-y-4">
+                  <Users className="h-16 w-16 text-gray-400" />
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                      No Users Yet
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                      Start by adding users to see analytics and performance
+                      data.
+                    </p>
+                    <Button
+                      onClick={() =>
+                        (window.location.href = '/dashboard/admin/students')
+                      }
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Users
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Students */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="lg:col-span-2"
-          >
-            <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center">
-                      <Users className="h-5 w-5 mr-2" />
-                      Student Profiles
-                    </CardTitle>
-                    <CardDescription>Recent student activity and performance</CardDescription>
-                  </div>
-                  <Button size="sm">View All</Button>
+        {/* Courses Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card className="bg-white/70 backdrop-blur-lg border-white/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <GraduationCap className="h-5 w-5 mr-2" />
+                    Course Management
+                  </CardTitle>
+                  <CardDescription>
+                    Manage available courses for students
+                  </CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {recentStudents.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={student.avatar} />
-                        <AvatarFallback>{student.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <h4 className="font-medium text-gray-800">{student.name}</h4>
-                          <Badge 
-                            variant={student.status === 'active' ? 'default' : 'secondary'}
-                            className={student.status === 'active' ? 'bg-green-100 text-green-800' : ''}
-                          >
-                            {student.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">{student.email}</p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-xs text-gray-500">{student.testsCompleted} tests</span>
-                          <span className="text-xs text-gray-500">{student.lastActive}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          <div className="flex items-center">
-                            <span className="text-xs text-gray-500 mr-1">Strong:</span>
-                            {student.strengths.map((strength) => (
-                              <Badge key={strength} variant="outline" className="text-xs mr-1 bg-green-50 text-green-700">
-                                {strength}
-                              </Badge>
-                            ))}
+                <Button
+                  onClick={() => setShowAddCourseModal(true)}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Course
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {courses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {courses.map((course) => (
+                    <div
+                      key={course.id}
+                      className="p-4 border border-gray-200 rounded-lg bg-gray-50/50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-purple-100 rounded-full">
+                            <GraduationCap className="h-4 w-4 text-purple-600" />
                           </div>
-                          <div className="flex items-center">
-                            <span className="text-xs text-gray-500 mr-1">Weak:</span>
-                            {student.weaknesses.map((weakness) => (
-                              <Badge key={weakness} variant="outline" className="text-xs mr-1 bg-red-50 text-red-700">
-                                {weakness}
-                              </Badge>
-                            ))}
+                          <div>
+                            <h4 className="font-medium text-gray-800">
+                              {course.name}
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              Active Course
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-gray-900">{student.avgScore}%</div>
-                      <Progress value={student.avgScore} className="w-20 h-2 mt-1" />
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Upcoming Interviews */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            <Card className="bg-white/70 backdrop-blur-lg border-white/20">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2" />
-                  Upcoming Interviews
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {upcomingInterviews.map((interview) => (
-                  <div key={interview.id} className="p-3 bg-gray-50/50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-sm text-gray-800">{interview.student}</h4>
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          interview.status === 'confirmed' 
-                            ? 'bg-green-50 text-green-700' 
-                            : interview.status === 'pending'
-                            ? 'bg-yellow-50 text-yellow-700'
-                            : 'bg-blue-50 text-blue-700'
-                        }
-                      >
-                        {interview.status}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-1">{interview.type} Interview</p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>{interview.date}</span>
-                      <span>{interview.time}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">with {interview.interviewer}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                    No Courses Available
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    Start by adding courses for students to enroll in.
+                  </p>
+                  <Button
+                    onClick={() => setShowAddCourseModal(true)}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Course
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Quick Actions */}
         <motion.div
@@ -448,6 +602,75 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Add Course Modal */}
+      {showAddCourseModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Add New Course
+              </h2>
+              <button
+                onClick={() => {
+                  setShowAddCourseModal(false);
+                  setCourseName('');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="courseName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Course Name
+                </label>
+                <input
+                  type="text"
+                  id="courseName"
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  placeholder="Enter course name..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  maxLength={255}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setShowAddCourseModal(false);
+                    setCourseName('');
+                  }}
+                  variant="outline"
+                  disabled={addingCourse}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddCourse}
+                  disabled={addingCourse || !courseName.trim()}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {addingCourse ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Adding...
+                    </>
+                  ) : (
+                    'Add Course'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
