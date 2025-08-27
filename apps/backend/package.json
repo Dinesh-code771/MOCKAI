@@ -36,6 +36,7 @@
     "prisma:generate": "npx prisma generate --schema=./src/db/prisma/schema.prisma",
     "prisma:setup": "npm run prisma:migrate && npm run prisma:dbpull && npm run prisma:generate",
     "prisma:migrate-dbpull": "npm run prisma:migrate && npm run prisma:dbpull",
+    "prisma:prod:deploy": "npx prisma migrate deploy --schema=./src/db/prisma/schema.prisma",
     "local:up": "npm run db:dev:up && sleep 5 && npm run prisma:setup && npm run start:dev",
     "local:dev:up": "npm run db:dev:up && sleep 5 && npm run prisma:reset && npm run prisma:local:up && npm run start:dev"
   },
