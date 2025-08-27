@@ -10,31 +10,31 @@ export class DevToolsMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: CustomJwtService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    // let token = req.cookies?.['sid'];
+    let token = req.cookies?.['sid'];
 
-    // if (!token && !req.headers['authorization']) {
-    //   return res.status(401).json({
-    //     status: 'Unauthorized',
-    //     message: 'Missing admin session',
-    //   });
-    // } else if (token && !req.headers['authorization']) {
-    //   req.headers['authorization'] = `Bearer ${token}`;
-    // } else {
-    //   token = req.headers['authorization'].split(' ')[1];
-    // }
+    if (!token && !req.headers['authorization']) {
+      return res.status(401).json({
+        status: 'Unauthorized',
+        message: 'Missing admin session',
+      });
+    } else if (token && !req.headers['authorization']) {
+      req.headers['authorization'] = `Bearer ${token}`;
+    } else {
+      token = req.headers['authorization'].split(' ')[1];
+    }
 
-    // if (
-    //   req.baseUrl.includes(RouteNames.QUEUES_UI)
-    // ) {
-    //   const decoded = await this.jwtService.verifyAccessToken(token);
+    if (
+      req.baseUrl.includes(RouteNames.QUEUES_UI)
+    ) {
+      const decoded = await this.jwtService.verifyAccessToken(token);
   
-    //   if (!decoded?.roles?.some((role) => role.name === RoleType.ADMIN)) {
-    //     return res.status(401).json({
-    //       status: 'Unauthorized',
-    //       message: 'Invalid or expired admin session',
-    //     });
-    //   }
-    // }
+      if (!decoded?.roles?.some((role) => role.name === RoleType.ADMIN)) {
+        return res.status(401).json({
+          status: 'Unauthorized',
+          message: 'Invalid or expired admin session',
+        });
+      }
+    }
 
     next();
   }
