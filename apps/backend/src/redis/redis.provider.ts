@@ -10,7 +10,9 @@ export const RedisProvider = {
     const redisUrl = configService.get<string>('REDIS_URL');
 
     if (redisUrl) {
-      return new Redis(redisUrl);
+      return new Redis(redisUrl, {
+        maxRetriesPerRequest: null,
+      });
     }
 
     const redisHost = configService.get<string>('REDIS_HOST');
