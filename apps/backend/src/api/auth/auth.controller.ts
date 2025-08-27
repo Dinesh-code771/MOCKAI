@@ -218,7 +218,7 @@ export class AuthController {
       this.cookieService.setAuthCookie(res, response.token);
     }
 
-    let redirectUrl = `${this.frontendUrl}/social-auth`;
+    let redirectUrl = `${this.frontendUrl}/${response.user ? 'social-auth' : 'social-auth-failed'}`;
     if (nextUrl) {
       redirectUrl += `?next_url=${nextUrl}`;
     }

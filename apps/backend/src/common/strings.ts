@@ -1,27 +1,18 @@
-import { strategies } from "passport";
+import { AssessmentStatus } from '@assessments/enum/assessment-status.enum';
+import { strategies } from 'passport';
 
 export const APP_STRINGS = {
-  auth: {},
-
   redis: {
     health: {
       redis_check_failed: 'Redis check failed',
     },
   },
-
-  db: {
-    auth: {
-
-    }
-  },
-
   common: {
     pipes: {
       validation_failed: 'Validation failed (numeric string is expected)',
     },
     cannot_access_this_resource: 'Cannot access this resource',
   },
-
   background: {
     cron: {
       processor: {
@@ -32,7 +23,6 @@ export const APP_STRINGS = {
       unknown_job_name: (jobName) => `Unknown job name ${jobName}`,
     },
   },
-
   api_responses: {
     email: {
       providers: {
@@ -93,6 +83,9 @@ export const APP_STRINGS = {
     },
     auth: {
       verification_code_expired: 'Verification code expired',
+      you_are_not_authorized_to_access_this_app:
+        'You are not authorized to access this app',
+      your_account_is_disabled: 'Your account is disabled, contact admin.',
       user_not_found: 'User not found',
       invalid_code: 'Invalid code',
       strategies: {
@@ -100,7 +93,7 @@ export const APP_STRINGS = {
           roles: {
             roles_are_not_an_array: 'Roles are not an array',
           },
-        }
+        },
       },
       too_many_attempts: 'Too many attempts',
       too_many_attempts_after_1_minute: 'Too many attempts after 1 minute',
@@ -135,6 +128,49 @@ export const APP_STRINGS = {
           failed_to_copy_file_in_s3: 'Failed to copy file in S3',
         },
       },
+    },
+    users: {
+      country_code_required:
+        'Country code is required when phone number is provided',
+      invalid_phone_number: (ids: string[]) =>
+        `Invalid course IDs: ${ids.join(', ')}`,
+    },
+    assessments: {
+      mcq_question_must_have_at_least_2_options: (questionText: string) => `MCQ question "${questionText}" must have at least 2 options`,
+      mcq_question_can_have_at_most_6_options: (questionText: string) => `MCQ question "${questionText}" can have at most 6 options`,
+      correct_answer_must_be_one_of_the_provided_options: (questionText: string) => `Correct answer for question "${questionText}" must be one of the provided options`,
+      subjective_question_should_not_have_options: (questionText: string) => `Subjective question "${questionText}" should not have options`,
+      question_order_sequences_must_be_sequential: 'Question order sequences must be sequential starting from 1',
+      assessment_already_published: 'Assessment is already published',
+      assessment_total_questions_mismatch: 'Assessment total questions mismatch',
+      question_order_sequences_must_be_unique: 'Question order sequences must be unique',
+      course_not_found: 'Course not found',
+      cannot_update_published_assessment: 'Cannot update published assessment',
+      cannot_update_inactive_assessment: 'Cannot update inactive assessment',
+      user_assessment_not_found: 'User assessment not found',
+      assessment_not_found: 'Assessment not found',
+      missing_required_parameter:
+        'Either userAssessmentId or assessmentId must be provided',
+      assessment_already_completed:
+        'Cannot start assessment. Assessment is already completed.',
+      assessment_cancelled: 'Cannot start assessment. Assessment is cancelled.',
+      assessment_time_expired:
+        'Cannot start assessment. Assessment time has expired.',
+      user_already_has_assessment:
+        'User already has an assessment for this test. Use userAssessmentId to continue.',
+      cannot_start_assessment: (status: AssessmentStatus) => {
+        switch (status) {
+          case AssessmentStatus.COMPLETED:
+            return 'Cannot start assessment. Assessment is already completed.';
+          case AssessmentStatus.CANCELLED:
+            return 'Cannot start assessment. Assessment is cancelled.';
+          default:
+            return `Cannot start assessment. Assessment is in ${status} state.`;
+        }
+      },
+      question_already_answered: 'Question already answered',
+      question_not_found: 'Question not found',
+      subjective_assessment_requires_schedule: 'Subjective assessment requires a schedule',
     },
     metrics: {
       failed_to_retrieve_metrics: 'Failed to retrieve metrics',

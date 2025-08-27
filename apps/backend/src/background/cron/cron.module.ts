@@ -10,6 +10,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { DeadLetterQueueModule } from '@dead-letter-queue/dead-letter-queue.module';
+import { AssessmentsModule } from '@assessments/assessments.module';
 
 @Injectable()
 export class CronQueueConfig {
@@ -36,7 +37,7 @@ export class CronQueueConfig {
       name: QueueName.CRON,
       adapter: BullMQAdapter,
       options: {
-        readOnlyMode: process.env.NODE_ENV === 'production' || false,
+        readOnlyMode: false,
         displayName: 'CRON Queue',
         description: 'Queue for CRON jobs',
       },
@@ -50,6 +51,7 @@ export class CronQueueConfig {
     CronQueueConfig.getQueueConfig(),
     CronQueueConfig.getQueueUIConfig(),
     DeadLetterQueueModule,
+    AssessmentsModule,
   ],
   providers: [
     CronProcessor,

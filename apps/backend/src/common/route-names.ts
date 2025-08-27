@@ -7,6 +7,9 @@ export enum RouteNames {
   EMAIL = 'email',
   MEDIA_UPLOAD = 'media-upload',
   HEALTH_UI = 'health-ui',
+  STATIC_DATA = 'static-data',
+  USERS = 'users',
+  ASSESSMENTS = 'assessments',
 
   // Named routes
   // --- AUTH ROUTES ---
@@ -29,4 +32,28 @@ export enum RouteNames {
   MEDIA_UPLOAD_DELETE = 'delete',
   MEDIA_UPLOAD_LIST = 'list',
   MEDIA_UPLOAD_GET = 'get',
+
+  // --- STATIC DATA ROUTES ---
+  STATIC_DATA_COURSES = 'courses',
+
+  // --- USERS ROUTES ---
+  USERS_PROFILE = 'profile',
+  USERS_ADD = 'add',
+  USERS_LIST = 'list',
+  USERS_DISABLE = 'disable',
+  USERS_DELETE = 'delete',
+  USERS_RANKING = 'ranking',
+  USERS_ANALYTICS = 'analytics',
+  ADMIN_DASHBOARD_ANALYTICS = 'admin/analytics',
+
+  // --- ASSESSMENTS ROUTES ---
+  ASSESSMENTS_LIST = 'list',
+  ASSESSMENTS_START = 'start',
+  ASSESSMENTS_STORE_USER_ANSWERS = 'user-assessment/:userAssessmentId/question/:questionId',
+  ASSESSMENTS_COMPLETE = 'user-assessment/:userAssessmentId/complete',
+  ASSESSMENTS_GET_COMPLETE_DATA = 'user-assessment/:userAssessmentId/complete-data',
+  ASSESSMENTS_USER_LIST = 'user-assessments',
+  ASSESSMENTS_UPSERT = 'upsert',
+  ASSESSMENTS_PUBLISH = ':assessmentId/publish',
+  ASSESSMENTS_DETAILS = ':assessmentId',
 }

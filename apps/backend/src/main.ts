@@ -74,7 +74,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   // ❌ remove unwanted route manually from swagger document
   delete document.paths['/v1/metrics'];
-  SwaggerModule.setup(RouteNames.API_DOCS, app, document);
+  if (!isProd) {
+    SwaggerModule.setup(RouteNames.API_DOCS, app, document);
+  }
 
   // Use global filters and pipes
   const errorHandler = app.get(ErrorHandlerService);

@@ -34,7 +34,11 @@
       "@email/*": ["api/email/*"],
       "@media-upload/*": ["api/media-upload/*"],
       "@dead-letter-queue/*": ["background/queue/dead-letter/*"],
-      "@auth/*": ["api/auth/*"]
+      "@auth/*": ["api/auth/*"],
+      "@static-data/*": ["api/static-data/*"],
+      "@users/*": ["api/users/*"],
+      "@assessments/*": ["api/assessments/*"],
+      "@ai/*": ["ai/*"],
     }
   }
 }

@@ -94,8 +94,8 @@ CREATE TABLE user_courses (
     UNIQUE(user_id, course_id)
 );
 
--- Interviews table
-CREATE TABLE interviews (
+-- Assessments table (renamed from interviews for better clarity)
+CREATE TABLE assessments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     course_id UUID REFERENCES courses(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL,
@@ -106,18 +106,21 @@ CREATE TABLE interviews (
     max_score DECIMAL(5,2) DEFAULT 100,
     total_questions INTEGER DEFAULT 25,
     is_active BOOLEAN DEFAULT TRUE,
+    is_published BOOLEAN DEFAULT FALSE,
+    published_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Users Interviews table
-CREATE TABLE user_interviews (
+-- User Assessments table (renamed from user_interviews)
+CREATE TABLE user_assessments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    interview_id UUID NOT NULL REFERENCES interviews(id) ON DELETE CASCADE,
-    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+    scheduled_at TIMESTAMP WITH TIME ZONE,
     started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE,
+    is_assessed BOOLEAN DEFAULT FALSE,
     status interview_status_enum DEFAULT 'scheduled',
     total_score DECIMAL(5,2),
     percentage_score DECIMAL(5,2),
@@ -131,7 +134,7 @@ CREATE TABLE user_interviews (
 -- Questions table
 CREATE TABLE questions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    interview_id UUID NOT NULL REFERENCES interviews(id) ON DELETE CASCADE,
+    assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
     question_text TEXT NOT NULL,
     question_type question_type_enum NOT NULL,
     options JSONB, -- For MCQ options
@@ -146,12 +149,12 @@ CREATE TABLE questions (
 -- User answers table
 CREATE TABLE user_answers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_interview_id UUID NOT NULL REFERENCES user_interviews(id) ON DELETE CASCADE,
+    user_assessment_id UUID NOT NULL REFERENCES user_assessments(id) ON DELETE CASCADE,
     question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
     answer TEXT,
     is_correct BOOLEAN,
-    points_earned DECIMAL(5,2) DEFAULT 0.00, -- for subjective questions 
-    UNIQUE(user_interview_id, question_id)
+    points_earned DECIMAL(5,2) DEFAULT 0.00, -- for subjective questions
+    UNIQUE(user_assessment_id, question_id)
 );
 
 -- User analytics table
@@ -160,11 +163,34 @@ CREATE TABLE user_analytics (
     user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     test_taken_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     total_percentage_score DECIMAL(5,2),
-    given_interviews INTEGER DEFAULT 0,
-    upcoming_interviews INTEGER DEFAULT 0,
+    given_assessments INTEGER DEFAULT 0,
+    upcoming_assessments INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+-- User ranking view
+CREATE OR REPLACE VIEW user_ranking_view AS
+SELECT 
+    ua.id,
+    ua.user_id,
+    u.full_name,
+    u.email,
+    u.avatar,
+    ua.total_percentage_score AS average_score,
+    ua.given_assessments,
+    ua.upcoming_assessments,
+    ua.test_taken_at,
+    RANK() OVER (ORDER BY ua.total_percentage_score DESC) AS rank,
+    PERCENT_RANK() OVER (ORDER BY ua.total_percentage_score DESC) * 100 AS percentile,
+    ua.created_at,
+    ua.updated_at
+FROM 
+    user_analytics ua
+JOIN 
+    users u ON ua.user_id = u.id
+WHERE 
+    ua.total_percentage_score IS NOT NULL;
 
 
 -- Create indexes for better performance
@@ -183,20 +209,20 @@ CREATE INDEX idx_user_courses_user ON user_courses(user_id);
 CREATE INDEX idx_user_courses_course ON user_courses(course_id);
 CREATE INDEX idx_user_courses_active ON user_courses(is_active);
 
-CREATE INDEX idx_interviews_course ON interviews(course_id);
-CREATE INDEX idx_interviews_type ON interviews(type);
-CREATE INDEX idx_interviews_difficulty ON interviews(difficulty);
+CREATE INDEX idx_assessments_course ON assessments(course_id);
+CREATE INDEX idx_assessments_type ON assessments(type);
+CREATE INDEX idx_assessments_difficulty ON assessments(difficulty);
 
-CREATE INDEX idx_user_interviews_user ON user_interviews(user_id);
-CREATE INDEX idx_user_interviews_interview ON user_interviews(interview_id);
-CREATE INDEX idx_user_interviews_status ON user_interviews(status);
-CREATE INDEX idx_user_interviews_scheduled ON user_interviews(scheduled_at);
+CREATE INDEX idx_user_assessments_user ON user_assessments(user_id);
+CREATE INDEX idx_user_assessments_assessment ON user_assessments(assessment_id);
+CREATE INDEX idx_user_assessments_status ON user_assessments(status);
+CREATE INDEX idx_user_assessments_scheduled ON user_assessments(scheduled_at);
 
-CREATE INDEX idx_questions_interview ON questions(interview_id);
+CREATE INDEX idx_questions_assessment ON questions(assessment_id);
 CREATE INDEX idx_questions_type ON questions(question_type);
 CREATE INDEX idx_questions_order ON questions(order_sequence);
 
-CREATE INDEX idx_user_answers_user_interview ON user_answers(user_interview_id);
+CREATE INDEX idx_user_answers_user_assessment ON user_answers(user_assessment_id);
 CREATE INDEX idx_user_answers_question ON user_answers(question_id);
 
 CREATE INDEX idx_user_analytics_user ON user_analytics(user_id);

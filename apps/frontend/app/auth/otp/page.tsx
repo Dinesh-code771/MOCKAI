@@ -6,11 +6,6 @@ import { redirect } from 'next/navigation';
 export default async function OtpPage() {
   const { isLoggedIn } = await verifySession();
 
-  if (isLoggedIn) {
-    redirect('/dashboard/student');
-  }
-  if (!isLoggedIn) {
-    redirect('/auth/login');
-  }
+
   return <OtpClient />;
 }

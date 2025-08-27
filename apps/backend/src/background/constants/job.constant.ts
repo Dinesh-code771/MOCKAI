@@ -1,4 +1,5 @@
 export enum QueueName {
+  ASSESSMENTS = 'assessments',
   EMAIL = 'email',
   CRON = 'cron',
   DEAD_LETTER = 'dead_letter'
@@ -30,9 +31,12 @@ export const DEFAULT_JOB_OPTIONS = {
 };
 
 export enum JobName {
-  DLQ_FAILED_JOB = 'dlq_failed_job'
+  DLQ_FAILED_JOB = 'dlq_failed_job',
+  ASSESSMENT_START_JOB = 'assessment_start_job',
+  ASSESSMENT_END_JOB = 'assessment_end_job',
+  ASSESS_INTERVIEW_JOB = 'assess_interview_job',
 }
 
 export enum CronJobName {
-  PLACE = 'place'
+  ASSESS_PENDING_ASSESSMENTS = 'assess_pending_assessments',
 }

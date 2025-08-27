@@ -14,7 +14,6 @@ export async function copyStaticAssets() {
   try {
     await fse.copy(viewsSrc, viewsDest, { overwrite: true });
     await fse.copy(assetsSrc, assetsDest, { overwrite: true });
-    console.log('[Static Copy] ✅ Copied views and assets after bootstrap');
   } catch (err) {
     console.error('[Static Copy] ❌ Failed to copy static files:', err);
   }

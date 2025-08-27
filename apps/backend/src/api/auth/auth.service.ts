@@ -41,24 +41,15 @@ export class AuthService {
 
     // create user if not exists
     if (!user) {
-      input.password = await this.hashingService.hash(input.password);
+      throw new BadRequestException(
+        APP_STRINGS.api_errors.auth.you_are_not_authorized_to_access_this_app,
+      );
+    }
 
-      let otp = generateOtp();
-      if (this.isDevelopment) {
-        otp = '123456';
-      }
-
-      const newUser = await this.authDBService.createUser(input, otp);
-      const parsedUser = this.authTransform.transformToUserResponse(newUser);
-      const token = await this.jwtService.generateAuthToken(parsedUser, 'temp');
-
-      // ToDo: send email
-
-      return {
-        is_temp: true,
-        user: parsedUser,
-        token,
-      };
+    if (!user.is_active) {
+      throw new BadRequestException(
+        APP_STRINGS.api_errors.auth.your_account_is_disabled,
+      );
     }
 
     // if temp_user, update the password and send the email
@@ -239,6 +230,16 @@ export class AuthService {
 
     const { email, full_name, avatar, provider_id } = req.user;
 
+    const existingUser = await this.authDBService.findUserByEmail(email.toLowerCase());
+
+    if (!existingUser) {
+      return {
+        is_temp: null,
+        user: null,
+        token: null,
+      };
+    }
+
     const userData: OAuthDto = {
       email: email.toLowerCase(),
       full_name,
@@ -246,7 +247,7 @@ export class AuthService {
       provider_id,
     };
 
-    const user = await this.authDBService.upsertOAuthUser(userData, provider);
+    const user = await this.authDBService.upsertOAuthUser(userData, provider, existingUser.is_temp);
 
     const parsedUser = this.authTransform.transformToUserResponse(user);
     const token = await this.jwtService.generateAuthToken(parsedUser);

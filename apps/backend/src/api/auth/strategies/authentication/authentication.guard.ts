@@ -30,12 +30,9 @@ export class AuthenticationGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     ) ?? [AuthenticationGuard.defaultAuthType];
 
-    console.log('authTypes', authTypes);
-
     const guards = authTypes.map((type) => this.authTypeGuardMap[type]).flat();
     let error = new UnauthorizedException();
     for (const instance of guards) {
-      console.log('instance', instance);
       const canActivate = await Promise.resolve(
         instance.canActivate(context),
       ).catch((err) => {

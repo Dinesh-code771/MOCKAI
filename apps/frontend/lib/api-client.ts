@@ -1,4 +1,53 @@
-import { Configuration, AuthApi, HealthApi, MediaApi } from '@mockai/sdk';
+import {
+  Configuration,
+  AuthApi,
+  HealthApi,
+  MediaApi,
+  UsersApi,
+  Middleware,
+  StaticDataApi,
+  AssessmentsApi,
+  RequestContext,
+  ResponseContext,
+  ErrorContext,
+} from '@mockai/sdk';
+import cookieUtils from './cookie-utils';
+import { getToken } from '@/app/auth/actions';
+
+// Create middleware for authentication
+const authMiddleware: Middleware = {
+  pre: async (context: RequestContext) => {
+    const token = await getToken();
+    console.log('token23', token);
+
+    if (token) {
+      context.init = {
+        ...context.init,
+        headers: {
+          ...(context.init.headers || {}),
+          Authorization: `Bearer ${token}`,
+        },
+      };
+    }
+
+    return context;
+  },
+  post: async (context: ResponseContext) => {
+    return context.response;
+  },
+  onError: async (context: ErrorContext) => {
+    if (context.response?.status === 401) {
+      // Clear auth cookies on 401 error
+      cookieUtils.clearAuthCookies();
+
+      // Redirect to login page if we're on the client side
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth/login';
+      }
+    }
+    throw context.error;
+  },
+};
 
 // Create a configuration instance
 const createApiConfiguration = (): Configuration => {
@@ -8,6 +57,7 @@ const createApiConfiguration = (): Configuration => {
     headers: {
       'Content-Type': 'application/json',
     },
+    middleware: [authMiddleware],
   });
 };
 
@@ -17,44 +67,27 @@ const config = createApiConfiguration();
 export const authApi = new AuthApi(config);
 export const healthApi = new HealthApi(config);
 export const mediaApi = new MediaApi(config);
+export const usersApi = new UsersApi(config);
+export const staticDataApi = new StaticDataApi(config);
+export const assessmentApi = new AssessmentsApi(config);
 
-// Helper function to get auth token from localStorage or cookies
-export const getAuthToken = (): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
-  }
-  return null;
-};
-
-// Helper function to set auth token
+// Helper function to set auth token in cookies
 export const setAuthToken = (token: string): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('authToken', token);
-  }
+  console.log('setting token', token);
+  cookieUtils.setAuthToken(token);
 };
 
-// Helper function to remove auth token
+// Helper function to remove auth token from cookies
 export const removeAuthToken = (): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('authToken');
-  }
+  cookieUtils.removeAuthToken();
 };
 
-// Create authenticated API configuration
+// Create authenticated API configuration (for backward compatibility)
 export const createAuthenticatedConfig = (): Configuration => {
-  const token = getAuthToken();
-
-  return new Configuration({
-    basePath: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
+  return createApiConfiguration();
 };
 
-// Export authenticated API instances
+// Export authenticated API instances (for backward compatibility)
 export const getAuthenticatedAuthApi = (): AuthApi => {
   return new AuthApi(createAuthenticatedConfig());
 };
@@ -65,4 +98,12 @@ export const getAuthenticatedHealthApi = (): HealthApi => {
 
 export const getAuthenticatedMediaApi = (): MediaApi => {
   return new MediaApi(createAuthenticatedConfig());
+};
+
+export const getAuthenticatedUsersApi = (): UsersApi => {
+  return new UsersApi(createAuthenticatedConfig());
+};
+
+export const getAuthenticatedAssessmentsApi = (): AssessmentsApi => {
+  return new AssessmentsApi(createAuthenticatedConfig());
 };

@@ -1,4 +1,9 @@
-import { authApi, getAuthenticatedAuthApi, getAuthToken } from './api-client';
+import {
+  getAuthenticatedAuthApi,
+  getAuthenticatedUsersApi,
+} from './api-client';
+import { UserListItemDto } from '@mockai/sdk';
+import { revalidatePath } from 'next/cache';
 
 // Health check utilities
 export const checkApiHealth = async () => {
@@ -54,12 +59,13 @@ export const logoutUser = async () => {
 // Google OAuth utilities
 export const initiateGoogleLogin = (nextUrl?: string) => {
   const baseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
   const url = new URL('/v1/auth/google', baseUrl);
   if (nextUrl) {
     url.searchParams.set('next_url', nextUrl);
   }
   window.location.href = url.toString();
+  console.log('url', url.toString());
 };
 
 // Error handling utility
@@ -71,4 +77,23 @@ export const handleApiError = (error: any) => {
     return error.message;
   }
   return 'An unexpected error occurred';
+};
+
+export const getStudentsList = async () => {
+  const authenticatedApi = getAuthenticatedUsersApi();
+  const response = await authenticatedApi.usersControllerGetUsersList({
+    page: 1,
+    limit: 10,
+  });
+  return response.data?.users;
+};
+
+export const addStudents = async (students: string[]) => {
+  const authenticatedApi = getAuthenticatedUsersApi();
+  const response = await authenticatedApi.usersControllerAddUsers({
+    addUsersDto: {
+      emails: students,
+    },
+  });
+  return response.data;
 };

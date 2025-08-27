@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
+import { authApi } from '@/lib/api-client';
+import { initiateGoogleLogin } from '@/lib/api-utils';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -46,22 +48,31 @@ export default function LoginPage() {
       email: formData.email,
       password: formData.password,
     });
-
+    console.log(result, 'result');
     if (result.success) {
-      console.log(result.data, 'result.data');
+      console.log(result.data, 'result.data', result.data?.is_temp);
       if (result.data?.is_temp) {
-        router.push('/auth/otp');
+        return router.push('/auth/otp');
+      }
+
+      if (result.data?.user.roles[0]?.name === 'admin') {
+        return router.push('/dashboard/admin');
+      }
+
+      if (result.data?.user.roles[0]?.name === 'instructor') {
+        return router.push('/dashboard/instructor');
+      }
+
+      if (result.data?.user.roles[0]?.name === 'student') {
+        return router.push('/dashboard/student');
       }
       // Redirect to dashboard on successful login
-      // router.push('/dashboard/student');
     }
   };
 
   const handleGoogleLogin = async () => {
-    // For Google login, we'll redirect to the backend OAuth endpoint
-    window.location.href = `${
-      process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
-    }/v1/auth/google`;
+    const result = await initiateGoogleLogin('/dashboard/student');
+    console.log(result, 'result');
   };
 
   return (

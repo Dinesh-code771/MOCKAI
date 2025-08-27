@@ -215,41 +215,33 @@ export class AuthDBRepository {
     });
   }
 
-  async upsertOAuthUser(userData: OAuthDto, provider: OAuthEnum) {
+  async upsertOAuthUser(userData: OAuthDto, provider: OAuthEnum, isTemp: boolean) {
     return this.prisma.$transaction(async (tx) => {
-      const user = await tx.users.findUnique({
+      const upsertedUser = await tx.users.update({
         where: {
           email: userData.email,
         },
-      });
-
-      const upsertedUser = await tx.users.upsert({
-        where: {
-          email: userData.email,
-        },
-        update: {
-          is_temp: false,
-          full_name: userData.full_name,
+        data: {
           is_email_verified: true,
-          ...(user && user.is_temp ? { password_hash: null } : {}),
+          ...(isTemp ? { 
+            avatar: userData.avatar,
+            email: userData.email,
+            full_name: userData.full_name,
+            is_email_verified: true,
+            is_temp: false,
+          } : {}),
         },
-        create: {
-          avatar: userData.avatar,
-          email: userData.email,
-          full_name: userData.full_name,
-          is_email_verified: true,
-          is_temp: false,
-          user_roles: {
-            create: {
-              roles: {
-                connect: {
-                  name: RoleType.STUDENT,
+        include: {
+          user_courses: {
+            select: {
+              courses: {
+                select: {
+                  id: true,
+                  name: true,
                 },
               },
             },
           },
-        },
-        include: {
           user_roles: {
             include: {
               roles: {

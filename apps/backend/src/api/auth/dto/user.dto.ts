@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { RoleDto } from "./roles.dto";
 import { ApiResponse } from "@common/dto/api-response";
+import { CourseDto } from "@static-data/dto/course.dto";
 
 export class UserResponseDto {
   @ApiProperty({ example: '9a1b488b-3171-4aa0-a695-312a3d6c7052' })
@@ -23,6 +24,9 @@ export class UserResponseDto {
     description: 'Whether the user account is disabled',
   })
   is_disabled?: boolean;
+
+  @ApiPropertyOptional({ type: [CourseDto] })
+  enrolled_courses?: CourseDto[];
 }
 
 export class UserResponseApiResponse extends ApiResponse<UserResponseDto> {

@@ -1,0 +1,41 @@
+import { RoleType } from '@common/enums/auth-type.enum';
+import { RouteNames } from '@common/route-names';
+import { CustomJwtService } from '@common/services/jwt.service';
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+
+@Injectable()
+export class DevToolsMiddleware implements NestMiddleware {
+
+  constructor(private readonly jwtService: CustomJwtService) {}
+
+  async use(req: Request, res: Response, next: NextFunction) {
+    // let token = req.cookies?.['sid'];
+
+    // if (!token && !req.headers['authorization']) {
+    //   return res.status(401).json({
+    //     status: 'Unauthorized',
+    //     message: 'Missing admin session',
+    //   });
+    // } else if (token && !req.headers['authorization']) {
+    //   req.headers['authorization'] = `Bearer ${token}`;
+    // } else {
+    //   token = req.headers['authorization'].split(' ')[1];
+    // }
+
+    // if (
+    //   req.baseUrl.includes(RouteNames.QUEUES_UI)
+    // ) {
+    //   const decoded = await this.jwtService.verifyAccessToken(token);
+  
+    //   if (!decoded?.roles?.some((role) => role.name === RoleType.ADMIN)) {
+    //     return res.status(401).json({
+    //       status: 'Unauthorized',
+    //       message: 'Invalid or expired admin session',
+    //     });
+    //   }
+    // }
+
+    next();
+  }
+}

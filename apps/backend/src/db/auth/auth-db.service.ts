@@ -54,8 +54,8 @@ export class AuthDBService {
     return this.authReposioty.updateUserIsTemp(userId, isTemp);
   }
 
-  async upsertOAuthUser(userData: OAuthDto, provider: OAuthEnum) {
-    return this.authReposioty.upsertOAuthUser(userData, provider);
+  async upsertOAuthUser(userData: OAuthDto, provider: OAuthEnum, isTemp: boolean) {
+    return this.authReposioty.upsertOAuthUser(userData, provider, isTemp);
   }
 
   async findUserByEmail(email: string) {
