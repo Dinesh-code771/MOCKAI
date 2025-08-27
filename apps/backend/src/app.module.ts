@@ -75,11 +75,16 @@ const rateLimit = ThrottlerModule.forRoot([
 // Cache Module
 const cacheModule = CacheModule.registerAsync({
   useFactory: async () => {
+    const redisUrl = configService.get<string>('REDIS_URL');
+
     const store = await redisStore({
-      socket: {
-        host: configService.get<string>('REDIS_HOST'),
-        port: configService.get<number>('REDIS_PORT'),
-      },
+      ...(redisUrl ? { url: redisUrl } : {}),
+      socket: redisUrl
+        ? undefined
+        : {
+            host: configService.get<string>('REDIS_HOST'),
+            port: configService.get<number>('REDIS_PORT'),
+          },
     });
 
     return {
@@ -136,9 +141,8 @@ const cacheModule = CacheModule.registerAsync({
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(CookieAuthMiddleware).forRoutes('*');
-    consumer.apply(DevToolsMiddleware).forRoutes(
-      `*/${RouteNames.API_DOCS}`,
-      `*/${RouteNames.QUEUES_UI}`,
-    );
+    consumer
+      .apply(DevToolsMiddleware)
+      .forRoutes(`*/${RouteNames.API_DOCS}`, `*/${RouteNames.QUEUES_UI}`);
   }
 }
