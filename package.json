@@ -35,6 +35,7 @@
     "backend:prisma:migrate-dbpull": "npm run prisma:migrate-dbpull --workspace=backend",
     "backend:prisma:generate": "npm run prisma:generate --workspace=backend",
     "backend:prisma:reset": "npm run prisma:reset --workspace=backend",
+    "backend:prisma:prod:deploy": "npm run prisma:prod:deploy --workspace=backend",
     "backend:generate:client": "npm run generate:client --workspace=backend",
     "backend:generate:sdk": "npm run generate:sdk --workspace=backend",
     "backend:generate:openapi-spec": "npm run generate:openapi-spec --workspace=backend",
