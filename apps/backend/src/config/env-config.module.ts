@@ -10,6 +10,7 @@ const envConfig = registerAs(
       PORT: parseInt(process.env.PORT, 10),
       APP_VERSION: process.env.APP_VERSION,
       NODE_ENV: process.env.NODE_ENV,
+      REDIS_URL: process.env.REDIS_URL,
       REDIS_HOST: process.env.REDIS_HOST,
       REDIS_PORT: parseInt(process.env.REDIS_PORT, 10),
       REDIS_PASSWORD: process.env.REDIS_PASSWORD,
@@ -53,6 +54,7 @@ const validationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'staging', 'production')
     .required(),
+  REDIS_URL: Joi.string().optional(),
   REDIS_HOST: Joi.string().required(),
   REDIS_PORT: Joi.number().port().required(),
   REDIS_PASSWORD: Joi.string().required(),

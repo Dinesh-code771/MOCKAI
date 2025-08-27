@@ -7,6 +7,12 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
 export const RedisProvider = {
   provide: REDIS_CLIENT,
   useFactory: (configService: ConfigService<EnvConfig>) => {
+    const redisUrl = configService.get<string>('REDIS_URL');
+
+    if (redisUrl) {
+      return new Redis(redisUrl);
+    }
+
     const redisHost = configService.get<string>('REDIS_HOST');
     const redisPort = configService.get<number>('REDIS_PORT');
     const redisPassword = configService.get<string>('REDIS_PASSWORD');
