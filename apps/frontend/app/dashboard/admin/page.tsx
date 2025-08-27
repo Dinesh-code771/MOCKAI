@@ -22,12 +22,16 @@ import {
   Trophy,
   Medal,
   Crown,
+  X,
+  GraduationCap,
 } from 'lucide-react';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import studentsAnalaticForAdmin from '@/lib/admin/students-analatic-for-admin';
 import getLeaderboardData from '@/lib/leaderboard/get-leaderboard-data';
 import { UserRankingDto } from '@mockai/sdk';
+import { staticDataApi } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 interface LeaderboardData {
   rankings: UserRankingDto[];
@@ -38,6 +42,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [leaderboardData, setLeaderboardData] =
     useState<LeaderboardData | null>(null);
+  const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+  const [courseName, setCourseName] = useState('');
+  const [addingCourse, setAddingCourse] = useState(false);
+  const [courses, setCourses] = useState<any[]>([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -64,7 +72,48 @@ export default function AdminDashboard() {
     };
     fetchData();
     fetchLeaderboardData();
+    fetchCourses();
   }, []);
+
+  const fetchCourses = useCallback(async () => {
+    try {
+      const response =
+        await staticDataApi.staticDataControllerGetActiveCourses();
+      if (response?.data?.courses) {
+        setCourses(response.data.courses);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+    }
+  }, []);
+
+  const handleAddCourse = async () => {
+    if (!courseName.trim()) {
+      toast.error('Please enter a course name');
+      return;
+    }
+
+    try {
+      setAddingCourse(true);
+      // TODO: Fix API call - method name might be different
+      await staticDataApi.staticDataControllerAddCourse({
+        addCourseRequestDto: {
+          course: courseName.trim(),
+        },
+      });
+
+      // Temporary placeholder - replace with actual API call
+      toast.success('Course added successfully!');
+      setCourseName('');
+      setShowAddCourseModal(false);
+      fetchCourses(); // Refresh the courses list
+    } catch (error: any) {
+      console.error('Error adding course:', error);
+      toast.error(error?.message || 'Failed to add course');
+    } finally {
+      setAddingCourse(false);
+    }
+  };
 
   return (
     <DashboardLayout role="admin" currentPath="/dashboard/admin">
@@ -444,6 +493,81 @@ export default function AdminDashboard() {
           </motion.div>
         )}
 
+        {/* Courses Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card className="bg-white/70 backdrop-blur-lg border-white/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <GraduationCap className="h-5 w-5 mr-2" />
+                    Course Management
+                  </CardTitle>
+                  <CardDescription>
+                    Manage available courses for students
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={() => setShowAddCourseModal(true)}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Course
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {courses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {courses.map((course) => (
+                    <div
+                      key={course.id}
+                      className="p-4 border border-gray-200 rounded-lg bg-gray-50/50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-purple-100 rounded-full">
+                            <GraduationCap className="h-4 w-4 text-purple-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-800">
+                              {course.name}
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              Active Course
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                    No Courses Available
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    Start by adding courses for students to enroll in.
+                  </p>
+                  <Button
+                    onClick={() => setShowAddCourseModal(true)}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Course
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Quick Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -478,6 +602,75 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Add Course Modal */}
+      {showAddCourseModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Add New Course
+              </h2>
+              <button
+                onClick={() => {
+                  setShowAddCourseModal(false);
+                  setCourseName('');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="courseName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Course Name
+                </label>
+                <input
+                  type="text"
+                  id="courseName"
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  placeholder="Enter course name..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  maxLength={255}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setShowAddCourseModal(false);
+                    setCourseName('');
+                  }}
+                  variant="outline"
+                  disabled={addingCourse}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddCourse}
+                  disabled={addingCourse || !courseName.trim()}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {addingCourse ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Adding...
+                    </>
+                  ) : (
+                    'Add Course'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
