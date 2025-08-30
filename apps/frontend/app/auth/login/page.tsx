@@ -4,10 +4,14 @@ import { verifySession } from '../actions';
 import { redirect } from 'next/navigation';
 
 export default async function LoginPage() {
-  const { isLoggedIn } = await verifySession();
+  const { isLoggedIn, role } = await verifySession();
   console.log(isLoggedIn, 'isLoggedIn');
   if (isLoggedIn) {
-    redirect('/dashboard/student');
+    if (role === 'student') {
+      redirect('/dashboard/student');
+    } else if (role === 'admin') {
+      redirect('/dashboard/admin');
+    } 
   }
   return <LoginClient />;
 }
