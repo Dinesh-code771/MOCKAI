@@ -1,3 +1,4 @@
+import { Auth } from '@auth/decorator/auth.decorator';
 import { User } from '@common/decorators/user.decorator';
 import { AuthType } from '@common/enums/auth-type.enum';
 import { RouteNames } from '@common/route-names';
@@ -14,6 +15,7 @@ export class HealthController {
 
   @Get()
   @HealthCheck()
+  @Auth(AuthType.NONE)
   @ApiOperation({
     summary: 'Check the health of the service',
     description: 'Health check endpoint',

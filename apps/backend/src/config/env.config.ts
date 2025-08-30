@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 
@@ -18,6 +19,10 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsString()
   NODE_ENV: string;
+
+  @IsOptional()
+  @IsString()
+  REDIS_URL?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -150,4 +155,8 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsString()
   GEMINI_API_KEY: string;
+
+  @IsNotEmpty()
+  @IsString()
+  DOMAIN: string;
 }

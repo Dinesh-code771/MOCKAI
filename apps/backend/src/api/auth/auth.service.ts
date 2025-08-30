@@ -252,10 +252,13 @@ export class AuthService {
     const parsedUser = this.authTransform.transformToUserResponse(user);
     const token = await this.jwtService.generateAuthToken(parsedUser);
 
+    const onboarded = !!user.gender;
+ 
     return {
       is_temp: false,
       user: parsedUser,
       token,
+      is_onboarding: !onboarded,
     };
   }
 

@@ -10,6 +10,7 @@ const envConfig = registerAs(
       PORT: parseInt(process.env.PORT, 10),
       APP_VERSION: process.env.APP_VERSION,
       NODE_ENV: process.env.NODE_ENV,
+      REDIS_URL: process.env.REDIS_URL,
       REDIS_HOST: process.env.REDIS_HOST,
       REDIS_PORT: parseInt(process.env.REDIS_PORT, 10),
       REDIS_PASSWORD: process.env.REDIS_PASSWORD,
@@ -44,6 +45,7 @@ const envConfig = registerAs(
       PRIVATE_IMAGE_EXPIRATION: parseInt(process.env.PRIVATE_IMAGE_EXPIRATION),
       FILE_URL_EXPIRY_IN_MILLISECONDS: parseInt(process.env.FILE_URL_EXPIRY_IN_MILLISECONDS),
       GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      DOMAIN: process.env.DOMAIN,
     }) as EnvConfig,
   );
 
@@ -53,6 +55,7 @@ const validationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'staging', 'production')
     .required(),
+  REDIS_URL: Joi.string().optional(),
   REDIS_HOST: Joi.string().required(),
   REDIS_PORT: Joi.number().port().required(),
   REDIS_PASSWORD: Joi.string().required(),
@@ -92,6 +95,7 @@ const validationSchema = Joi.object({
   PRIVATE_IMAGE_EXPIRATION: Joi.number().required(),
   FILE_URL_EXPIRY_IN_MILLISECONDS: Joi.number().required(),
   GEMINI_API_KEY: Joi.string().required(),
+  DOMAIN: Joi.string().required(),
 });
 
 
