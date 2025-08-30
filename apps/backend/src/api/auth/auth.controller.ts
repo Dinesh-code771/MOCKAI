@@ -221,6 +221,11 @@ export class AuthController {
     let redirectUrl = `${this.frontendUrl}/${response.user ? 'social-auth' : 'social-auth-failed'}`;
     if (nextUrl) {
       redirectUrl += `?next_url=${nextUrl}`;
+      if (response.is_onboarding) {
+        redirectUrl += `&is_onboarding=true`;
+      }
+    } else if (response.is_onboarding) {
+      redirectUrl += `?is_onboarding=true`;
     }
     return res.redirect(redirectUrl);
   }
