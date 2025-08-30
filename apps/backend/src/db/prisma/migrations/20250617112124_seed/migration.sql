@@ -13,8 +13,8 @@ ON CONFLICT(name) DO NOTHING;
 
 INSERT INTO user_roles (id, user_id, role_id) VALUES
 ('d30eeef6-b281-4e69-b7a8-bfafc8a4aae4', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae1', (SELECT id FROM roles WHERE name = 'admin')),
-('d30eeef6-b281-4e69-b7a8-bfafc8a4aae5', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae2', (SELECT id FROM roles WHERE name = 'instructor')),
-('d30eeef6-b281-4e69-b7a8-bfafc8a4aae6', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM roles WHERE name = 'student'))
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae5', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae2', (SELECT id FROM roles WHERE name = 'admin')),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae6', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM roles WHERE name = 'admin'))
 ON CONFLICT(id) DO NOTHING;
 
 -- seed courses
