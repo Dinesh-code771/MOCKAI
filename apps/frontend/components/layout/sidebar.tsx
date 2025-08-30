@@ -44,18 +44,7 @@ const sidebarItems = {
   ],
   admin: [
     { icon: BarChart3, label: 'Dashboard', href: '/dashboard/admin' },
-    { icon: FileText, label: 'Questions', href: '/dashboard/admin/questions' },
     { icon: Users, label: 'Students', href: '/dashboard/admin/students' },
-    {
-      icon: Trophy,
-      label: 'Leaderboard',
-      href: '/dashboard/admin/leaderboard',
-    },
-    {
-      icon: Calendar,
-      label: 'Interviews',
-      href: '/dashboard/admin/interviews',
-    },
     { icon: Settings, label: 'Settings', href: '/dashboard/admin/settings' },
   ],
   superadmin: [

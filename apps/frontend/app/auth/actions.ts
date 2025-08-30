@@ -90,8 +90,69 @@ export async function googleLoginAction(
 export async function verifySession() {
   const cookieStore = cookies();
   const session = cookieStore.get('token');
-  const isLoggedIn = session?.value ? true : false;
-  return { session, isLoggedIn };
+
+  // validate the token and return the role
+  let userInfo = null;
+  let isLoggedIn = false;
+  let role = null;
+
+  if (session?.value) {
+    try {
+      // Decode JWT token to extract user information
+      const token = session.value;
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(''),
+      );
+
+      const payload = JSON.parse(jsonPayload);
+
+      // Check if token is expired
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < currentTime) {
+        // Token is expired, clear it
+        cookieStore.delete('token');
+        return { session: null, isLoggedIn: false, userInfo: null, role: null };
+      }
+
+      // Extract user information
+      userInfo = {
+        id: payload.sub,
+        full_name: payload.name,
+        roles: payload.roles,
+        is_disabled: payload.is_disabled,
+        type: payload.type,
+      };
+
+      // Check if user is disabled
+      if (payload.is_disabled) {
+        cookieStore.delete('token');
+        return { session: null, isLoggedIn: false, userInfo: null, role: null };
+      }
+
+      // Extract role (assuming roles is an array, take the first one)
+      if (
+        payload.roles &&
+        Array.isArray(payload.roles) &&
+        payload.roles.length > 0
+      ) {
+        role = payload.roles[0].name || payload.roles[0];
+      }
+
+      isLoggedIn = true;
+    } catch (error) {
+      console.error('Error validating token:', error);
+      // Clear invalid token
+      cookieStore.delete('token');
+      return { session: null, isLoggedIn: false, userInfo: null, role: null };
+    }
+  }
+
+  return { session, isLoggedIn, userInfo, role };
 }
 
 export async function getToken() {
@@ -103,8 +164,10 @@ export async function getToken() {
 export async function getUserProfile() {
   try {
     const response = await usersApi.usersControllerGetUserProfile();
+
     return { success: true, data: response.data };
   } catch (error: any) {
+    console.log(error, 'error');
     return { success: false, error: error.message };
   }
 }
