@@ -1,7 +1,7 @@
-INSERT INTO users (id, email, password_hash, is_temp, full_name) VALUES
-('d30eeef6-b281-4e69-b7a8-bfafc8a4aae1', 'admin@gmail.com', '$2a$10$jJEZ6VrojnQ.AqItAa5qbuHviz8lP5XyJea6vaheXSWOb1Lr1Ahda', false, 'Admin'),
-('d30eeef6-b281-4e69-b7a8-bfafc8a4aae2', 'instructor@gmail.com', '$2a$10$jJEZ6VrojnQ.AqItAa5qbuHviz8lP5XyJea6vaheXSWOb1Lr1Ahda', false, 'Instructor'),
-('d30eeef6-b281-4e69-b7a8-bfafc8a4aae3', 'student@gmail.com', '$2a$10$jJEZ6VrojnQ.AqItAa5qbuHviz8lP5XyJea6vaheXSWOb1Lr1Ahda', false, 'Student')
+INSERT INTO users (id, email, password_hash, is_temp, full_name, gender) VALUES
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae1', 'vkranthi888@gmail.com', '$2a$10$/EXniyQchpsnyL2oYaj0WO/5tyc7DHNzD01zebzoBtEXdcd6wRwCe', false, 'Admin', 'male'),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae2', 'akepatidinu@gmail.com', '$2a$10$/EXniyQchpsnyL2oYaj0WO/5tyc7DHNzD01zebzoBtEXdcd6wRwCe', false, 'Admin', 'male'),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae3', 'saikirankandimalla90@gmail.com', '$2a$10$/EXniyQchpsnyL2oYaj0WO/5tyc7DHNzD01zebzoBtEXdcd6wRwCe', false, 'Admin', 'male')
 ON CONFLICT(id) DO NOTHING;
 
 -- seed roles
@@ -13,8 +13,8 @@ ON CONFLICT(name) DO NOTHING;
 
 INSERT INTO user_roles (id, user_id, role_id) VALUES
 ('d30eeef6-b281-4e69-b7a8-bfafc8a4aae4', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae1', (SELECT id FROM roles WHERE name = 'admin')),
-('d30eeef6-b281-4e69-b7a8-bfafc8a4aae5', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae2', (SELECT id FROM roles WHERE name = 'instructor')),
-('d30eeef6-b281-4e69-b7a8-bfafc8a4aae6', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM roles WHERE name = 'student'))
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae5', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae2', (SELECT id FROM roles WHERE name = 'admin')),
+('d30eeef6-b281-4e69-b7a8-bfafc8a4aae6', 'd30eeef6-b281-4e69-b7a8-bfafc8a4aae3', (SELECT id FROM roles WHERE name = 'admin'))
 ON CONFLICT(id) DO NOTHING;
 
 -- seed courses

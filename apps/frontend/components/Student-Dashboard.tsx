@@ -37,24 +37,6 @@ import {
 import getUserAnalytics from '@/lib/student/student-get-analatics';
 import { useAuth } from '@/hooks/use-auth';
 
-const recentTests = [
-  {
-    id: 1,
-    subject: 'JavaScript Fundamentals',
-    score: 85,
-    maxScore: 100,
-    date: '2024-01-10',
-    duration: '45 mins',
-  },
-  {
-    id: 2,
-    subject: 'System Design',
-    score: 78,
-    maxScore: 100,
-    date: '2024-01-08',
-    duration: '60 mins',
-  },
-];
 
 const achievements = [
   { icon: Star, title: 'First Test Completed', color: 'text-yellow-500' },
