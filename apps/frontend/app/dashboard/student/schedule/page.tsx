@@ -17,8 +17,7 @@ import { toast } from 'sonner';
 import { assessmentApi } from '@/lib/api-client';
 import {
   AssessmentsControllerGetAssessmentsListTypeEnum,
-  AssessmentsControllerGetAssessmentsListDifficultyEnum,
-  AssessmentsControllerGetAssessmentsListDraftAssessmentEnum,
+
 } from '@mockai/sdk';
 
 // Generate all time slots from 12:00 AM to 11:30 PM with 30-minute intervals
