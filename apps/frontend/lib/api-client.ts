@@ -71,16 +71,13 @@ export const usersApi = new UsersApi(config);
 export const staticDataApi = new StaticDataApi(config);
 export const assessmentApi = new AssessmentsApi(config);
 
-// Helper function to set auth token in cookies
-export const setAuthToken = (token: string): void => {
-  console.log('setting token', token);
-  cookieUtils.setAuthToken(token);
-};
-
 // Helper function to remove auth token from cookies
 export const removeAuthToken = (): void => {
   cookieUtils.removeAuthToken();
 };
+
+// Note: setAuthToken is removed as cookies should only be set by the backend
+// for security reasons (httpOnly, secure, etc.)
 
 // Create authenticated API configuration (for backward compatibility)
 export const createAuthenticatedConfig = (): Configuration => {

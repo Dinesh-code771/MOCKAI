@@ -18,17 +18,8 @@ const cookieUtils = {
     return tokenCookie || legacyTokenCookie;
   },
 
-  setAuthToken: (token: string) => {
-    if (typeof window === 'undefined') {
-      // Server-side: this should be handled by server actions
-      return;
-    }
-    // Client-side: set cookie with proper attributes
-    const isProduction = process.env.NODE_ENV === 'production';
-    document.cookie = `sid=${token}; path=/; max-age=3600; ${
-      isProduction ? 'secure; ' : ''
-    }samesite=lax`;
-  },
+  // Note: setAuthToken removed - cookies should only be set by backend for security
+  // This prevents client-side XSS attacks and ensures proper httpOnly, secure settings
 
   removeAuthToken: () => {
     if (typeof window === 'undefined') {

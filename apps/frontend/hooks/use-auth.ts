@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   authApi,
   getAuthenticatedAuthApi,
-  setAuthToken,
   removeAuthToken,
 } from '@/lib/api-client';
 import {
@@ -109,8 +108,8 @@ export const useAuth = () => {
       });
 
       if (response && response.data?.token) {
-        // Store token in cookies using the new utility
-        setAuthToken(response.data.token);
+        // Backend handles cookie setting securely - no need to set client-side
+        // setAuthToken(response.data.token);
 
         setAuthState((prev) => ({
           ...prev,
@@ -154,9 +153,8 @@ export const useAuth = () => {
       });
 
       if (response && response.data?.token) {
-        // Store token in cookies using the new utility
-
-        setAuthToken(response.data.token);
+        // Backend handles cookie setting securely - no need to set client-side
+        // setAuthToken(response.data.token);
 
         setAuthState((prev) => ({
           ...prev,
