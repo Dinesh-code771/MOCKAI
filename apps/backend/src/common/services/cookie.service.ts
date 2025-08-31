@@ -13,15 +13,13 @@ export class CookieService {
 
   constructor(private readonly configService: ConfigService<EnvConfig>) {
     this.env = this.configService.get<string>('NODE_ENV');
-    this.JWT_TOKEN_EXPIRY =
-      this.configService.get<number>('JWT_TOKEN_EXPIRY') * 1000;
-    this.REFRESH_TOKEN_EXPIRY =
-      this.configService.get<number>('REFRESH_TOKEN_EXPIRY') * 1000;
+    this.JWT_TOKEN_EXPIRY = this.configService.get<number>('JWT_TOKEN_EXPIRY') * 1000;
+    this.REFRESH_TOKEN_EXPIRY = this.configService.get<number>('REFRESH_TOKEN_EXPIRY') * 1000;
 
     this.SET_COOKIE_OPTIONS = {
-      httpOnly: true,
-      secure: this.env !== 'development',
-      sameSite: this.env === 'development' ? 'strict' : 'none',
+      httpOnly: true, // Always true for security
+      secure: this.env !== 'development', // Secure in production
+      sameSite: this.env === 'development' ? 'strict' : 'lax', // Use 'lax' instead of 'none' for production
       path: '/',
       domain:
         this.env === 'development'

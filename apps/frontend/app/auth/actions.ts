@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { removeAuthToken, staticDataApi, usersApi } from '@/lib/api-client';
+import { authApi, removeAuthToken, staticDataApi, usersApi } from '@/lib/api-client';
 // Validation schemas
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -89,8 +89,7 @@ export async function googleLoginAction(
 
 export async function verifySession() {
   const cookieStore = cookies();
-  const session = cookieStore.get('token');
-
+  const session = cookieStore.get('sid');
   // validate the token and return the role
   let userInfo = null;
   let isLoggedIn = false;
@@ -157,7 +156,7 @@ export async function verifySession() {
 
 export async function getToken() {
   const cookieStore = cookies();
-  const token = cookieStore.get('token')?.value;
+  const token = cookieStore.get('sid')?.value;
   return token;
 }
 
@@ -172,13 +171,63 @@ export async function getUserProfile() {
   }
 }
 
+// Helper function for robust server-side cookie deletion
+function deleteServerCookie(cookieStore: any, name: string) {
+  // Try multiple approaches to ensure cookie deletion
+  const options = [
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+      expires: new Date(0),
+    },
+    {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+      expires: new Date(0),
+    },
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict' as const,
+      path: '/',
+      expires: new Date(0),
+    },
+    {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict' as const,
+      path: '/',
+      expires: new Date(0),
+    },
+  ];
+
+  // Try each option to ensure cookie is deleted
+  options.forEach((option) => {
+    try {
+      cookieStore.set(name, '', option);
+    } catch (error) {
+      console.warn(`Failed to delete cookie ${name} with option:`, option);
+    }
+  });
+}
+
 export async function logoutAction() {
-  console.log('logoutAction');
-  // Delete cookies first
+  // Delete cookies first with proper server-side cookie deletion
   const cookieStore = cookies();
-  cookieStore.delete('auth_token');
-  cookieStore.delete('token');
-  cookieStore.delete('user');
+
+  await authApi.authControllerLogout();
+
+  // Delete all possible auth cookies
+  const cookieNames = ['auth_token', 'token', 'user', 'sid'];
+
+  cookieNames.forEach((name) => {
+    deleteServerCookie(cookieStore, name);
+  });
+
   // Return success response instead of redirecting
   return { success: true, message: 'Logged out successfully' };
 }
