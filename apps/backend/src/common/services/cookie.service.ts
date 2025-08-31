@@ -48,10 +48,17 @@ export class CookieService {
 
   deleteCookies(res: Response, ...cookieNames: string[]) {
     cookieNames.forEach((cookie) => {
-      res.cookie('sid', res.cookie['sid'], {
+      res.cookie(cookie, res.cookie[cookie], {
         ...this.SET_COOKIE_OPTIONS,
-        maxAge: 1,
+        maxAge: 0,
       });
+
+      res.cookie(cookie, res.cookie[cookie], {
+        ...this.SET_COOKIE_OPTIONS,
+        domain: null,
+        maxAge: 0,
+      });
+
       
       // Try multiple clearing strategies
       const baseOptions: ICookieOptions = {
@@ -69,14 +76,6 @@ export class CookieService {
   
       // Clear without domain
       res.clearCookie(cookie, baseOptions);
-  
-      // For Railway, also try with explicit Railway domain
-      if (this.env !== 'development') {
-        res.clearCookie(cookie, {
-          ...baseOptions,
-          domain: '.up.railway.app',
-        });
-      }
     });
   }
 
