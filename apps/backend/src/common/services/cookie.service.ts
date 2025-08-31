@@ -1,6 +1,6 @@
 import { ICookieOptions } from '@common/types/auth.types';
 import { EnvConfig } from '@config/env.config';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
@@ -39,6 +39,7 @@ export class CookieService {
 
   setAuthCookie(res: Response, accessToken?: string) {
     if (accessToken) {
+      Logger.log(`Setting cookie: sid`);
       res.cookie('sid', accessToken, {
         ...this.SET_COOKIE_OPTIONS,
         maxAge: this.JWT_TOKEN_EXPIRY,
@@ -51,27 +52,26 @@ export class CookieService {
       // Method 1: Use res.cookie with empty value and maxAge: 0
       // This should match the exact same options used when setting the cookie
       res.cookie(cookie, '', {
-        ...this.SET_COOKIE_OPTIONS,
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        domain: '.up.railway.app',
         maxAge: 0,
         expires: new Date(0),
       });
 
-      // Method 2: Try without domain (for cases where domain might cause issues)
-      res.cookie(cookie, '', {
-        httpOnly: true,
-        secure: this.env !== 'development',
-        sameSite: this.env === 'development' ? 'strict' : 'lax',
-        path: '/',
-        maxAge: 0,
-        expires: new Date(0),
-      });
+      Logger.log(`Deleted cookie: ${cookie}`);
+      Logger.log(`Cookie options: ${JSON.stringify(this.SET_COOKIE_OPTIONS)}`);
 
       // Method 3: Also try clearCookie with exact same options
+      Logger.log(`Clearing cookie: ${cookie}`);
       res.clearCookie(cookie, {
         ...this.SET_COOKIE_OPTIONS,
       });
 
       // Method 4: clearCookie without domain
+      Logger.log(`Clearing cookie: ${cookie}`);
       res.clearCookie(cookie, {
         httpOnly: true,
         secure: this.env !== 'development',
