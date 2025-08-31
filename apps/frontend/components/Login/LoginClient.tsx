@@ -22,7 +22,7 @@ import { initiateGoogleLogin } from '@/lib/api-utils';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState('email');
+  const [activeTab, setActiveTab] = useState('google');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
