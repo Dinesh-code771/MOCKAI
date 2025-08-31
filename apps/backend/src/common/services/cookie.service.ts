@@ -63,10 +63,22 @@ export class CookieService {
 
       // Method 3: Also try clearCookie with exact same options
       Logger.log(`Clearing cookie: ${cookie}`);
-      const response = res.clearCookie(cookie, {
+      res.clearCookie(cookie, {
         ...this.SET_COOKIE_OPTIONS,
+        domain: 'mockai-be-production.up.railway.app'
       });
-      Logger.warn(`Response: ${JSON.stringify(response)}`);
+      res.clearCookie(cookie, {
+        ...this.SET_COOKIE_OPTIONS,
+        domain: 'mockai-production.up.railway.app'
+      });
+      res.clearCookie(cookie, {
+        ...this.SET_COOKIE_OPTIONS,
+        domain: '.up.railway.app'
+      });
+      res.clearCookie(cookie, {
+        ...this.SET_COOKIE_OPTIONS,
+        domain: undefined
+      });
 
       // Method 4: clearCookie without domain
       // Logger.log(`Clearing cookie: ${cookie}`);
