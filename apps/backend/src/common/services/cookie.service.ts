@@ -13,8 +13,10 @@ export class CookieService {
 
   constructor(private readonly configService: ConfigService<EnvConfig>) {
     this.env = this.configService.get<string>('NODE_ENV');
-    this.JWT_TOKEN_EXPIRY = this.configService.get<number>('JWT_TOKEN_EXPIRY') * 1000;
-    this.REFRESH_TOKEN_EXPIRY = this.configService.get<number>('REFRESH_TOKEN_EXPIRY') * 1000;
+    this.JWT_TOKEN_EXPIRY =
+      this.configService.get<number>('JWT_TOKEN_EXPIRY') * 1000;
+    this.REFRESH_TOKEN_EXPIRY =
+      this.configService.get<number>('REFRESH_TOKEN_EXPIRY') * 1000;
 
     this.SET_COOKIE_OPTIONS = {
       httpOnly: true, // Always true for security
@@ -50,7 +52,6 @@ export class CookieService {
       const clearOptions = {
         ...this.SET_COOKIE_OPTIONS,
         maxAge: 0,
-        expires: new Date(0), // Ensure immediate expiration
       };
 
       res.clearCookie(cookie, clearOptions);
