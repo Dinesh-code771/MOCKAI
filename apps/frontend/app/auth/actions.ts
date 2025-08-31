@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { removeAuthToken, staticDataApi, usersApi } from '@/lib/api-client';
+import { authApi, removeAuthToken, staticDataApi, usersApi } from '@/lib/api-client';
 // Validation schemas
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -218,6 +218,8 @@ function deleteServerCookie(cookieStore: any, name: string) {
 export async function logoutAction() {
   // Delete cookies first with proper server-side cookie deletion
   const cookieStore = cookies();
+
+  await authApi.authControllerLogout();
 
   // Delete all possible auth cookies
   const cookieNames = ['auth_token', 'token', 'user', 'sid'];
