@@ -37,12 +37,12 @@ export class CookieService {
     });
   }
 
-  setAuthCookie(res: Response, accessToken?: string) {
+  setAuthCookie(res: Response, accessToken?: string, maxAge?: number) {
     if (accessToken) {
       Logger.log(`Setting cookie: sid`);
       res.cookie('sid', accessToken, {
         ...this.SET_COOKIE_OPTIONS,
-        maxAge: this.JWT_TOKEN_EXPIRY,
+        maxAge: maxAge ? maxAge : this.JWT_TOKEN_EXPIRY,
       });
     }
   }
@@ -66,9 +66,10 @@ export class CookieService {
 
       // Method 3: Also try clearCookie with exact same options
       Logger.log(`Clearing cookie: ${cookie}`);
-      res.clearCookie(cookie, {
-        ...this.SET_COOKIE_OPTIONS,
-      });
+      this.setAuthCookie(res, '', 0);
+      // res.clearCookie(cookie, {
+      //   ...this.SET_COOKIE_OPTIONS,
+      // });
 
       // Method 4: clearCookie without domain
       // Logger.log(`Clearing cookie: ${cookie}`);
