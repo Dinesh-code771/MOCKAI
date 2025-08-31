@@ -18,7 +18,6 @@ import { getToken } from '@/app/auth/actions';
 const authMiddleware: Middleware = {
   pre: async (context: RequestContext) => {
     const token = await getToken();
-    console.log('token23', token);
 
     if (token) {
       context.init = {

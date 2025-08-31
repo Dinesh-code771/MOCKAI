@@ -1,26 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  console.log('Transcription API called');
+
 
   try {
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
     const questionId = formData.get('questionId') as string;
 
-    console.log('Received audio file:', audioFile ? 'Yes' : 'No');
-    console.log('Question ID:', questionId);
-
+  
     if (!audioFile) {
-      console.log('No audio file provided');
+    
       return NextResponse.json(
         { error: 'No audio file provided' },
         { status: 400 },
       );
     }
 
-    console.log('Audio file size:', audioFile.size);
-    console.log('Audio file type:', audioFile.type);
+   
 
     // For now, we'll use a mock transcription service
     // In a real implementation, you would integrate with services like:
@@ -29,9 +26,9 @@ export async function POST(request: NextRequest) {
     // - Azure Speech Services
     // - AWS Transcribe
 
-    console.log('Starting mock transcription...');
+  
     const mockTranscription = await mockTranscribeAudio(audioFile, questionId);
-    console.log('Mock transcription completed:', mockTranscription);
+
 
     return NextResponse.json({
       text: mockTranscription,

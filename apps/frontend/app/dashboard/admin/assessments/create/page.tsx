@@ -303,10 +303,10 @@ export default function CreateAssessment() {
           })),
         };
 
-        console.log('Submitting assessment payload:', payload);
+
 
         const response = await createAssessmentAction(payload);
-        console.log('Response:', response);
+
         if (response) {
           alert('Assessment created successfully!');
           // Redirect to assessments list
@@ -335,7 +335,7 @@ export default function CreateAssessment() {
   useEffect(() => {
     const fetchCourses = async () => {
       const courses = await getCourses();
-      console.log('courses', courses);
+
       setCourses(courses?.courses);
     };
     fetchCourses();
@@ -925,10 +925,7 @@ export default function CreateAssessment() {
                               order_sequence: q.order_sequence,
                             })),
                           };
-                          console.log(
-                            'Assessment Payload:',
-                            JSON.stringify(payload, null, 2),
-                          );
+
                           alert(
                             'Payload logged to console. Check browser developer tools.',
                           );

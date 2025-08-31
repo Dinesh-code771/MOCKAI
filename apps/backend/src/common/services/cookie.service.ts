@@ -1,6 +1,6 @@
 import { ICookieOptions } from '@common/types/auth.types';
 import { EnvConfig } from '@config/env.config';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
@@ -13,18 +13,17 @@ export class CookieService {
 
   constructor(private readonly configService: ConfigService<EnvConfig>) {
     this.env = this.configService.get<string>('NODE_ENV');
-    this.JWT_TOKEN_EXPIRY = this.configService.get<number>('JWT_TOKEN_EXPIRY') * 1000;
-    this.REFRESH_TOKEN_EXPIRY = this.configService.get<number>('REFRESH_TOKEN_EXPIRY') * 1000;
+    this.JWT_TOKEN_EXPIRY =
+      this.configService.get<number>('JWT_TOKEN_EXPIRY') * 1000;
+    this.REFRESH_TOKEN_EXPIRY =
+      this.configService.get<number>('REFRESH_TOKEN_EXPIRY') * 1000;
 
     this.SET_COOKIE_OPTIONS = {
-      httpOnly: true, // Always true for security
-      secure: this.env !== 'development', // Secure in production
-      sameSite: this.env === 'development' ? 'strict' : 'lax', // Use 'lax' instead of 'none' for production
+      httpOnly: true,
+      secure: this.env !== 'development',
+      sameSite: this.env === 'development' ? 'strict' : 'none',
       path: '/',
-      domain:
-        this.env === 'development'
-          ? undefined
-          : this.configService.get<string>('DOMAIN'),
+      domain: this.env === 'development' ? undefined : this.configService.get<string>('DOMAIN'),
     };
   }
 
@@ -37,6 +36,7 @@ export class CookieService {
 
   setAuthCookie(res: Response, accessToken?: string) {
     if (accessToken) {
+      Logger.log(`Setting cookie: sid`);
       res.cookie('sid', accessToken, {
         ...this.SET_COOKIE_OPTIONS,
         maxAge: this.JWT_TOKEN_EXPIRY,
@@ -46,27 +46,40 @@ export class CookieService {
 
   deleteCookies(res: Response, ...cookieNames: string[]) {
     cookieNames.forEach((cookie) => {
-      // For production, we need to clear cookies with the exact same options
-      const clearOptions = {
-        ...this.SET_COOKIE_OPTIONS,
+      // Method 1: Use res.cookie with empty value and maxAge: 0
+      // This should match the exact same options used when setting the cookie
+      res.cookie(cookie, '', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        domain: '.up.railway.app',
         maxAge: 0,
-        expires: new Date(0), // Ensure immediate expiration
-      };
+        expires: new Date(0),
+      });
 
-      res.clearCookie(cookie, clearOptions);
+      Logger.log(`Deleted cookie: ${cookie}`);
+      Logger.log(`Cookie options: ${JSON.stringify(this.SET_COOKIE_OPTIONS)}`);
 
-      // For Railway domains, also try clearing without domain
-      if (this.env !== 'development' && this.SET_COOKIE_OPTIONS.domain) {
-        res.clearCookie(cookie, {
-          ...clearOptions,
-          domain: undefined, // Try without domain
-        });
-      }
+      // Method 3: Also try clearCookie with exact same options
+      Logger.log(`Clearing cookie: ${cookie}`);
+      res.clearCookie(cookie, {
+        ...this.SET_COOKIE_OPTIONS,
+      });
+
+      // Method 4: clearCookie without domain
+      Logger.log(`Clearing cookie: ${cookie}`);
+      res.clearCookie(cookie, {
+        httpOnly: true,
+        secure: this.env !== 'development',
+        sameSite: this.env === 'development' ? 'strict' : 'lax',
+        path: '/',
+      });
     });
   }
 
   deleteAuthCookies(res: Response) {
-    const cookieNames = ['sid', 'refresh_token'];
+    const cookieNames = ['sid'];
     this.deleteCookies(res, ...cookieNames);
   }
 }

@@ -6,7 +6,7 @@ import { AssessmentsControllerUpsertAssessmentRequest, UpsertAssessmentDto } fro
 export async function createAssessmentAction(
   assessment: UpsertAssessmentDto,
 ) {
-  console.log('Creating assessment:', assessment, typeof assessment);
+
   const authenticatedApi = getAuthenticatedAssessmentsApi();
   const response = await authenticatedApi.assessmentsControllerUpsertAssessment(
     {

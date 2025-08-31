@@ -110,8 +110,6 @@ export default function TakeTest() {
     limit,
   } = useInfiniteScroll(fetchData, scrollRef, 4);
 
-  console.log(tests, 'tests');
-  console.log(inProgressTests, 'inProgressTests');
 
   if (loading) {
     return (

@@ -67,9 +67,7 @@ export default function TakeTestPage() {
   const time = searchParams.get('time') as string;
   const score = searchParams.get('score') as string;
 
-  console.log(noQuestion, 'noQuestion');
-  console.log(time, 'time');
-  console.log(score, 'score');
+
   const [testData, setTestData] = useState<TestData | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: number }>(
@@ -265,14 +263,11 @@ export default function TakeTestPage() {
           ? question.options[selectedAnswer]
           : 'no answer';
 
-      console.log(testData.userAssessmentId, 'testData.userAssessmentId');
-      console.log(question.id, 'question.id');
-      console.log(answerText, 'answerText');
 
       const authenticatedApi = getAuthenticatedAssessmentsApi();
 
       // Add debugging for authentication
-      console.log('Sending answer with authenticated API...');
+
 
       await authenticatedApi.assessmentsControllerStoreUserAnswers({
         userAssessmentId: testData.userAssessmentId,
@@ -282,7 +277,7 @@ export default function TakeTestPage() {
         },
       });
 
-      console.log('Answer sent successfully!');
+
 
       // Mark as answered
       setAnsweredQuestions(
@@ -392,7 +387,7 @@ export default function TakeTestPage() {
     const getTestData = async () => {
       try {
         const response = await startTest(testId);
-        console.log(response, 'test data response');
+
         setTestData({
           title: response?.assessment?.name || '',
           description: response?.assessment?.description || '',

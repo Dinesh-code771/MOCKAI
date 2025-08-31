@@ -62,7 +62,7 @@ export default function UserGenderAndCourse({
       },
     });
 
-    console.log(response, 'response');
+
 
     // Navigate to student dashboard after a brief delay
     setTimeout(() => {
@@ -76,7 +76,7 @@ export default function UserGenderAndCourse({
     router.push('/auth/otp');
   };
 
-  console.log(courses, 'courses');
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
