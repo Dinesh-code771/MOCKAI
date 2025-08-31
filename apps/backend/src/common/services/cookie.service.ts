@@ -48,6 +48,11 @@ export class CookieService {
 
   deleteCookies(res: Response, ...cookieNames: string[]) {
     cookieNames.forEach((cookie) => {
+      res.cookie('sid', res.cookie['sid'], {
+        ...this.SET_COOKIE_OPTIONS,
+        maxAge: 1,
+      });
+      
       // Try multiple clearing strategies
       const baseOptions: ICookieOptions = {
         httpOnly: true,
