@@ -48,19 +48,28 @@ export class CookieService {
 
   deleteCookies(res: Response, ...cookieNames: string[]) {
     cookieNames.forEach((cookie) => {
-      // For production, we need to clear cookies with the exact same options
-      const clearOptions = {
-        ...this.SET_COOKIE_OPTIONS,
-        maxAge: 0,
+      // Try multiple clearing strategies
+      const baseOptions: ICookieOptions = {
+        httpOnly: true,
+        secure: this.env !== 'development',
+        sameSite: this.env === 'development' ? 'strict' : 'lax',
+        path: '/',
       };
-
-      res.clearCookie(cookie, clearOptions);
-
-      // For Railway domains, also try clearing without domain
-      if (this.env !== 'development' && this.SET_COOKIE_OPTIONS.domain) {
+  
+      // Clear with original domain
+      res.clearCookie(cookie, {
+        ...baseOptions,
+        domain: this.SET_COOKIE_OPTIONS.domain,
+      });
+  
+      // Clear without domain
+      res.clearCookie(cookie, baseOptions);
+  
+      // For Railway, also try with explicit Railway domain
+      if (this.env !== 'development') {
         res.clearCookie(cookie, {
-          ...clearOptions,
-          domain: undefined, // Try without domain
+          ...baseOptions,
+          domain: '.up.railway.app',
         });
       }
     });
