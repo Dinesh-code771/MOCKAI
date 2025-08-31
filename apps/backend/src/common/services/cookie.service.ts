@@ -23,7 +23,7 @@ export class CookieService {
       secure: this.env !== 'development', // Secure in production
       sameSite: this.env === 'development' ? 'strict' : 'none', // Use 'lax' instead of 'none' for production
       path: '/',
-      domain: undefined,
+      domain: this.env === 'development' ? undefined : '.up.railway.app',
     };
   }
 
@@ -63,9 +63,10 @@ export class CookieService {
 
       // Method 3: Also try clearCookie with exact same options
       Logger.log(`Clearing cookie: ${cookie}`);
-      res.clearCookie(cookie, {
+      const response = res.clearCookie(cookie, {
         ...this.SET_COOKIE_OPTIONS,
       });
+      Logger.warn(`Response: ${JSON.stringify(response)}`);
 
       // Method 4: clearCookie without domain
       // Logger.log(`Clearing cookie: ${cookie}`);
