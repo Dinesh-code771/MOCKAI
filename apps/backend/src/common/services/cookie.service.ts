@@ -23,7 +23,10 @@ export class CookieService {
       secure: this.env !== 'development',
       sameSite: this.env === 'development' ? 'strict' : 'none',
       path: '/',
-      domain: this.env === 'development' ? undefined : this.configService.get<string>('DOMAIN'),
+      domain:
+        this.env === 'development'
+          ? undefined
+          : this.configService.get<string>('DOMAIN'),
     };
   }
 
@@ -34,7 +37,7 @@ export class CookieService {
     });
   }
 
-  setAuthCookie(res: Response, accessToken?: string) {    
+  setAuthCookie(res: Response, accessToken?: string) {
     if (accessToken) {
       res.cookie('sid', accessToken, {
         ...this.SET_COOKIE_OPTIONS,
@@ -45,10 +48,22 @@ export class CookieService {
 
   deleteCookies(res: Response, ...cookieNames: string[]) {
     cookieNames.forEach((cookie) => {
-      res.clearCookie(cookie, {
+      // For production, we need to clear cookies with the exact same options
+      const clearOptions = {
         ...this.SET_COOKIE_OPTIONS,
         maxAge: 0,
-      });
+        expires: new Date(0), // Ensure immediate expiration
+      };
+
+      res.clearCookie(cookie, clearOptions);
+
+      // For Railway domains, also try clearing without domain
+      if (this.env !== 'development' && this.SET_COOKIE_OPTIONS.domain) {
+        res.clearCookie(cookie, {
+          ...clearOptions,
+          domain: undefined, // Try without domain
+        });
+      }
     });
   }
 
