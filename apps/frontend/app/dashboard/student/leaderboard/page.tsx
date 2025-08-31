@@ -388,7 +388,6 @@ export default function Leaderboard() {
     ) => {
       try {
         const response = await getLeaderboardData();
-        console.log('leaderboardData', response);
 
         if (response?.data?.rankings) {
           setRankings(response.data.rankings);

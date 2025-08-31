@@ -65,7 +65,6 @@ export const initiateGoogleLogin = (nextUrl?: string) => {
     url.searchParams.set('next_url', nextUrl);
   }
   window.location.href = url.toString();
-  console.log('url', url.toString());
 };
 
 // Error handling utility

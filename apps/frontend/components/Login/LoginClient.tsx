@@ -48,9 +48,7 @@ export default function LoginPage() {
       email: formData.email,
       password: formData.password,
     });
-    console.log(result, 'result');
     if (result.success) {
-      console.log(result.data, 'result.data', result.data?.is_temp);
       if (result.data?.is_temp) {
         return router.push('/auth/otp');
       }
@@ -72,7 +70,6 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     const result = await initiateGoogleLogin('/dashboard/student');
-    console.log(result, 'result');
   };
 
   return (
