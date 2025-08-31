@@ -65,6 +65,7 @@ export class CookieService {
       Logger.log(`Clearing cookie: ${cookie}`);
       const response = res.clearCookie(cookie, {
         ...this.SET_COOKIE_OPTIONS,
+        domain: 'mockai-be-production.up.railway.app'
       });
       Logger.warn(`Response: ${JSON.stringify(response)}`);
 
