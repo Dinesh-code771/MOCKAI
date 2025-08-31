@@ -23,10 +23,7 @@ export class CookieService {
       secure: this.env !== 'development', // Secure in production
       sameSite: this.env === 'development' ? 'strict' : 'none', // Use 'lax' instead of 'none' for production
       path: '/',
-      domain:
-        this.env === 'development'
-          ? undefined
-          : undefined,
+      domain: undefined,
     };
   }
 
@@ -37,12 +34,12 @@ export class CookieService {
     });
   }
 
-  setAuthCookie(res: Response, accessToken?: string, maxAge?: number) {
+  setAuthCookie(res: Response, accessToken?: string) {
     if (accessToken) {
       Logger.log(`Setting cookie: sid`);
       res.cookie('sid', accessToken, {
         ...this.SET_COOKIE_OPTIONS,
-        maxAge: maxAge ? maxAge : this.JWT_TOKEN_EXPIRY,
+        maxAge: this.JWT_TOKEN_EXPIRY,
       });
     }
   }
@@ -66,10 +63,9 @@ export class CookieService {
 
       // Method 3: Also try clearCookie with exact same options
       Logger.log(`Clearing cookie: ${cookie}`);
-      this.setAuthCookie(res, '', 0);
-      // res.clearCookie(cookie, {
-      //   ...this.SET_COOKIE_OPTIONS,
-      // });
+      res.clearCookie(cookie, {
+        ...this.SET_COOKIE_OPTIONS,
+      });
 
       // Method 4: clearCookie without domain
       // Logger.log(`Clearing cookie: ${cookie}`);
