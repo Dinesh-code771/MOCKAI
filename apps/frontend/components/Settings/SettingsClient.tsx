@@ -56,7 +56,7 @@ export default function SettingsClient({
   );
 
   const { toast } = useToast();
-  console.log(profile, 'profile');
+
 
   const handleEdit = () => {
     setIsEditing(true);

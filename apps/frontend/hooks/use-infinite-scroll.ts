@@ -28,10 +28,7 @@ export function useInfiniteScroll(
   }, [fetchItems, page]);
 
   useEffect(() => {
-    console.log('divRef', divRef.current);
-
     if (!divRef.current) {
-      console.log('Ref not available yet');
       return;
     }
 
@@ -42,10 +39,8 @@ export function useInfiniteScroll(
           (divRef.current?.scrollHeight ?? 0) ||
         isLoading
       ) {
-        console.log('not scrolling');
         return;
       }
-      console.log('hasMore', hasMore);
       setIsLoading(true);
       if (hasMore) {
         setPage(page + 1);

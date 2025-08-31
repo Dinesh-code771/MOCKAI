@@ -50,7 +50,7 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       try {
         const studentsAnalytics = await studentsAnalaticForAdmin();
-        console.log(studentsAnalytics, 'studentsAnalytics');
+
         setAnalytics(studentsAnalytics.data);
       } catch (error) {
         console.error('Error fetching analytics:', error);
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
       try {
         setLoading(true);
         const response = await getLeaderboardData();
-        console.log('leaderboardData', response);
+
         setLeaderboardData(response.data || null);
       } catch (err: any) {
         console.error('Error fetching leaderboard data:', err);

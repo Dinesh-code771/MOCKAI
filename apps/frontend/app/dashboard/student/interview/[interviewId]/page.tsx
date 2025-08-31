@@ -117,10 +117,10 @@ export default function InterviewPage() {
           questions: response?.questions || [],
           userAssessmentId: response?.id || '',
         } as TestData);
-        console.log('Interview data:', response);
+
 
         if (response?.questions) {
-          console.log('response?.questions', response?.questions);
+
           // Transform the questions to match our interface
           const transformedQuestions: Question[] = response.questions.map(
             (q: any, index: number) => ({
@@ -217,10 +217,7 @@ export default function InterviewPage() {
   // Check browser support on mount
   useEffect(() => {
     if (browserSupportsSpeechRecognition) {
-      console.log(
-        'Browser supports speech recognition:',
-        browserSupportsSpeechRecognition,
-      );
+    
     }
   }, [browserSupportsSpeechRecognition]);
 
@@ -234,11 +231,9 @@ export default function InterviewPage() {
 
   // Capture transcript when it changes
   useEffect(() => {
-    console.log('transcript', transcript);
+
     if (transcript && transcript.trim()) {
-      console.log('=== TRANSCRIPT UPDATED ===');
-      console.log('Current transcript:', transcript);
-      console.log('==========================');
+
       setFinalTranscript(transcript);
     }
   }, [transcript]);
@@ -267,7 +262,7 @@ export default function InterviewPage() {
 
   const startRecording = async () => {
     try {
-      console.log('startRecording');
+    
 
       // Check if speech recognition is supported
       if (!browserSupportsSpeechRecognition) {
@@ -278,10 +273,6 @@ export default function InterviewPage() {
       // Reset transcript for new recording
       resetTranscript();
       setFinalTranscript('');
-
-      console.log('=== STARTING REACT SPEECH RECOGNITION ===');
-      console.log('Question ID:', currentQuestion.id);
-      console.log('Question:', currentQuestion.text);
 
       // Start recording timer
       setIsRecording(true);
@@ -302,9 +293,7 @@ export default function InterviewPage() {
 
   const stopRecording = () => {
     if (isRecording) {
-      console.log('=== STOPPING RECORDING ===');
-      console.log('Current transcript:', transcript);
-      console.log('Final transcript:', finalTranscript);
+    
 
       // Stop speech recognition
       SpeechRecognition.stopListening();
@@ -321,12 +310,6 @@ export default function InterviewPage() {
   };
 
   const processTranscript = () => {
-    console.log('=== PROCESSING TRANSCRIPT ===');
-    console.log('Question ID:', currentQuestion.id);
-    console.log('Question:', currentQuestion.text);
-    console.log('Current transcript:', transcript);
-    console.log('Final transcript:', finalTranscript);
-    console.log('=============================');
 
     // Use transcript from the hook, fallback to finalTranscript
     const finalText = transcript || finalTranscript;
@@ -369,14 +352,12 @@ export default function InterviewPage() {
     try {
       const answerText = userAnswer !== undefined ? userAnswer : 'no answer';
 
-      console.log(interviewId, 'interviewId');
-      console.log(question.id, 'question.id');
-      console.log(answerText, 'answerText');
+     
 
       const authenticatedApi = getAuthenticatedAssessmentsApi();
 
       // Add debugging for authentication
-      console.log('Sending answer with authenticated API...');
+
 
       if (!testData) {
         throw new Error('Test data not available');
@@ -390,7 +371,7 @@ export default function InterviewPage() {
         },
       });
 
-      console.log('Answer sent successfully!');
+
 
       // Mark as answered
       // setAnsweredQuestions(
@@ -413,8 +394,7 @@ export default function InterviewPage() {
     //before moving to next question, send current question id and answer to the server
     const currentQuestionId = questions[currentQuestionIndex].id;
     const currentQuestionAnswer = questions[currentQuestionIndex].answer;
-    console.log('currentQuestionId', currentQuestionId);
-    console.log('currentQuestionAnswer', currentQuestionAnswer);
+
     sendAnswerToServer(currentQuestionIndex);
 
     if (currentQuestionIndex < questions.length - 1) {
@@ -425,7 +405,7 @@ export default function InterviewPage() {
       const authenticatedApi = getAuthenticatedAssessmentsApi();
 
       // Add debugging for authentication
-      console.log('Sending answer with authenticated API...');
+
 
       if (!testData) {
         throw new Error('Test data not available');
@@ -436,7 +416,6 @@ export default function InterviewPage() {
           userAssessmentId: testData.userAssessmentId,
         });
 
-      console.log('response', response);
 
       if (response.statusCode === 200) {
         setIsCompleted(true);
@@ -880,10 +859,7 @@ export default function InterviewPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                console.log(
-                                  'Manually marking question as answered:',
-                                  currentQuestion.id,
-                                );
+
                                 setQuestions((prev) =>
                                   prev.map((q) =>
                                     q.id === currentQuestion.id
