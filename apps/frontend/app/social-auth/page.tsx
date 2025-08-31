@@ -20,8 +20,9 @@ function SocialAuthContent() {
           router.push('/dashboard/admin');
         }
         return setIsLoading(false);
+      } else {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
     toVerifySession();
   }, [nextUrl, router]);
