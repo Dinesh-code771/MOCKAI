@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
     };
 
-    console.log('Saving interview data:', interviewData);
+
 
     // Mock database save - replace with actual database operation
     await mockSaveInterview(interviewData);
@@ -59,5 +59,4 @@ async function mockSaveInterview(interviewData: any): Promise<void> {
   // 3. Update user's interview history
   // 4. Generate analytics and insights
 
-  console.log('Interview saved to database:', interviewData);
 }

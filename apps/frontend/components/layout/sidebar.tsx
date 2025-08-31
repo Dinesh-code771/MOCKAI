@@ -75,7 +75,6 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
   const handleLogout = async () => {
     try {
       const result = await logoutAction();
-      console.log(result, 'result');
       if (result.success) {
         router.push('/auth/login');
       }

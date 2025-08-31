@@ -12,6 +12,7 @@ function SocialAuthContent() {
 
   useEffect(() => {
     async function toVerifySession() {
+
       const { isLoggedIn, role } = await verifySession();
       if (isLoggedIn) {
         if (role.toLowerCase() === 'student') {

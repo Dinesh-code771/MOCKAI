@@ -80,7 +80,7 @@ export default function AssessmentsList() {
             AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.True,
         });
 
-      console.log(response.data?.assessments, 'response');
+
       if (response.data?.assessments) {
         setSubjectiveAssessments(
           response.data.assessments as unknown as Assessment[],
@@ -102,7 +102,7 @@ export default function AssessmentsList() {
         draftAssessment:
           AssessmentsControllerGetAssessmentsListDraftAssessmentEnum.True,
       });
-    console.log(response.data?.assessments, 'response');
+
     if (response.data?.assessments) {
       setMcqAssessments(response.data.assessments as unknown as Assessment[]);
     }

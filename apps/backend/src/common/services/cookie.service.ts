@@ -19,14 +19,11 @@ export class CookieService {
       this.configService.get<number>('REFRESH_TOKEN_EXPIRY') * 1000;
 
     this.SET_COOKIE_OPTIONS = {
-      httpOnly: true, // Always true for security
-      secure: this.env !== 'development', // Secure in production
-      sameSite: this.env === 'development' ? 'strict' : 'lax', // Use 'lax' instead of 'none' for production
+      httpOnly: true,
+      secure: this.env !== 'development',
+      sameSite: this.env === 'development' ? 'strict' : 'none',
       path: '/',
-      domain:
-        this.env === 'development'
-          ? undefined
-          : this.configService.get<string>('DOMAIN'),
+      domain: this.env === 'development' ? undefined : this.configService.get<string>('DOMAIN'),
     };
   }
 
