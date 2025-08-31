@@ -222,11 +222,11 @@ export async function logoutAction() {
   await authApi.authControllerLogout();
 
   // Delete all possible auth cookies
-  const cookieNames = ['auth_token', 'token', 'user', 'sid'];
+  // const cookieNames = ['auth_token', 'token', 'user', 'sid'];
 
-  cookieNames.forEach((name) => {
-    deleteServerCookie(cookieStore, name);
-  });
+  // cookieNames.forEach((name) => {
+  //   deleteServerCookie(cookieStore, name);
+  // });
 
   // Return success response instead of redirecting
   return { success: true, message: 'Logged out successfully' };
