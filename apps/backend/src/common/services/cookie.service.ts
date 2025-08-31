@@ -82,7 +82,7 @@ export class CookieService {
   }
 
   deleteAuthCookies(res: Response) {
-    const cookieNames = ['sid', 'refresh_token'];
+    const cookieNames = ['sid'];
     this.deleteCookies(res, ...cookieNames);
   }
 }
