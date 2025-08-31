@@ -9,6 +9,7 @@ import {
   staticDataApi,
   usersApi,
 } from '@/lib/api-client';
+import { env } from 'process';
 // Validation schemas
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -219,83 +220,101 @@ function deleteServerCookie(cookieStore: any, name: string) {
     }
   });
 }
+export const getBaseDomain = (subdomain: string) => {
+  if (subdomain === '') {
+    return undefined;
+  }
+  const match = subdomain.match(/([a-zA-Z0-9-]+\.[a-zA-Z]+)$/);
+  return match ? `.${match[0]}` : undefined; // Extract the base domain
+};
 
 export async function logoutAction() {
   // Delete cookies first with proper server-side cookie deletion
   const cookieStore = cookies();
-  console.log(cookieStore, 'cookieStore');
+  console.log('Starting logout process...');
 
   try {
     // Call backend logout API
     const response = await authApi.authControllerLogout();
     console.log(response, 'response');
+
+    const domain =
+      env.NEXT_PUBLIC_NODE_ENV === 'production'
+        ? getBaseDomain(env.NEXT_PUBLIC_API_BASE_URL || '')
+        : undefined;
+
+    const cookieStore = await cookies();
+    cookieStore.delete({
+      name: 'sid',
+      domain: domain || undefined,
+    });
   } catch (error) {
     console.error('Backend logout failed:', error);
     // Continue with frontend cookie deletion even if backend fails
   }
 
   // Delete all possible auth cookies with multiple strategies for Railway
-  const cookieNames = ['auth_token', 'token', 'user', 'sid'];
+  // const cookieNames = ['auth_token', 'token', 'user', 'sid'];
 
-  cookieNames.forEach((name) => {
-    deleteServerCookie(cookieStore, name);
-  });
+  // cookieNames.forEach((name) => {
+  //   deleteServerCookie(cookieStore, name);
+  // });
 
   // Additional Railway-specific cookie deletion
   // Try deleting with different domain configurations
-  const railwayCookieOptions = [
-    {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax' as const,
-      path: '/',
-      domain: '.up.railway.app',
-      expires: new Date(0),
-    },
-    {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax' as const,
-      path: '/',
-      domain: 'up.railway.app',
-      expires: new Date(0),
-    },
-    {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax' as const,
-      path: '/',
-      domain: undefined, // Try without domain
-      expires: new Date(0),
-    },
-    {
-      httpOnly: false,
-      secure: true,
-      sameSite: 'lax' as const,
-      path: '/',
-      domain: '.up.railway.app',
-      expires: new Date(0),
-    },
-    {
-      httpOnly: false,
-      secure: true,
-      sameSite: 'lax' as const,
-      path: '/',
-      domain: undefined,
-      expires: new Date(0),
-    },
-  ];
+  // const railwayCookieOptions = [
+  //   {
+  //     httpOnly: true,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: '.up.railway.app',
+  //     expires: new Date(0),
+  //   },
+  //   {
+  //     httpOnly: true,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: 'up.railway.app',
+  //     expires: new Date(0),
+  //   },
+  //   {
+  //     httpOnly: true,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: undefined, // Try without domain
+  //     expires: new Date(0),
+  //   },
+  //   {
+  //     httpOnly: false,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: '.up.railway.app',
+  //     expires: new Date(0),
+  //   },
+  //   {
+  //     httpOnly: false,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: undefined,
+  //     expires: new Date(0),
+  //   },
+  // ];
 
-  // Try each option for each cookie name
-  cookieNames.forEach((name) => {
-    railwayCookieOptions.forEach((option) => {
-      try {
-        cookieStore.set(name, '', option);
-      } catch (error) {
-        console.warn(`Failed to delete cookie ${name} with option:`, option);
-      }
-    });
-  });
+  // // Try each option for each cookie name
+  // cookieNames.forEach((name) => {
+  //   railwayCookieOptions.forEach((option) => {
+  //     try {
+  //       cookieStore.set(name, '', option);
+  //     } catch (error) {
+  //       console.warn(`Failed to delete cookie ${name} with option:`, option);
+  //     }
+  //   });
+  // });
 
   // Return success response instead of redirecting
   return { success: true, message: 'Logged out successfully' };
