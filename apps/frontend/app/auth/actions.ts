@@ -89,7 +89,7 @@ export async function googleLoginAction(
 
 export async function verifySession() {
   const cookieStore = cookies();
-  const session = cookieStore.get(process.env.NEXT_PUBLIC_COOKIE_KEY as string);
+  const session = cookieStore.get("sid");
   // validate the token and return the role
   let userInfo = null;
   let isLoggedIn = false;
@@ -105,7 +105,7 @@ export async function verifySession() {
         atob(base64)
           .split('')
           .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join(''),
+          .join(''),    
       );
 
       const payload = JSON.parse(jsonPayload);
@@ -157,7 +157,7 @@ export async function verifySession() {
 export async function getToken() {
   const cookieStore = cookies();
   const token = cookieStore.get(
-    process.env.NEXT_PUBLIC_COOKIE_KEY as string,
+    "sid",
   )?.value;
   return token;
 }
@@ -174,13 +174,13 @@ export async function getUserProfile() {
 }
 
 export async function logoutAction() {
-  console.log('logoutAction');
+
   // Delete cookies first
   const cookieStore = cookies();
   cookieStore.delete('auth_token');
   cookieStore.delete('token');
   cookieStore.delete('user');
-  cookieStore.delete(process.env.NEXT_PUBLIC_COOKIE_KEY as string);
+  cookieStore.delete("sid");
   // Return success response instead of redirecting
   return { success: true, message: 'Logged out successfully' };
 }

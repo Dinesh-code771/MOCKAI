@@ -19,8 +19,9 @@ function SocialAuthContent() {
         } else if (role.toLowerCase() === 'admin') {
           router.push('/dashboard/admin');
         }
-        setIsLoading(false);
+        return setIsLoading(false);
       }
+      setIsLoading(false);
     }
     toVerifySession();
   }, [nextUrl, router]);
