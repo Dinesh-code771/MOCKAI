@@ -48,39 +48,41 @@ export class CookieService {
 
   deleteCookies(res: Response, ...cookieNames: string[]) {
     cookieNames.forEach((cookie) => {
-      res.cookie(cookie, res.cookie[cookie], {
+      // Method 1: Use res.cookie with empty value and maxAge: 0
+      // This should match the exact same options used when setting the cookie
+      res.cookie(cookie, '', {
         ...this.SET_COOKIE_OPTIONS,
         maxAge: 0,
+        expires: new Date(0),
       });
 
-      res.cookie(cookie, res.cookie[cookie], {
-        ...this.SET_COOKIE_OPTIONS,
-        domain: null,
-        maxAge: 0,
-      });
-
-      
-      // Try multiple clearing strategies
-      const baseOptions: ICookieOptions = {
+      // Method 2: Try without domain (for cases where domain might cause issues)
+      res.cookie(cookie, '', {
         httpOnly: true,
         secure: this.env !== 'development',
         sameSite: this.env === 'development' ? 'strict' : 'lax',
         path: '/',
-      };
-  
-      // Clear with original domain
-      res.clearCookie(cookie, {
-        ...baseOptions,
-        domain: this.SET_COOKIE_OPTIONS.domain,
+        maxAge: 0,
+        expires: new Date(0),
       });
-  
-      // Clear without domain
-      res.clearCookie(cookie, baseOptions);
+
+      // Method 3: Also try clearCookie with exact same options
+      res.clearCookie(cookie, {
+        ...this.SET_COOKIE_OPTIONS,
+      });
+
+      // Method 4: clearCookie without domain
+      res.clearCookie(cookie, {
+        httpOnly: true,
+        secure: this.env !== 'development',
+        sameSite: this.env === 'development' ? 'strict' : 'lax',
+        path: '/',
+      });
     });
   }
 
   deleteAuthCookies(res: Response) {
-    const cookieNames = ['sid', 'refresh_token'];
+    const cookieNames = ['sid'];
     this.deleteCookies(res, ...cookieNames);
   }
 }
