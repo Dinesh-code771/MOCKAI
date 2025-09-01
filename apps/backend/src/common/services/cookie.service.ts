@@ -45,8 +45,10 @@ export class CookieService {
 
   deleteCookies(res: Response, ...cookieNames: string[]) {
     cookieNames.forEach((cookie) => {
-      res.clearCookie(cookie, {
+      res.cookie(cookie, '', {
         ...this.SET_COOKIE_OPTIONS,
+        maxAge: 0,
+        expires: new Date(0),
       });
     });
   }
