@@ -23,7 +23,7 @@ export class CookieService {
       secure: this.env !== 'development', // Secure in production
       sameSite: this.env === 'development' ? 'strict' : 'lax', // Use 'lax' for production
       path: '/',
-      domain: this.env === 'development' ? undefined : '.inprep.in',
+      domain: this.env === 'development' ? undefined : undefined,
     };
   }
 
