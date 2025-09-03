@@ -99,47 +99,69 @@ export async function googleLoginAction(
 export async function verifySession() {
   const cookieStore = cookies();
   const session = cookieStore.get('sid');
-  if (!session?.value)
-    return { session: null, isLoggedIn: false, userInfo: null, role: null };
 
-  try {
-    const { payload } = await jwtVerify(session.value, secret, {
-      // issuer, audience, algorithms: ['HS256'] etc. (match your issuer)
-    });
+  // validate the token and return the role
+  let userInfo = null;
+  let isLoggedIn = false;
+  let role = null;
+  console.log(session, 'session');
+  if (session?.value) {
+    try {
+      // Decode JWT token to extract user information
+      const token = session.value;
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(''),
+      );
 
-    const now = Math.floor(Date.now() / 1000);
-    if (typeof payload.exp === 'number' && now >= payload.exp)
-      throw new Error('Expired');
+      const payload = JSON.parse(jsonPayload);
 
-    const userInfo = {
-      id: payload.sub ?? null,
-      full_name: payload.name ?? null,
-      roles: payload.roles ?? [],
-      is_disabled: payload.is_disabled ?? payload.isDisabled ?? false,
-      type: payload.type ?? null,
-    };
+      // Check if token is expired
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < currentTime) {
+        // Token is expired, clear it
+        cookieStore.delete('sid');
+        return { session: null, isLoggedIn: false, userInfo: null, role: null };
+      }
 
-    if (userInfo.is_disabled) throw new Error('Disabled');
+      // Extract user information
+      userInfo = {
+        id: payload.sub,
+        full_name: payload.name,
+        roles: payload.roles,
+        is_disabled: payload.is_disabled,
+        type: payload.type,
+      };
 
-    const role =
-      Array.isArray(userInfo.roles) && userInfo.roles.length
-        ? typeof userInfo.roles[0] === 'string'
-          ? userInfo.roles[0]
-          : userInfo.roles[0]?.name ?? null
-        : null;
+      // Check if user is disabled
+      if (payload.is_disabled) {
+        cookieStore.delete('sid');
+        return { session: null, isLoggedIn: false, userInfo: null, role: null };
+      }
 
-    return { session, isLoggedIn: true, userInfo, role };
-  } catch (e) {
-    // Clear cookie with matching attributes
-    cookies().set('sid', '', {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      expires: new Date(0),
-    });
-    return { session: null, isLoggedIn: false, userInfo: null, role: null };
+      // Extract role (assuming roles is an array, take the first one)
+      if (
+        payload.roles &&
+        Array.isArray(payload.roles) &&
+        payload.roles.length > 0
+      ) {
+        role = payload.roles[0].name || payload.roles[0];
+      }
+
+      isLoggedIn = true;
+    } catch (error) {
+      console.error('Error validating token:', error);
+      // Clear invalid token
+      cookieStore.delete('sid');
+      return { session: null, isLoggedIn: false, userInfo: null, role: null };
+    }
   }
+
+  return { session, isLoggedIn, userInfo, role };
 }
 
 export async function getToken() {
