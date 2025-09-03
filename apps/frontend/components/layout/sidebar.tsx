@@ -81,10 +81,9 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
           credentials: 'include',
         },
       );
-      const data = await response.json();
-      console.log(data, 'data');
+      const result = await response.json();
 
-      if (data.success) {
+      if (result.data.statusCode === 200) {
         router.push('/auth/login');
       }
 
