@@ -21,9 +21,9 @@ export class CookieService {
     this.SET_COOKIE_OPTIONS = {
       httpOnly: true, // Always true for security
       secure: this.env !== 'development', // Secure in production
-      sameSite: this.env === 'development' ? 'strict' : 'none', // Use 'lax' instead of 'none' for production
+      sameSite: this.env === 'development' ? 'strict' : 'lax', // Use 'lax' for production
       path: '/',
-      domain: this.env === 'development' ? undefined : '.up.railway.app',
+      domain: this.env === 'development' ? undefined : undefined,
     };
   }
 
@@ -47,7 +47,6 @@ export class CookieService {
     cookieNames.forEach((cookie) => {
       res.clearCookie(cookie, {
         ...this.SET_COOKIE_OPTIONS,
-        maxAge: 0,
       });
     });
   }
