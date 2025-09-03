@@ -9,6 +9,7 @@ import {
   staticDataApi,
   usersApi,
 } from '@/lib/api-client';
+import { jwtVerify } from 'jose';
 import { env } from 'process';
 // Validation schemas
 const loginSchema = z.object({
@@ -19,6 +20,8 @@ const loginSchema = z.object({
 const googleLoginSchema = z.object({
   provider: z.literal('google'),
 });
+
+const secret = new TextEncoder().encode(process.env.NEXT_PUBLIC_JWT_SECRET);
 
 // Types
 export type LoginFormState = {
@@ -96,69 +99,47 @@ export async function googleLoginAction(
 export async function verifySession() {
   const cookieStore = cookies();
   const session = cookieStore.get('sid');
+  if (!session?.value)
+    return { session: null, isLoggedIn: false, userInfo: null, role: null };
 
-  // validate the token and return the role
-  let userInfo = null;
-  let isLoggedIn = false;
-  let role = null;
-  console.log(session, 'session');
-  if (session?.value) {
-    try {
-      // Decode JWT token to extract user information
-      const token = session.value;
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join(''),
-      );
+  try {
+    const { payload } = await jwtVerify(session.value, secret, {
+      // issuer, audience, algorithms: ['HS256'] etc. (match your issuer)
+    });
 
-      const payload = JSON.parse(jsonPayload);
+    const now = Math.floor(Date.now() / 1000);
+    if (typeof payload.exp === 'number' && now >= payload.exp)
+      throw new Error('Expired');
 
-      // Check if token is expired
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (payload.exp && payload.exp < currentTime) {
-        // Token is expired, clear it
-        cookieStore.delete('sid');
-        return { session: null, isLoggedIn: false, userInfo: null, role: null };
-      }
+    const userInfo = {
+      id: payload.sub ?? null,
+      full_name: payload.name ?? null,
+      roles: payload.roles ?? [],
+      is_disabled: payload.is_disabled ?? payload.isDisabled ?? false,
+      type: payload.type ?? null,
+    };
 
-      // Extract user information
-      userInfo = {
-        id: payload.sub,
-        full_name: payload.name,
-        roles: payload.roles,
-        is_disabled: payload.is_disabled,
-        type: payload.type,
-      };
+    if (userInfo.is_disabled) throw new Error('Disabled');
 
-      // Check if user is disabled
-      if (payload.is_disabled) {
-        cookieStore.delete('sid');
-        return { session: null, isLoggedIn: false, userInfo: null, role: null };
-      }
+    const role =
+      Array.isArray(userInfo.roles) && userInfo.roles.length
+        ? typeof userInfo.roles[0] === 'string'
+          ? userInfo.roles[0]
+          : userInfo.roles[0]?.name ?? null
+        : null;
 
-      // Extract role (assuming roles is an array, take the first one)
-      if (
-        payload.roles &&
-        Array.isArray(payload.roles) &&
-        payload.roles.length > 0
-      ) {
-        role = payload.roles[0].name || payload.roles[0];
-      }
-
-      isLoggedIn = true;
-    } catch (error) {
-      console.error('Error validating token:', error);
-      // Clear invalid token
-      cookieStore.delete('sid');
-      return { session: null, isLoggedIn: false, userInfo: null, role: null };
-    }
+    return { session, isLoggedIn: true, userInfo, role };
+  } catch (e) {
+    // Clear cookie with matching attributes
+    cookies().set('sid', '', {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: false,
+      expires: new Date(0),
+    });
+    return { session: null, isLoggedIn: false, userInfo: null, role: null };
   }
-
-  return { session, isLoggedIn, userInfo, role };
 }
 
 export async function getToken() {
@@ -235,19 +216,25 @@ export async function logoutAction() {
 
   try {
     // Call backend logout API
-    const response = await authApi.authControllerLogout();
+    const response = fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/auth/logout`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      },
+    );
     console.log(response, 'response');
 
-    const domain =
-      env.NEXT_PUBLIC_NODE_ENV === 'production'
-        ? getBaseDomain(env.NEXT_PUBLIC_API_BASE_URL || '')
-        : undefined;
+    // const domain =
+    //   env.NEXT_PUBLIC_NODE_ENV === 'production'
+    //     ? getBaseDomain(env.NEXT_PUBLIC_API_BASE_URL || '')
+    //     : undefined;
 
-    const cookieStore = await cookies();
-    cookieStore.delete({
-      name: 'sid',
-      domain: domain || undefined,
-    });
+    // const cookieStore = await cookies();
+    // cookieStore.delete({
+    //   name: 'sid',
+    //   domain: domain || undefined,
+    // });
   } catch (error) {
     console.error('Backend logout failed:', error);
     // Continue with frontend cookie deletion even if backend fails
