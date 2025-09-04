@@ -116,19 +116,20 @@ export class EmailProcessor extends WorkerHost {
 
   @OnWorkerEvent('error')
   async onError(job: Job, error: Error) {
-    const logString_ = `Job ${job.id} has failed with worker error: ${error?.message}`;
+    const errorMessage = error?.message ?? 'Unknown worker error';
+    const logString_ = `Job ${job?.id ?? 'unknown'} has failed with worker error: ${errorMessage}`;
     this.logger.error(logString_);
     if (typeof job.log === 'function') job.log(logString_);
 
     // Errors to DLQ as well
     await this.dlqService.addFailedJobToDLQ({
       originalQueueName: QueueName.EMAIL,
-      originalJobId: `job_no:${job.id}`,
-      originalJobName: job.name,
-      originalJobData: job.data,
+      originalJobId: `job_no:${job?.id ?? 'unknown'}`,
+      originalJobName: job?.name,
+      originalJobData: job?.data,
       originalJobAttempts: job?.attemptsMade ?? 0,
-      failedReason: `Processor error: ${error?.message}`,
-      stacktrace: error.stack ? error.stack.split('\n') : [],
+      failedReason: `Processor error: ${errorMessage}`,
+      stacktrace: error?.stack ? error.stack.split('\n') : [],
       timestamp: Date.now(),
     });
   }
