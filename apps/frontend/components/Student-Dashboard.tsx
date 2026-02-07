@@ -17,14 +17,10 @@ import {
   Calendar,
   BookOpen,
   Trophy,
-  Users,
-  Clock,
   Target,
-  TrendingUp,
   Star,
   Award,
   ChevronRight,
-  Mic,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -37,7 +33,6 @@ import {
 import getUserAnalytics from '@/lib/student/student-get-analatics';
 import { useAuth } from '@/hooks/use-auth';
 
-
 const achievements = [
   { icon: Star, title: 'First Test Completed', color: 'text-yellow-500' },
   { icon: Award, title: 'Top 10%', color: 'text-purple-500' },
@@ -46,9 +41,31 @@ const achievements = [
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const { user } = useAuth();
   const [upcomingInterviews, setInterViews] = useState([]);
   const [userAnalytics, setUserAnalytics] =
     useState<UserAnalyticsApiResponse | null>(null);
+
+  const displayName =
+    user?.full_name || user?.email?.split('@')[0] || 'Student';
+
+  const getInitials = () => {
+    if (user?.full_name) {
+      const parts = user.full_name.split(' ').filter(Boolean);
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      }
+      if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+      }
+    }
+
+    if (user?.email) {
+      return user.email.slice(0, 2).toUpperCase();
+    }
+
+    return 'ST';
+  };
 
   const cards = [
     {
@@ -104,11 +121,13 @@ export default function StudentDashboard() {
               <Avatar className="h-16 w-16 border-4 border-white/20">
                 <AvatarImage src="/placeholder-avatar.jpg" />
                 <AvatarFallback className="bg-white/20 text-white text-lg">
-                  JD
+                  {getInitials()}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h1 className="text-2xl font-bold">Welcome back, John!</h1>
+                <h1 className="text-2xl font-bold">
+                  Welcome back, {displayName}!
+                </h1>
                 <p className="text-blue-100">
                   Ready to practice and improve your skills?
                 </p>
@@ -317,8 +336,6 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
           </motion.div>
-
-     
         </div>
 
         {/* Achievements */}
