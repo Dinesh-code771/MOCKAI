@@ -137,20 +137,21 @@ export class AssessmentsQueueProcessor extends WorkerHost {
 
   @OnWorkerEvent('error')
   async onError(job: Job, error: Error) {
-    const logString_ = `Job ${job.id} has failed with worker error: ${error?.message}`;
-    this.logger.error(logString_, error.stack, 'AssessmentsQueueProcessor');
+    const errorMessage = error?.message ?? 'Unknown worker error';
+    const logString_ = `Job ${job?.id ?? 'unknown'} has failed with worker error: ${errorMessage}`;
+    this.logger.error(logString_, error?.stack, 'AssessmentsQueueProcessor');
     this.safeJobLog(job, logString_);
 
     // Errors to DLQ as well
     if (job && (job.attemptsMade ?? 1) >= (job.opts?.attempts ?? 0)) {
       await this.dlqService.addFailedJobToDLQ({
         originalQueueName: QueueName.ASSESSMENTS,
-        originalJobId: `job_no:${job.id}`,
-        originalJobName: job.name,
-        originalJobData: job.data,
+        originalJobId: `job_no:${job?.id ?? 'unknown'}`,
+        originalJobName: job?.name,
+        originalJobData: job?.data,
         originalJobAttempts: job?.attemptsMade ?? 0,
-        failedReason: `Processor error: ${error?.message}`,
-        stacktrace: error.stack ? error.stack.split('\n') : [],
+        failedReason: `Processor error: ${errorMessage}`,
+        stacktrace: error?.stack ? error.stack.split('\n') : [],
         timestamp: Date.now(),
       });
     }

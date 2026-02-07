@@ -21,9 +21,9 @@ export class CookieService {
     this.SET_COOKIE_OPTIONS = {
       httpOnly: true, // Always true for security
       secure: this.env !== 'development', // Secure in production
-      sameSite: this.env === 'development' ? 'strict' : 'lax', // Use 'lax' for production
+      sameSite: this.env === 'development' ? 'strict' : 'none', // Use 'lax' for production
       path: '/',
-      domain: this.env === 'development' ? undefined : undefined,
+      domain: this.env === 'development' ? undefined : '.inprep.in',
     };
   }
 
