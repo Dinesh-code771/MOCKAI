@@ -3,7 +3,14 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { authApi, removeAuthToken, staticDataApi, usersApi } from '@/lib/api-client';
+import {
+  authApi,
+  removeAuthToken,
+  staticDataApi,
+  usersApi,
+} from '@/lib/api-client';
+import { jwtVerify } from 'jose';
+import { env } from 'process';
 // Validation schemas
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -13,6 +20,8 @@ const loginSchema = z.object({
 const googleLoginSchema = z.object({
   provider: z.literal('google'),
 });
+
+const secret = new TextEncoder().encode(process.env.NEXT_PUBLIC_JWT_SECRET);
 
 // Types
 export type LoginFormState = {
@@ -90,11 +99,12 @@ export async function googleLoginAction(
 export async function verifySession() {
   const cookieStore = cookies();
   const session = cookieStore.get('sid');
+
   // validate the token and return the role
   let userInfo = null;
   let isLoggedIn = false;
   let role = null;
-
+  console.log(session, 'session');
   if (session?.value) {
     try {
       // Decode JWT token to extract user information
@@ -114,7 +124,7 @@ export async function verifySession() {
       const currentTime = Math.floor(Date.now() / 1000);
       if (payload.exp && payload.exp < currentTime) {
         // Token is expired, clear it
-        cookieStore.delete('token');
+        cookieStore.delete('sid');
         return { session: null, isLoggedIn: false, userInfo: null, role: null };
       }
 
@@ -129,7 +139,7 @@ export async function verifySession() {
 
       // Check if user is disabled
       if (payload.is_disabled) {
-        cookieStore.delete('token');
+        cookieStore.delete('sid');
         return { session: null, isLoggedIn: false, userInfo: null, role: null };
       }
 
@@ -146,7 +156,7 @@ export async function verifySession() {
     } catch (error) {
       console.error('Error validating token:', error);
       // Clear invalid token
-      cookieStore.delete('token');
+      cookieStore.delete('sid');
       return { session: null, isLoggedIn: false, userInfo: null, role: null };
     }
   }
@@ -166,7 +176,6 @@ export async function getUserProfile() {
 
     return { success: true, data: response.data };
   } catch (error: any) {
-    console.log(error, 'error');
     return { success: false, error: error.message };
   }
 }
@@ -214,18 +223,106 @@ function deleteServerCookie(cookieStore: any, name: string) {
     }
   });
 }
+export const getBaseDomain = (subdomain: string) => {
+  if (subdomain === '') {
+    return undefined;
+  }
+  const match = subdomain.match(/([a-zA-Z0-9-]+\.[a-zA-Z]+)$/);
+  return match ? `.${match[0]}` : undefined; // Extract the base domain
+};
 
 export async function logoutAction() {
   // Delete cookies first with proper server-side cookie deletion
   const cookieStore = cookies();
+  console.log('Starting logout process...');
 
-  await authApi.authControllerLogout();
+  try {
+    // Call backend logout API
+    const response = fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/auth/logout`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      },
+    );
+    console.log(response, 'response');
 
-  // Delete all possible auth cookies
+    // const domain =
+    //   env.NEXT_PUBLIC_NODE_ENV === 'production'
+    //     ? getBaseDomain(env.NEXT_PUBLIC_API_BASE_URL || '')
+    //     : undefined;
+
+    // const cookieStore = await cookies();
+    // cookieStore.delete({
+    //   name: 'sid',
+    //   domain: domain || undefined,
+    // });
+  } catch (error) {
+    console.error('Backend logout failed:', error);
+    // Continue with frontend cookie deletion even if backend fails
+  }
+
+  // Delete all possible auth cookies with multiple strategies for Railway
   // const cookieNames = ['auth_token', 'token', 'user', 'sid'];
 
   // cookieNames.forEach((name) => {
   //   deleteServerCookie(cookieStore, name);
+  // });
+
+  // Additional Railway-specific cookie deletion
+  // Try deleting with different domain configurations
+  // const railwayCookieOptions = [
+  //   {
+  //     httpOnly: true,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: '.up.railway.app',
+  //     expires: new Date(0),
+  //   },
+  //   {
+  //     httpOnly: true,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: 'up.railway.app',
+  //     expires: new Date(0),
+  //   },
+  //   {
+  //     httpOnly: true,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: undefined, // Try without domain
+  //     expires: new Date(0),
+  //   },
+  //   {
+  //     httpOnly: false,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: '.up.railway.app',
+  //     expires: new Date(0),
+  //   },
+  //   {
+  //     httpOnly: false,
+  //     secure: true,
+  //     sameSite: 'lax' as const,
+  //     path: '/',
+  //     domain: undefined,
+  //     expires: new Date(0),
+  //   },
+  // ];
+
+  // // Try each option for each cookie name
+  // cookieNames.forEach((name) => {
+  //   railwayCookieOptions.forEach((option) => {
+  //     try {
+  //       cookieStore.set(name, '', option);
+  //     } catch (error) {
+  //       console.warn(`Failed to delete cookie ${name} with option:`, option);
+  //     }
+  //   });
   // });
 
   // Return success response instead of redirecting

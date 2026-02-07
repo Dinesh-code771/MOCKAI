@@ -50,7 +50,7 @@ export const startTest = async (id: string) => {
           assessmentId: id,
         },
       });
-    console.log(response, 'response start test');
+
     return response.data;
   } catch (error) {
     console.error('Error fetching test by id:', error);

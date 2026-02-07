@@ -6,7 +6,7 @@ import SettingsClient from '@/components/Settings/SettingsClient';
 export default async function SettingsPage() {
   const { isLoggedIn } = await verifySession();
   const { data, error } = await getUserProfile();
-  console.log(data, 'data');
+
   if (!isLoggedIn) {
     redirect('/auth/login');
   }

@@ -4,6 +4,7 @@ import {
   getAuthenticatedAuthApi,
   removeAuthToken,
 } from '@/lib/api-client';
+import cookieUtils from '@/lib/cookie-utils';
 import {
   LoginDto,
   OtpDto,
@@ -187,6 +188,9 @@ export const useAuth = () => {
     } catch (error) {
       console.error('Logout API call failed:', error);
     } finally {
+      // Clear cookies using comprehensive deletion for Railway
+      cookieUtils.logout();
+
       // Clear auth state
       setAuthState({
         user: null,

@@ -74,11 +74,23 @@ export function Sidebar({ role, currentPath }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
-      const result = await logoutAction();
-      console.log(result, 'result');
-      if (result.success) {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/auth/logout`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        },
+      );
+      const result = await response.json();
+
+      if (result.data.statusCode === 200) {
         router.push('/auth/login');
       }
+
+      // const result = await logoutAction();
+      // if (result.success) {
+      //   router.push('/auth/login');
+      // }
     } catch (error) {
       console.error('Logout error:', error);
       // Fallback redirect

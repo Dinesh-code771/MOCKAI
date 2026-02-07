@@ -1,6 +1,6 @@
 import { ICookieOptions } from '@common/types/auth.types';
 import { EnvConfig } from '@config/env.config';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
@@ -21,12 +21,9 @@ export class CookieService {
     this.SET_COOKIE_OPTIONS = {
       httpOnly: true, // Always true for security
       secure: this.env !== 'development', // Secure in production
-      sameSite: this.env === 'development' ? 'strict' : 'lax', // Use 'lax' instead of 'none' for production
+      sameSite: this.env === 'development' ? 'strict' : 'none', // Use 'lax' for production
       path: '/',
-      domain:
-        this.env === 'development'
-          ? undefined
-          : this.configService.get<string>('DOMAIN'),
+      domain: this.env === 'development' ? undefined : '.inprep.in',
     };
   }
 
@@ -48,35 +45,8 @@ export class CookieService {
 
   deleteCookies(res: Response, ...cookieNames: string[]) {
     cookieNames.forEach((cookie) => {
-      // Method 1: Use res.cookie with empty value and maxAge: 0
-      // This should match the exact same options used when setting the cookie
-      res.cookie(cookie, '', {
-        ...this.SET_COOKIE_OPTIONS,
-        maxAge: 0,
-        expires: new Date(0),
-      });
-
-      // Method 2: Try without domain (for cases where domain might cause issues)
-      res.cookie(cookie, '', {
-        httpOnly: true,
-        secure: this.env !== 'development',
-        sameSite: this.env === 'development' ? 'strict' : 'lax',
-        path: '/',
-        maxAge: 0,
-        expires: new Date(0),
-      });
-
-      // Method 3: Also try clearCookie with exact same options
       res.clearCookie(cookie, {
         ...this.SET_COOKIE_OPTIONS,
-      });
-
-      // Method 4: clearCookie without domain
-      res.clearCookie(cookie, {
-        httpOnly: true,
-        secure: this.env !== 'development',
-        sameSite: this.env === 'development' ? 'strict' : 'lax',
-        path: '/',
       });
     });
   }
